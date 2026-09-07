@@ -64,12 +64,18 @@ import { ReportParser } from './parsers/index.js';
 import { StandardParser } from './parsers/index.js';
 import { PatentParser } from './parsers/index.js';
 import { WebPageParser } from './parsers/index.js';
+import { ArchiveParser } from './parsers/index.js';
+import { MapParser } from './parsers/index.js';
+import { DatasetParser } from './parsers/index.js';
+import { PreprintParser } from './parsers/index.js';
+import { ComponentPartParser } from './parsers/index.js';
 import { validate as validateFn } from './validator/index.js';
 import { format as formatFn } from './formatter/index.js';
 import type { ReferenceUnion, ParseOptions, FormatOptions, ValidationReport, StandardVersion } from './types/index.js';
 
 // 创建默认解析器实例并注册策略
 const defaultParser = new Parser();
+defaultParser.register(new ComponentPartParser()); // 析出文献解析器优先
 defaultParser.register(new JournalParser());
 defaultParser.register(new BookParser());
 defaultParser.register(new ThesisParser());
@@ -78,6 +84,10 @@ defaultParser.register(new ReportParser());
 defaultParser.register(new StandardParser());
 defaultParser.register(new PatentParser());
 defaultParser.register(new WebPageParser());
+defaultParser.register(new ArchiveParser());
+defaultParser.register(new MapParser());
+defaultParser.register(new DatasetParser());
+defaultParser.register(new PreprintParser());
 
 /**
  * 解析单条参考文献
@@ -158,6 +168,11 @@ export {
   StandardParser,
   PatentParser,
   WebPageParser,
+  ArchiveParser,
+  MapParser,
+  DatasetParser,
+  PreprintParser,
+  ComponentPartParser,
 } from './parsers/index.js';
 export { Validator } from './validator/index.js';
 export { Formatter } from './formatter/index.js';

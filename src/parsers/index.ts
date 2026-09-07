@@ -8,3 +8,8 @@ export { ReportParser } from './report-parser.js';
 export { StandardParser } from './standard-parser.js';
 export { PatentParser } from './patent-parser.js';
 export { WebPageParser } from './web-page-parser.js';
+export { ArchiveParser } from './archive-parser.js';
+export { MapParser } from './map-parser.js';
+export { DatasetParser } from './dataset-parser.js';
+export { PreprintParser } from './preprint-parser.js';
+export { ComponentPartParser } from './component-part-parser.js';
