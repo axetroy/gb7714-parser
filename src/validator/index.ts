@@ -42,6 +42,9 @@ export class Validator {
     this.validateDateFormat(reference, errors);
     this.validateAuthorFormat(reference, errors);
 
+    // 版本特定校验
+    this.validateByVersion(reference, errors);
+
     // 根据文献类型进行特定校验
     this.validateByType(reference, errors);
 
@@ -121,6 +124,58 @@ export class Validator {
   }
 
   /**
+   * 版本特定校验
+   */
+  private validateByVersion(reference: ReferenceUnion, errors: ValidationError[]): void {
+    const version = this.options.version;
+
+    // 2015 版本不支持的文献类型
+    if (version === '2015') {
+      const unsupportedTypes2015: ReferenceType[] = [
+        ReferenceType.A, // 档案
+        ReferenceType.CM, // 地图
+        ReferenceType.DS, // 数据集
+        ReferenceType.PP, // 预印本
+      ];
+
+      if (unsupportedTypes2015.includes(reference.type as ReferenceType)) {
+        errors.push({
+          field: 'type',
+          message: `${this.getTypeName(reference.type)}是 2025 版新增的文献类型，2025 版不支持`,
+          level: 'warning',
+        });
+      }
+
+      // 2015 版使用 DOI 而非 PID
+      if (reference.pid) {
+        errors.push({
+          field: 'pid',
+          message: '2025 版使用"永久标识符(PID)"，2015 版使用"数字对象唯一标识符(DOI)"',
+          level: 'warning',
+        });
+      }
+    }
+
+    // 2025 版本特有的校验
+    if (version === '2025') {
+      // 电子资源应包含载体标识
+      const electronicTypes: ReferenceType[] = [
+        ReferenceType.EB,
+        ReferenceType.DS,
+        ReferenceType.PP,
+      ];
+
+      if (electronicTypes.includes(reference.type as ReferenceType) && !reference.mediaType) {
+        errors.push({
+          field: 'mediaType',
+          message: '电子资源应包含文献载体标识（如 OL、CD 等）',
+          level: 'warning',
+        });
+      }
+    }
+  }
+
+  /**
    * 根据文献类型进行特定校验
    */
   private validateByType(reference: ReferenceUnion, errors: ValidationError[]): void {
@@ -134,8 +189,17 @@ export class Validator {
       case 'D':
         this.validateThesis(reference, errors);
         break;
+      case 'C':
+        this.validateProceedings(reference, errors);
+        break;
+      case 'R':
+        this.validateReport(reference, errors);
+        break;
       case 'S':
         this.validateStandard(reference, errors);
+        break;
+      case 'P':
+        this.validatePatent(reference, errors);
         break;
       case 'EB':
         this.validateWebPage(reference, errors);
@@ -217,6 +281,28 @@ export class Validator {
   }
 
   /**
+   * 校验会议录
+   */
+  private validateProceedings(ref: ReferenceUnion, errors: ValidationError[]): void {
+    const proceedings = ref as { conferenceName?: string };
+
+    if (!proceedings.conferenceName) {
+      errors.push({
+        field: 'conferenceName',
+        message: '会议名称为建议填写字段',
+        level: 'warning',
+      });
+    }
+  }
+
+  /**
+   * 校验报告
+   */
+  private validateReport(_ref: ReferenceUnion, _errors: ValidationError[]): void {
+    // 报告的校验规则相对宽松
+  }
+
+  /**
    * 校验标准
    */
   private validateStandard(ref: ReferenceUnion, errors: ValidationError[]): void {
@@ -234,6 +320,21 @@ export class Validator {
       errors.push({
         field: 'standardName',
         message: '标准名称为必填字段',
+        level: 'error',
+      });
+    }
+  }
+
+  /**
+   * 校验专利
+   */
+  private validatePatent(ref: ReferenceUnion, errors: ValidationError[]): void {
+    const patent = ref as { patentNumber?: string };
+
+    if (!patent.patentNumber) {
+      errors.push({
+        field: 'patentNumber',
+        message: '专利申请号为必填字段',
         level: 'error',
       });
     }

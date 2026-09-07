@@ -9,8 +9,13 @@ import type {
  * 将结构化对象反向生成为符合 GB/T 7714 的字符串
  */
 export class Formatter {
-  constructor(_options?: FormatOptions) {
-    // 保留 options 以备将来使用
+  private options: FormatOptions;
+
+  constructor(options?: FormatOptions) {
+    this.options = {
+      version: '2025',
+      ...options,
+    };
   }
 
   /**
@@ -98,9 +103,13 @@ export class Formatter {
       parts.push(journal.url);
     }
 
-    // PID
+    // PID/DOI
     if (journal.pid) {
-      parts.push(`DOI:${journal.pid}`);
+      if (this.options.version === '2015') {
+        parts.push(`DOI:${journal.pid}`);
+      } else {
+        parts.push(`PID:${journal.pid}`);
+      }
     }
 
     return parts.join(' ');
@@ -149,7 +158,11 @@ export class Formatter {
     }
 
     if (book.pid) {
-      parts.push(`DOI:${book.pid}`);
+      if (this.options.version === '2015') {
+        parts.push(`DOI:${book.pid}`);
+      } else {
+        parts.push(`PID:${book.pid}`);
+      }
     }
 
     return parts.join(' ');
