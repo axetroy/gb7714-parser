@@ -3,3 +3,8 @@ export type { ParserStrategy, ParserResult } from './base.js';
 export { JournalParser } from './journal-parser.js';
 export { BookParser } from './book-parser.js';
 export { ThesisParser } from './thesis-parser.js';
+export { ProceedingsParser } from './proceedings-parser.js';
+export { ReportParser } from './report-parser.js';
+export { StandardParser } from './standard-parser.js';
+export { PatentParser } from './patent-parser.js';
+export { WebPageParser } from './web-page-parser.js';

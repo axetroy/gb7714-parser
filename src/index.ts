@@ -59,6 +59,11 @@ import { Parser } from './parsers/index.js';
 import { JournalParser } from './parsers/index.js';
 import { BookParser } from './parsers/index.js';
 import { ThesisParser } from './parsers/index.js';
+import { ProceedingsParser } from './parsers/index.js';
+import { ReportParser } from './parsers/index.js';
+import { StandardParser } from './parsers/index.js';
+import { PatentParser } from './parsers/index.js';
+import { WebPageParser } from './parsers/index.js';
 import { validate as validateFn } from './validator/index.js';
 import { format as formatFn } from './formatter/index.js';
 import type { ReferenceUnion, ParseOptions, FormatOptions, ValidationReport, StandardVersion } from './types/index.js';
@@ -68,6 +73,11 @@ const defaultParser = new Parser();
 defaultParser.register(new JournalParser());
 defaultParser.register(new BookParser());
 defaultParser.register(new ThesisParser());
+defaultParser.register(new ProceedingsParser());
+defaultParser.register(new ReportParser());
+defaultParser.register(new StandardParser());
+defaultParser.register(new PatentParser());
+defaultParser.register(new WebPageParser());
 
 /**
  * 解析单条参考文献
@@ -138,7 +148,17 @@ export function format(reference: ReferenceUnion, options?: FormatOptions): stri
 }
 
 // 导出类以便高级用法
-export { Parser, JournalParser, BookParser, ThesisParser } from './parsers/index.js';
+export {
+  Parser,
+  JournalParser,
+  BookParser,
+  ThesisParser,
+  ProceedingsParser,
+  ReportParser,
+  StandardParser,
+  PatentParser,
+  WebPageParser,
+} from './parsers/index.js';
 export { Validator } from './validator/index.js';
 export { Formatter } from './formatter/index.js';
 export { Tokenizer, tokenize } from './tokenizer/index.js';
