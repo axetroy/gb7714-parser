@@ -1,0 +1,147 @@
+/**
+ * GB/T 7714 文献引用解析库
+ *
+ * @example
+ * ```typescript
+ * import { parse, format, validate } from 'gb7714-parser';
+ *
+ * // 解析
+ * const result = parse('[1] 张三，李四. 人工智能在教育中的应用[J]. 现代教育技术，2025，35(2)：15-22.');
+ * console.log(result.reference);
+ *
+ * // 校验
+ * const report = validate(result.reference);
+ * console.log(report.valid);
+ *
+ * // 格式化
+ * const str = format(result.reference);
+ * console.log(str);
+ * ```
+ *
+ * @packageDocumentation
+ */
+
+// 导出类型
+export type {
+  Author,
+  Reference,
+  ReferenceUnion,
+  Journal,
+  Book,
+  Thesis,
+  Proceedings,
+  Report,
+  Standard,
+  Patent,
+  WebPage,
+  Archive,
+  Map,
+  Dataset,
+  Preprint,
+  ComponentPart,
+  HostReference,
+  ParseOptions,
+  FormatOptions,
+  ParseResult,
+  ValidationReport,
+  ValidationError,
+  CitationStyle,
+  StandardVersion,
+  Token,
+  TokenType,
+} from './types/index.js';
+
+export { ReferenceType, MediaType } from './types/index.js';
+
+// 导出核心功能
+import { tokenize } from './tokenizer/index.js';
+import { Parser } from './parsers/index.js';
+import { JournalParser } from './parsers/index.js';
+import { BookParser } from './parsers/index.js';
+import { ThesisParser } from './parsers/index.js';
+import { validate as validateFn } from './validator/index.js';
+import { format as formatFn } from './formatter/index.js';
+import type { ReferenceUnion, ParseOptions, FormatOptions, ValidationReport, StandardVersion } from './types/index.js';
+
+// 创建默认解析器实例并注册策略
+const defaultParser = new Parser();
+defaultParser.register(new JournalParser());
+defaultParser.register(new BookParser());
+defaultParser.register(new ThesisParser());
+
+/**
+ * 解析单条参考文献
+ *
+ * @param input - 参考文献字符串
+ * @param options - 解析选项
+ * @returns 解析结果
+ *
+ * @example
+ * ```typescript
+ * const result = parse('[1] 张三. 人工智能[J]. 现代教育技术，2025，35(2)：15-22.');
+ * console.log(result.reference.title); // '人工智能'
+ * ```
+ */
+export function parse(input: string, options?: ParseOptions): { reference: ReferenceUnion; warnings: string[] } {
+  const tokens = tokenize(input);
+  return defaultParser.parse(tokens, options);
+}
+
+/**
+ * 批量解析参考文献
+ *
+ * @param inputs - 参考文献字符串数组
+ * @param options - 解析选项
+ * @returns 解析结果数组
+ */
+export function parseAll(inputs: string[], options?: ParseOptions): { reference: ReferenceUnion; warnings: string[] }[] {
+  return inputs.map(input => parse(input, options));
+}
+
+/**
+ * 校验文献格式
+ *
+ * @param reference - 文献对象
+ * @param options - 校验选项
+ * @returns 校验报告
+ *
+ * @example
+ * ```typescript
+ * const result = parse('[1] 张三. 人工智能[J]. 现代教育技术，2025，35(2)：15-22.');
+ * const report = validate(result.reference);
+ * console.log(report.valid); // true
+ * ```
+ */
+export function validate(
+  reference: ReferenceUnion,
+  options?: { version?: StandardVersion; strict?: boolean }
+): ValidationReport {
+  return validateFn(reference, options);
+}
+
+/**
+ * 格式化文献对象为字符串
+ *
+ * @param reference - 文献对象
+ * @param options - 格式化选项
+ * @returns 格式化后的字符串
+ *
+ * @example
+ * ```typescript
+ * const result = parse('[1] 张三. 人工智能[J]. 现代教育技术，2025，35(2)：15-22.');
+ * const str = format(result.reference);
+ * console.log(str);
+ * ```
+ */
+export function format(reference: ReferenceUnion, options?: FormatOptions): string {
+  return formatFn(reference, options);
+}
+
+// 导出类以便高级用法
+export { Parser, JournalParser, BookParser, ThesisParser } from './parsers/index.js';
+export { Validator } from './validator/index.js';
+export { Formatter } from './formatter/index.js';
+export { Tokenizer, tokenize } from './tokenizer/index.js';
+
+// 导出工具函数
+export { parseAuthors, formatAuthors, isValidDate, isValidYear } from './utils/index.js';
