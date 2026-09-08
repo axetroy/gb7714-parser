@@ -1,6 +1,7 @@
 import type { Token } from '../types/index.js';
 import type { ComponentPart, ParseOptions } from '../types/index.js';
 import type { ParserStrategy } from './base.js';
+import { parseTypeIndicator } from '../utils/index.js';
 
 /**
  * 析出文献解析器
@@ -44,9 +45,23 @@ export class ComponentPartParser implements ParserStrategy {
 
     // 解析析出文献题名（到 //）
     let componentTitle = '';
+    let componentType: string = 'Z'; // 默认类型
+    let componentMediaType: import('../types/index.js').MediaType | undefined;
     const doubleSlashIndex = tokens.findIndex((t, i) => i >= position && t.type === 'DOUBLE_SLASH');
     if (doubleSlashIndex >= position) {
       componentTitle = this.readTextUntil(tokens, position, doubleSlashIndex).trim().replace(/\.$/, '');
+      // 尝试从题名中提取文献类型标识
+      const typeMatch = componentTitle.match(/\[([A-Z\/]+)\]$/);
+      if (typeMatch) {
+        const typeIndicator = typeMatch[1];
+        if (typeIndicator) {
+          const parsed = parseTypeIndicator(`[${typeIndicator}]`);
+          componentType = parsed.baseType || 'Z';
+          componentMediaType = parsed.mediaType;
+          // 移除题名中的类型标识
+          componentTitle = componentTitle.replace(/\s*\[([A-Z\/]+)\]\s*$/, '').trim();
+        }
+      }
       position = doubleSlashIndex + 1;
     }
 
@@ -141,9 +156,10 @@ export class ComponentPartParser implements ParserStrategy {
     const pid = pidToken?.value;
 
     return {
-      type: 'Z' as never, // 析出文献使用通用类型
+      type: componentType as never, // 析出文献继承原始文献类型
       authors,
       title: componentTitle,
+      mediaType: componentMediaType,
       host: {
         authors: hostAuthors.length > 0 ? hostAuthors : undefined,
         title: hostTitle,

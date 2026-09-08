@@ -71,7 +71,7 @@ export interface Author {
 /**
  * 标引体系
  */
-export type CitationStyle = 'numeric' | 'author-date';
+export type CitationStyle = 'numeric' | 'author-date' | 'footnote';
 
 /**
  * 标准版本
@@ -104,6 +104,8 @@ export interface Reference {
   publisher?: string;
   /** 出版年 */
   year?: string;
+  /** 其他纪年形式（如"民国三十六年"），应置于"（ ）"内 */
+  alternativeYear?: string;
   /** 页码 */
   pages?: string;
   /** 获取和访问路径 */
@@ -209,6 +211,12 @@ export interface Serial extends Reference {
   publicationStartYear?: string;
   /** 出版年结束（无限期发行时为空） */
   publicationEndYear?: string;
+  /**
+   * 连载后续部分（§8.5.1.3）
+   * 凡是在同一期刊上连载的文献，其后续部分不必另行著录
+   * 格式: "年, 卷(期): 页码" 或 "年, 卷(期): 起始页码-终止页码"
+   */
+  continuationParts?: string[];
 }
 
 /**

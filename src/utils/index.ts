@@ -146,8 +146,12 @@ export function parseTypeIndicator(indicator: string): { baseType: string; media
 /**
  * 构建类型指示符字符串
  * 例如：baseType="J", mediaType=MediaType.OL -> "[J/OL]"
+ * 标准 §8.9.1：标准化文件中"文献类型标识"为可选项
  */
-export function buildTypeIndicator(baseType: string, mediaType?: MediaType): string {
+export function buildTypeIndicator(baseType: string, mediaType?: MediaType, includeTypeIndicator: boolean = true): string {
+  if (!includeTypeIndicator) {
+    return '';
+  }
   if (mediaType) {
     return `[${baseType}/${mediaType}]`;
   }

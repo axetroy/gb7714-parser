@@ -8,6 +8,11 @@ import type {
 import { buildTypeIndicator } from '../utils/index.js';
 
 /**
+ * 语种分类
+ */
+type LanguageGroup = 'zh' | 'ja' | 'western' | 'ru' | 'other';
+
+/**
  * 格式化器
  * 将结构化对象反向生成为符合 GB/T 7714 的字符串
  */
@@ -115,7 +120,7 @@ export class Formatter {
       parts.push(newspaper.url);
     }
 
-    if (newspaper.pid) {
+    if (newspaper.pid && !this.urlContainsPid(newspaper.url, newspaper.pid)) {
       if (this.options.version === '2015') {
         parts.push(`DOI:${newspaper.pid}`);
       } else {
@@ -185,7 +190,7 @@ export class Formatter {
       parts.push(component.url);
     }
 
-    if (component.pid) {
+    if (component.pid && !this.urlContainsPid(component.url, component.pid)) {
       if (this.options.version === '2015') {
         parts.push(`DOI:${component.pid}`);
       } else {
@@ -257,7 +262,7 @@ export class Formatter {
       parts.push(journal.url);
     }
 
-    if (journal.pid) {
+    if (journal.pid && !this.urlContainsPid(journal.url, journal.pid)) {
       if (this.options.version === '2015') {
         parts.push(`DOI:${journal.pid}`);
       } else {
@@ -320,42 +325,33 @@ export class Formatter {
       serialInfo += '—';
     }
 
+    // 连载后续部分（§8.5.1.3）
+    // 格式: "年, 卷(期): 页码" 或 "年, 卷(期): 起始页码-终止页码"
+    if (serial.continuationParts && serial.continuationParts.length > 0) {
+      serialInfo += '; ' + serial.continuationParts.join('; ');
+    }
+
     parts.push(serialInfo + '.');
 
     // 出版地: 出版者, 出版年—
-    if (serial.publisherPlace || serial.publisher || serial.publicationStartYear) {
-      let pubInfo = '';
-      if (serial.publisherPlace && serial.publisher) {
-        pubInfo = `${serial.publisherPlace}: ${serial.publisher}`;
-      } else if (serial.publisher) {
-        pubInfo = serial.publisher;
+    if (serial.publisherPlace && serial.publisher && serial.publicationStartYear) {
+      let pubInfo = `${serial.publisherPlace}: ${serial.publisher}, ${serial.publicationStartYear}`;
+
+      // 出版年结束
+      if (serial.publicationEndYear !== undefined) {
+        pubInfo += `—${serial.publicationEndYear}`;
+      } else {
+        pubInfo += '—';
       }
 
-      if (serial.publicationStartYear) {
-        if (pubInfo) {
-          pubInfo += `, ${serial.publicationStartYear}`;
-        } else {
-          pubInfo = serial.publicationStartYear;
-        }
-
-        // 出版年结束
-        if (serial.publicationEndYear !== undefined) {
-          pubInfo += `—${serial.publicationEndYear}`;
-        } else {
-          pubInfo += '—';
-        }
-      }
-
-      if (pubInfo) {
-        parts.push(pubInfo + '.');
-      }
+      parts.push(pubInfo + '.');
     }
 
     if (serial.url) {
       parts.push(serial.url);
     }
 
-    if (serial.pid) {
+    if (serial.pid && !this.urlContainsPid(serial.url, serial.pid)) {
       if (this.options.version === '2015') {
         parts.push(`DOI:${serial.pid}`);
       } else {
@@ -411,7 +407,8 @@ export class Formatter {
     }
 
     if (book.publisherPlace && book.publisher && book.year) {
-      let info = `${book.publisherPlace}: ${book.publisher}, ${book.year}`;
+      const formattedYear = this.formatYear(book.year, (book as Record<string, unknown>).alternativeYear as string | undefined);
+      let info = `${book.publisherPlace}: ${book.publisher}, ${formattedYear}`;
       if (book.pages) {
         info += `: ${book.pages}`;
       }
@@ -422,7 +419,7 @@ export class Formatter {
       parts.push(book.url);
     }
 
-    if (book.pid) {
+    if (book.pid && !this.urlContainsPid(book.url, book.pid)) {
       if (this.options.version === '2015') {
         parts.push(`DOI:${book.pid}`);
       } else {
@@ -588,7 +585,7 @@ export class Formatter {
       parts.push(`[${standard.id}]`);
     }
 
-    parts.push(`${standard.standardNumber} ${standard.standardName}${buildTypeIndicator('S', standard.mediaType)}.`);
+    parts.push(`${standard.standardNumber} ${standard.standardName}${buildTypeIndicator('S', standard.mediaType, (standard as Record<string, unknown>).includeTypeIndicator !== false)}.`);
 
     if (standard.url) {
       parts.push(standard.url);
@@ -902,15 +899,37 @@ export class Formatter {
    * 格式化正文引用标注
    * - 顺序编码制: [序号]
    * - 著者-出版年制: (作者, 年) 或 (作者 et al., 年)
+   * - 脚注式: 上标数字 ¹ 或 ①②③...
    *
    * §9.3.1.2: 多责任者文献，欧美责任者只标第一个姓 + "et al."；中国责任者标第一责任者姓名 + "等"
+   * §9.2.1.1: 脚注方式的引用标注，使用上标数字或圈码数字
    */
   formatCitation(reference: ReferenceUnion): string {
     if (this.options.citationStyle === 'author-date') {
       return this.formatAuthorDateCitation(reference);
     }
+    if (this.options.citationStyle === 'footnote') {
+      return this.formatFootnoteCitation(reference);
+    }
     // 顺序编码制
     return reference.id ? `[${reference.id}]` : '';
+  }
+
+  /**
+   * 格式化脚注式引用标注
+   * 标准 §9.2.1.1: 使用上标数字或圈码数字
+   */
+  private formatFootnoteCitation(ref: ReferenceUnion): string {
+    if (!ref.id) return '';
+    // 使用圈码数字：①②③④⑤⑥⑦⑧⑨⑩...
+    const circledNumbers = ['①', '②', '③', '④', '⑤', '⑥', '⑦', '⑧', '⑨', '⑩',
+      '⑪', '⑫', '⑬', '⑭', '⑮', '⑯', '⑰', '⑱', '⑲', '⑳'];
+    const id = parseInt(ref.id, 10);
+    if (id >= 1 && id <= circledNumbers.length) {
+      return circledNumbers[id - 1]!;
+    }
+    // 超过20使用上标数字格式
+    return `${ref.id}`;
   }
 
   /**
@@ -981,6 +1000,118 @@ export class Formatter {
     }
 
     return formatted.join(', ');
+  }
+
+  /**
+   * 检查 URL 中是否包含永久标识符
+   * 标准 §7.9.1：获取和访问路径中含永久标识符时，可不重复著录永久标识符
+   */
+  private urlContainsPid(url?: string, pid?: string): boolean {
+    if (!url || !pid) return false;
+    // 检查 URL 中是否包含 DOI 或 PID
+    const lowerUrl = url.toLowerCase();
+    const lowerPid = pid.toLowerCase();
+    return lowerUrl.includes(lowerPid) || lowerUrl.includes('doi.org') || lowerUrl.includes('doi:');
+  }
+
+  /**
+   * 判断文献的语种
+   * 标准 §9.3.2：各篇文献应首先按文种集中
+   */
+  private getLanguageGroup(ref: ReferenceUnion): LanguageGroup {
+    // 获取作者和题名
+    const authors = ref.authors || [];
+    const title = ref.title || '';
+
+    // 检查作者姓名
+    for (const author of authors) {
+      const name = author.surname || '';
+      // 中文字符范围
+      if (/[\u4e00-\u9fa5]/.test(name)) return 'zh';
+      // 日文字符范围（平假名、片假名）
+      if (/[\u3040-\u309f\u30a0-\u30ff]/.test(name)) return 'ja';
+      // 俄文字符范围
+      if (/[\u0400-\u04ff]/.test(name)) return 'ru';
+    }
+
+    // 检查题名
+    if (/[\u4e00-\u9fa5]/.test(title)) return 'zh';
+    if (/[\u3040-\u309f\u30a0-\u30ff]/.test(title)) return 'ja';
+    if (/[\u0400-\u04ff]/.test(title)) return 'ru';
+
+    // 默认为西文
+    return 'western';
+  }
+
+  /**
+   * 获取语种排序权重
+   */
+  private getLanguageWeight(group: LanguageGroup): number {
+    const weights: Record<LanguageGroup, number> = {
+      zh: 0,
+      ja: 1,
+      western: 2,
+      ru: 3,
+      other: 4,
+    };
+    return weights[group] ?? 4;
+  }
+
+  /**
+   * 格式化年份
+   * 标准 §7.5.4.1：如有其他纪年形式时，应将原有的纪年形式置于"（ ）"内
+   */
+  private formatYear(year?: string, alternativeYear?: string): string {
+    if (!year) return '';
+    if (alternativeYear) {
+      return `${year}（${alternativeYear}）`;
+    }
+    return year;
+  }
+
+  /**
+   * 获取责任者姓名（用于排序）
+   */
+  private getAuthorSortKey(ref: ReferenceUnion): string {
+    const authors = ref.authors || [];
+    if (authors.length === 0) return '';
+
+    const firstAuthor = authors[0]!;
+    // 对于中文作者，使用拼音排序（这里简化为使用原姓名）
+    // 对于西文作者，使用姓氏排序
+    return firstAuthor.surname || '';
+  }
+
+  /**
+   * 排序文献列表（著者-出版年制）
+   * 标准 §9.3.2：各篇文献应首先按文种集中，然后按责任者字顺和出版年排列
+   */
+  sortReferences(references: ReferenceUnion[]): ReferenceUnion[] {
+    return [...references].sort((a, b) => {
+      // 1. 按语种分组
+      const langA = this.getLanguageGroup(a);
+      const langB = this.getLanguageGroup(b);
+      const langWeightA = this.getLanguageWeight(langA);
+      const langWeightB = this.getLanguageWeight(langB);
+
+      if (langWeightA !== langWeightB) {
+        return langWeightA - langWeightB;
+      }
+
+      // 2. 按责任者字顺排列
+      const authorA = this.getAuthorSortKey(a);
+      const authorB = this.getAuthorSortKey(b);
+      const authorCompare = authorA.localeCompare(authorB, 'zh');
+
+      if (authorCompare !== 0) {
+        return authorCompare;
+      }
+
+      // 3. 按出版年排列
+      const yearA = this.getYear(a);
+      const yearB = this.getYear(b);
+      return yearA.localeCompare(yearB);
+    });
   }
 }
 

@@ -69,9 +69,11 @@ export class BookParser implements ParserStrategy {
     position = this.skipWhitespace(tokens, position);
 
     // 解析版本（如果有）
+    // 标准 §7.4: 版本宜用阿拉伯数字、序数缩写形式或其他标识表示
+    // 支持格式: "第3版", "3版", "新1版", "V1.0", "3rd ed", "Rev. ed", "修订版", "刻本", "影印本" 等
     let version: string | undefined;
     const versionToken = tokens.slice(position).find(t =>
-      t.type === 'TEXT' && /^(第?\d+版|[0-9]+th?\s*ed|修订版|新版|刻本|影印本)/i.test(t.value)
+      t.type === 'TEXT' && /^(第?\d+版|新\d+版|V\d+\.\d+|[0-9]+th?\s*ed|Rev\.\s*ed|修订版|新版|刻本|影印本)/i.test(t.value)
     );
     if (versionToken && tokens[tokens.indexOf(versionToken) - 1]?.type === 'DOT') {
       version = versionToken.value;
