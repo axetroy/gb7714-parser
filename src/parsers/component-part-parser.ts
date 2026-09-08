@@ -50,7 +50,7 @@ export class ComponentPartParser implements ParserStrategy {
     const doubleSlashIndex = tokens.findIndex((t, i) => i >= position && t.type === 'DOUBLE_SLASH');
     if (doubleSlashIndex >= position) {
       componentTitle = this.readTextUntil(tokens, position, doubleSlashIndex).trim().replace(/\.$/, '');
-      // 尝试从题名中提取文献类型标识
+      // 尝试从题名中提取文献类型标识（从文本中提取）
       const typeMatch = componentTitle.match(/\[([A-Z\/]+)\]$/);
       if (typeMatch) {
         const typeIndicator = typeMatch[1];
@@ -60,6 +60,14 @@ export class ComponentPartParser implements ParserStrategy {
           componentMediaType = parsed.mediaType;
           // 移除题名中的类型标识
           componentTitle = componentTitle.replace(/\s*\[([A-Z\/]+)\]\s*$/, '').trim();
+        }
+      } else {
+        // 检查是否在 DOUBLE_SLASH 之前有 TYPE_INDICATOR token
+        const typeIndicatorToken = tokens.slice(position, doubleSlashIndex).find(t => t.type === 'TYPE_INDICATOR');
+        if (typeIndicatorToken) {
+          const parsed = parseTypeIndicator(typeIndicatorToken.value);
+          componentType = parsed.baseType || 'Z';
+          componentMediaType = parsed.mediaType;
         }
       }
       position = doubleSlashIndex + 1;

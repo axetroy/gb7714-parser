@@ -1393,4 +1393,184 @@ describe('Formatter', () => {
       expect(result).toBe('张三, 2025. 论文标题[J]. 期刊名.');
     });
   });
+
+  describe('footnote citation', () => {
+    it('should format footnote citation with circled numbers', () => {
+      const reference: ReferenceUnion = {
+        id: '1',
+        type: ReferenceType.J,
+        authors: [{ surname: '张三' }],
+        title: '论文标题',
+        journalTitle: '期刊名',
+        year: '2025',
+      };
+      const result = formatCitation(reference, { citationStyle: 'footnote' });
+      expect(result).toBe('①');
+    });
+
+    it('should format footnote citation with number > 10', () => {
+      const reference: ReferenceUnion = {
+        id: '11',
+        type: ReferenceType.J,
+        authors: [{ surname: '张三' }],
+        title: '论文标题',
+        journalTitle: '期刊名',
+        year: '2025',
+      };
+      const result = formatCitation(reference, { citationStyle: 'footnote' });
+      expect(result).toBe('⑪');
+    });
+
+    it('should return empty string when id is missing', () => {
+      const reference: ReferenceUnion = {
+        type: ReferenceType.J,
+        authors: [{ surname: '张三' }],
+        title: '论文标题',
+        journalTitle: '期刊名',
+        year: '2025',
+      };
+      const result = formatCitation(reference, { citationStyle: 'footnote' });
+      expect(result).toBe('');
+    });
+  });
+
+  describe('sortReferences', () => {
+    it('should sort references by language group', () => {
+      const references: ReferenceUnion[] = [
+        {
+          type: ReferenceType.J,
+          authors: [{ surname: 'Smith' }],
+          title: 'English Paper',
+          journalTitle: 'Journal',
+          year: '2025',
+        },
+        {
+          type: ReferenceType.J,
+          authors: [{ surname: '张三' }],
+          title: '中文论文',
+          journalTitle: '期刊名',
+          year: '2024',
+        },
+        {
+          type: ReferenceType.J,
+          authors: [{ surname: 'Иванов' }],
+          title: 'Русская статья',
+          journalTitle: 'Журнал',
+          year: '2023',
+        },
+      ];
+      const formatter = new Formatter();
+      const sorted = formatter.sortReferences(references);
+      // Order: zh, western, ru
+      expect(sorted[0]!.authors[0]!.surname).toBe('张三');
+      expect(sorted[1]!.authors[0]!.surname).toBe('Smith');
+      expect(sorted[2]!.authors[0]!.surname).toBe('Иванов');
+    });
+
+    it('should sort references by author name within same language', () => {
+      const references: ReferenceUnion[] = [
+        {
+          type: ReferenceType.J,
+          authors: [{ surname: 'Zhang' }],
+          title: 'Paper C',
+          journalTitle: 'Journal',
+          year: '2025',
+        },
+        {
+          type: ReferenceType.J,
+          authors: [{ surname: 'Li' }],
+          title: 'Paper A',
+          journalTitle: 'Journal',
+          year: '2025',
+        },
+        {
+          type: ReferenceType.J,
+          authors: [{ surname: 'Wang' }],
+          title: 'Paper B',
+          journalTitle: 'Journal',
+          year: '2025',
+        },
+      ];
+      const formatter = new Formatter();
+      const sorted = formatter.sortReferences(references);
+      expect(sorted[0]!.authors[0]!.surname).toBe('Li');
+      expect(sorted[1]!.authors[0]!.surname).toBe('Wang');
+      expect(sorted[2]!.authors[0]!.surname).toBe('Zhang');
+    });
+
+    it('should sort references by year within same author', () => {
+      const references: ReferenceUnion[] = [
+        {
+          type: ReferenceType.J,
+          authors: [{ surname: '张三' }],
+          title: '论文2025',
+          journalTitle: '期刊',
+          year: '2025',
+        },
+        {
+          type: ReferenceType.J,
+          authors: [{ surname: '张三' }],
+          title: '论文2023',
+          journalTitle: '期刊',
+          year: '2023',
+        },
+        {
+          type: ReferenceType.J,
+          authors: [{ surname: '张三' }],
+          title: '论文2024',
+          journalTitle: '期刊',
+          year: '2024',
+        },
+      ];
+      const formatter = new Formatter();
+      const sorted = formatter.sortReferences(references);
+      expect(sorted[0]!.year).toBe('2023');
+      expect(sorted[1]!.year).toBe('2024');
+      expect(sorted[2]!.year).toBe('2025');
+    });
+  });
+
+  describe('alternative year format', () => {
+    it('should format year with alternative year', () => {
+      const reference: ReferenceUnion = {
+        type: ReferenceType.M,
+        authors: [{ surname: '张三' }],
+        title: '图书标题',
+        publisherPlace: '北京',
+        publisher: '出版社',
+        year: '1947',
+        alternativeYear: '民国三十六年',
+      };
+      const result = format(reference);
+      expect(result).toContain('1947（民国三十六年）');
+    });
+  });
+
+  describe('serial continuation', () => {
+    it('should format serial with continuation parts', () => {
+      const reference: ReferenceUnion = {
+        type: ReferenceType.J,
+        serialTitle: '期刊名',
+        startYear: '2011',
+        startVolume: '33',
+        startIssue: '2',
+        continuationParts: ['2011, 33 (3): 26-30'],
+      };
+      const result = format(reference);
+      expect(result).toContain('2011, 33(2)—; 2011, 33 (3): 26-30');
+    });
+  });
+
+  describe('optional type indicator', () => {
+    it('should format standard without type indicator when includeTypeIndicator is false', () => {
+      const reference: ReferenceUnion = {
+        type: ReferenceType.S,
+        standardNumber: 'GB/T 7714-2025',
+        standardName: '信息与文献 参考文献著录规则',
+        includeTypeIndicator: false,
+      };
+      const result = format(reference);
+      expect(result).not.toContain('[S]');
+    });
+  });
 });

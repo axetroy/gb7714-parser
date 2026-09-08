@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { parse, parseAll, validate, format } from '../index.js';
+import { parse, parseAll, validate, format, formatCitation, parseCitation } from '../index.js';
 
 describe('API', () => {
   describe('parse', () => {
@@ -107,6 +107,78 @@ describe('API', () => {
       const result = parse(input);
 
       expect(result.reference.pid).toBeUndefined();
+    });
+  });
+
+  describe('formatCitation', () => {
+    it('should format numeric citation', () => {
+      const reference = {
+        id: '1',
+        type: 'J' as const,
+        authors: [{ surname: '张三' }],
+        title: '论文标题',
+        journalTitle: '期刊名',
+        year: '2025',
+      };
+      const citation = formatCitation(reference);
+
+      expect(citation).toBe('[1]');
+    });
+
+    it('should format author-date citation', () => {
+      const reference = {
+        id: '1',
+        type: 'J' as const,
+        authors: [{ surname: '张三' }],
+        title: '论文标题',
+        journalTitle: '期刊名',
+        year: '2025',
+      };
+      const citation = formatCitation(reference, { citationStyle: 'author-date' });
+
+      expect(citation).toContain('张三');
+      expect(citation).toContain('2025');
+    });
+  });
+
+  describe('parseCitation', () => {
+    it('should parse numeric citation [1]', () => {
+      const result = parseCitation('[1]');
+      expect(result.type).toBe('numeric');
+      expect(result.ids).toEqual(['1']);
+    });
+
+    it('should parse numeric citation [1,2,3]', () => {
+      const result = parseCitation('[1,2,3]');
+      expect(result.type).toBe('numeric');
+      expect(result.ids).toEqual(['1', '2', '3']);
+    });
+
+    it('should parse numeric citation [1-5]', () => {
+      const result = parseCitation('[1-5]');
+      expect(result.type).toBe('numeric');
+      expect(result.ids).toEqual(['1', '2', '3', '4', '5']);
+    });
+
+    it('should parse author-date citation (张三, 2025)', () => {
+      const result = parseCitation('(张三, 2025)');
+      expect(result.type).toBe('author-date');
+      expect(result.author).toBe('张三');
+      expect(result.year).toBe('2025');
+    });
+
+    it('should parse author-date citation with suffix', () => {
+      const result = parseCitation('(张三, 2025, p. 10)');
+      expect(result.type).toBe('author-date');
+      expect(result.author).toBe('张三');
+      expect(result.year).toBe('2025');
+      expect(result.suffix).toBe('p. 10');
+    });
+
+    it('should handle unrecognized format', () => {
+      const result = parseCitation('unknown format');
+      expect(result.type).toBe('numeric');
+      expect(result.ids).toEqual(['unknown format']);
     });
   });
 });

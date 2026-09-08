@@ -55,5 +55,29 @@ describe('ComponentPartParser', () => {
 
       expect(result.url).toBe('https://example.com');
     });
+
+    it('should inherit type indicator from component title', () => {
+      const input = '[5] 张三. 析出文献[M]//李四. 图书题名. 北京: 出版社, 2024.';
+      const tokens = tokenize(input);
+      const result = parser.parse(tokens);
+
+      expect(result.type).toBe('M');
+    });
+
+    it('should inherit journal type indicator', () => {
+      const input = '[6] 张三. 论文标题[J]//李四. 期刊名, 2024, 10(2): 15-20.';
+      const tokens = tokenize(input);
+      const result = parser.parse(tokens);
+
+      expect(result.type).toBe('J');
+    });
+
+    it('should default to Z when no type indicator in component title', () => {
+      const input = '[7] 张三. 析出文献//李四. 图书题名. 北京: 出版社, 2024.';
+      const tokens = tokenize(input);
+      const result = parser.parse(tokens);
+
+      expect(result.type).toBe('Z');
+    });
   });
 });
