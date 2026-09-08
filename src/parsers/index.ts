@@ -1,6 +1,7 @@
 export { Parser } from './base.js';
 export type { ParserStrategy, ParserResult } from './base.js';
 export { JournalParser } from './journal-parser.js';
+export { NewspaperParser } from './newspaper-parser.js';
 export { BookParser } from './book-parser.js';
 export { ThesisParser } from './thesis-parser.js';
 export { ProceedingsParser } from './proceedings-parser.js';
@@ -13,3 +14,4 @@ export { MapParser } from './map-parser.js';
 export { DatasetParser } from './dataset-parser.js';
 export { PreprintParser } from './preprint-parser.js';
 export { ComponentPartParser } from './component-part-parser.js';
+export { AuthorDateParser } from './author-date-parser.js';

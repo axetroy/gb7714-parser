@@ -27,6 +27,7 @@ export type {
   Reference,
   ReferenceUnion,
   Journal,
+  Newspaper,
   Book,
   Thesis,
   Proceedings,
@@ -57,6 +58,7 @@ export { ReferenceType, MediaType } from './types/index.js';
 import { tokenize } from './tokenizer/index.js';
 import { Parser } from './parsers/index.js';
 import { JournalParser } from './parsers/index.js';
+import { NewspaperParser } from './parsers/index.js';
 import { BookParser } from './parsers/index.js';
 import { ThesisParser } from './parsers/index.js';
 import { ProceedingsParser } from './parsers/index.js';
@@ -69,14 +71,17 @@ import { MapParser } from './parsers/index.js';
 import { DatasetParser } from './parsers/index.js';
 import { PreprintParser } from './parsers/index.js';
 import { ComponentPartParser } from './parsers/index.js';
+import { AuthorDateParser } from './parsers/index.js';
 import { validate as validateFn } from './validator/index.js';
 import { format as formatFn } from './formatter/index.js';
 import type { ReferenceUnion, ParseOptions, FormatOptions, ValidationReport, StandardVersion } from './types/index.js';
 
 // 创建默认解析器实例并注册策略
 const defaultParser = new Parser();
+defaultParser.register(new AuthorDateParser()); // 著者-出版年制优先
 defaultParser.register(new ComponentPartParser()); // 析出文献解析器优先
 defaultParser.register(new JournalParser());
+defaultParser.register(new NewspaperParser());
 defaultParser.register(new BookParser());
 defaultParser.register(new ThesisParser());
 defaultParser.register(new ProceedingsParser());
@@ -126,22 +131,32 @@ export function parseAll<T extends ReferenceUnion = ReferenceUnion>(inputs: stri
 /**
  * 校验文献格式
  *
- * @param reference - 文献对象
+ * @param input - 文献字符串或解析后的文献对象
  * @param options - 校验选项
  * @returns 校验报告
  *
  * @example
  * ```typescript
+ * // 校验字符串
+ * const report = validate('[1] 张三. 人工智能[J]. 现代教育技术，2025，35(2)：15-22.');
+ * console.log(report.valid); // true
+ *
+ * // 校验解析后的对象
  * const result = parse('[1] 张三. 人工智能[J]. 现代教育技术，2025，35(2)：15-22.');
  * const report = validate(result.reference);
  * console.log(report.valid); // true
  * ```
  */
 export function validate(
-  reference: ReferenceUnion,
+  input: string | ReferenceUnion,
   options?: { version?: StandardVersion; strict?: boolean }
 ): ValidationReport {
-  return validateFn(reference, options);
+  // 如果是字符串，先解析再校验
+  if (typeof input === 'string') {
+    const result = parse(input, { version: options?.version });
+    return validateFn(result.reference, options);
+  }
+  return validateFn(input, options);
 }
 
 /**
@@ -166,6 +181,7 @@ export function format(reference: ReferenceUnion, options?: FormatOptions): stri
 export {
   Parser,
   JournalParser,
+  NewspaperParser,
   BookParser,
   ThesisParser,
   ProceedingsParser,
@@ -178,6 +194,7 @@ export {
   DatasetParser,
   PreprintParser,
   ComponentPartParser,
+  AuthorDateParser,
 } from './parsers/index.js';
 export { Validator } from './validator/index.js';
 export { Formatter } from './formatter/index.js';

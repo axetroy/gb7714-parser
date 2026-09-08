@@ -166,6 +166,21 @@ export interface Journal extends Reference {
 }
 
 /**
+ * 报纸接口
+ */
+export interface Newspaper extends Reference {
+  type: ReferenceType.N;
+  /** 报纸名 */
+  newspaperTitle: string;
+  /** 年 */
+  year: string;
+  /** 月日（如 "09-07"） */
+  monthDay?: string;
+  /** 版次（如 "第5版"） */
+  edition?: string;
+}
+
+/**
  * 图书接口
  */
 export interface Book extends Reference {
@@ -304,6 +319,7 @@ export interface Preprint extends Reference {
 export type ReferenceUnion =
   | Reference
   | Journal
+  | Newspaper
   | Book
   | Thesis
   | Proceedings

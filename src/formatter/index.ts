@@ -2,6 +2,7 @@ import type {
   ReferenceUnion,
   FormatOptions,
   Author,
+  ComponentPart,
 } from '../types/index.js';
 
 /**
@@ -25,6 +26,8 @@ export class Formatter {
     switch (reference.type) {
       case 'J':
         return this.formatJournal(reference);
+      case 'N':
+        return this.formatNewspaper(reference);
       case 'M':
         return this.formatBook(reference);
       case 'D':
@@ -47,9 +50,129 @@ export class Formatter {
         return this.formatDataset(reference);
       case 'PP':
         return this.formatPreprint(reference);
+      case 'Z':
+        // 检查是否是析出文献（有 host 字段）
+        if ('host' in reference && reference.host) {
+          return this.formatComponentPart(reference as ComponentPart);
+        }
+        return this.formatGeneric(reference);
       default:
         return this.formatGeneric(reference);
     }
+  }
+
+  /**
+   * 格式化报纸
+   */
+  private formatNewspaper(ref: ReferenceUnion): string {
+    const newspaper = ref as {
+      id?: string;
+      authors: Author[];
+      title: string;
+      newspaperTitle?: string;
+      year?: string;
+      monthDay?: string;
+      edition?: string;
+      url?: string;
+      pid?: string;
+    };
+
+    const parts: string[] = [];
+
+    if (newspaper.id) {
+      parts.push(`[${newspaper.id}]`);
+    }
+
+    if (newspaper.authors.length > 0) {
+      parts.push(this.formatAuthors(newspaper.authors));
+    }
+
+    parts.push(`${newspaper.title}[N].`);
+
+    if (newspaper.newspaperTitle) {
+      let info = newspaper.newspaperTitle;
+      if (newspaper.year) {
+        info += `, ${newspaper.year}`;
+      }
+      if (newspaper.monthDay) {
+        info += `, ${newspaper.monthDay}`;
+      }
+      if (newspaper.edition) {
+        info += `: ${newspaper.edition}`;
+      }
+      parts.push(info + '.');
+    }
+
+    if (newspaper.url) {
+      parts.push(newspaper.url);
+    }
+
+    if (newspaper.pid) {
+      if (this.options.version === '2015') {
+        parts.push(`DOI:${newspaper.pid}`);
+      } else {
+        parts.push(`PID:${newspaper.pid}`);
+      }
+    }
+
+    return parts.join(' ');
+  }
+
+  /**
+   * 格式化析出文献
+   */
+  private formatComponentPart(ref: ReferenceUnion): string {
+    const component = ref as ComponentPart;
+
+    const parts: string[] = [];
+
+    if (component.id) {
+      parts.push(`[${component.id}]`);
+    }
+
+    if (component.authors.length > 0) {
+      parts.push(this.formatAuthors(component.authors));
+    }
+
+    // 析出文献题名
+    let title = component.title;
+    if (component.subtitle) {
+      title += `: ${component.subtitle}`;
+    }
+    parts.push(title + '//');
+
+    // 出处文献
+    if (component.host) {
+      if (component.host.authors && component.host.authors.length > 0) {
+        parts.push(this.formatAuthors(component.host.authors));
+      }
+      parts.push(`${component.host.title}.`);
+
+      if (component.host.publisherPlace && component.host.publisher && component.host.year) {
+        parts.push(`${component.host.publisherPlace}: ${component.host.publisher}, ${component.host.year}.`);
+      } else if (component.host.year) {
+        parts.push(`${component.host.year}.`);
+      }
+    }
+
+    // 析出文献页码
+    if (component.pages) {
+      parts.push(`: ${component.pages}.`);
+    }
+
+    if (component.url) {
+      parts.push(component.url);
+    }
+
+    if (component.pid) {
+      if (this.options.version === '2015') {
+        parts.push(`DOI:${component.pid}`);
+      } else {
+        parts.push(`PID:${component.pid}`);
+      }
+    }
+
+    return parts.join(' ');
   }
 
   /**
