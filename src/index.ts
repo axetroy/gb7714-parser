@@ -98,13 +98,18 @@ defaultParser.register(new PreprintParser());
  *
  * @example
  * ```typescript
+ * // 基础用法
  * const result = parse('[1] 张三. 人工智能[J]. 现代教育技术，2025，35(2)：15-22.');
  * console.log(result.reference.title); // '人工智能'
+ *
+ * // 使用泛型获取精确类型
+ * const { reference } = parse<Journal>('[1] 张三. 人工智能[J]. 现代教育技术，2025，35(2)：15-22.');
+ * console.log(reference.journalTitle); // '现代教育技术' - 无需类型断言
  * ```
  */
-export function parse(input: string, options?: ParseOptions): { reference: ReferenceUnion; warnings: string[] } {
+export function parse<T extends ReferenceUnion = ReferenceUnion>(input: string, options?: ParseOptions): { reference: T; warnings: string[] } {
   const tokens = tokenize(input);
-  return defaultParser.parse(tokens, options);
+  return defaultParser.parse(tokens, options) as { reference: T; warnings: string[] };
 }
 
 /**
@@ -114,8 +119,8 @@ export function parse(input: string, options?: ParseOptions): { reference: Refer
  * @param options - 解析选项
  * @returns 解析结果数组
  */
-export function parseAll(inputs: string[], options?: ParseOptions): { reference: ReferenceUnion; warnings: string[] }[] {
-  return inputs.map(input => parse(input, options));
+export function parseAll<T extends ReferenceUnion = ReferenceUnion>(inputs: string[], options?: ParseOptions): { reference: T; warnings: string[] }[] {
+  return inputs.map(input => parse<T>(input, options));
 }
 
 /**

@@ -26,9 +26,12 @@
     "dev": "tsup --watch",
     "test": "vitest run",
     "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage",
     "lint": "eslint src --ext .ts",
     "typecheck": "tsc --noEmit",
-    "prepublishOnly": "npm run build"
+    "prepublishOnly": "npm run build",
+    "crawl": "node scripts/crawl-wanfang.mjs",
+    "crawl:install": "PLAYWRIGHT_DOWNLOAD_HOST=https://npmmirror.com/mirrors/playwright npx playwright install chromium"
   },
   "keywords": [
     "gb7714",
@@ -56,7 +59,9 @@
   "devDependencies": {
     "@typescript-eslint/eslint-plugin": "^8.69.0",
     "@typescript-eslint/parser": "^8.69.0",
+    "@vitest/coverage-v8": "^5.0.0",
     "eslint": "^10.10.0",
+    "playwright": "^1.63.0",
     "tsup": "^8.5.1",
     "typescript": "^6.0.3",
     "vitest": "^5.0.0"
