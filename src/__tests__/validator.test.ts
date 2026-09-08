@@ -387,5 +387,75 @@ describe('Validator', () => {
       const report = validate(reference);
       expect(report.errors.some(e => e.field === 'title')).toBe(true);
     });
+
+    it('should validate newspaper requires newspaperTitle', () => {
+      const reference: ReferenceUnion = {
+        type: ReferenceType.N,
+        authors: [{ surname: '张三' }],
+        title: '新闻标题',
+        newspaperTitle: '',
+        year: '2025',
+      };
+      const report = validate(reference);
+      expect(report.errors.some(e => e.field === 'newspaperTitle')).toBe(true);
+    });
+
+    it('should validate newspaper requires year', () => {
+      const reference: ReferenceUnion = {
+        type: ReferenceType.N,
+        authors: [{ surname: '张三' }],
+        title: '新闻标题',
+        newspaperTitle: '人民日报',
+        year: '',
+      };
+      const report = validate(reference);
+      expect(report.errors.some(e => e.field === 'year')).toBe(true);
+    });
+
+    it('should validate standard number format', () => {
+      const reference: ReferenceUnion = {
+        type: ReferenceType.S,
+        authors: [],
+        title: '标准标题',
+        standardNumber: '12345',
+        standardName: '标准名称',
+      };
+      const report = validate(reference);
+      expect(report.errors.some(e => e.field === 'standardNumber' && e.level === 'warning')).toBe(true);
+    });
+
+    it('should accept valid standard number format', () => {
+      const reference: ReferenceUnion = {
+        type: ReferenceType.S,
+        authors: [],
+        title: '标准标题',
+        standardNumber: 'GB/T 3792—2021',
+        standardName: '标准名称',
+      };
+      const report = validate(reference);
+      expect(report.errors.some(e => e.field === 'standardNumber')).toBe(false);
+    });
+
+    it('should validate patent number format', () => {
+      const reference: ReferenceUnion = {
+        type: ReferenceType.P,
+        authors: [{ surname: '张三' }],
+        title: '专利标题',
+        patentNumber: '12345',
+      };
+      const report = validate(reference);
+      expect(report.errors.some(e => e.field === 'patentNumber' && e.level === 'warning')).toBe(true);
+    });
+
+    it('should accept valid patent number format', () => {
+      const reference: ReferenceUnion = {
+        type: ReferenceType.P,
+        authors: [{ surname: '张三' }],
+        title: '专利标题',
+        patentNumber: 'CN202310123456.7',
+      };
+      const report = validate(reference);
+      expect(report.errors.some(e => e.field === 'patentNumber')).toBe(false);
+    });
   });
 });

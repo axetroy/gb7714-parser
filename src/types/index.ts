@@ -314,6 +314,42 @@ export interface Preprint extends Reference {
 }
 
 /**
+ * 汇编接口
+ */
+export interface Compilation extends Reference {
+  type: ReferenceType.G;
+}
+
+/**
+ * 计算机程序接口
+ */
+export interface ComputerProgram extends Reference {
+  type: ReferenceType.CP;
+  /** 程序版本 */
+  programVersion?: string;
+  /** 运行环境 */
+  runtimeEnvironment?: string;
+}
+
+/**
+ * 数据库接口
+ */
+export interface Database extends Reference {
+  type: ReferenceType.DB;
+  /** 数据库名称 */
+  databaseName?: string;
+  /** 访问日期 */
+  accessDate?: string;
+}
+
+/**
+ * 其他文献接口
+ */
+export interface Other extends Reference {
+  type: ReferenceType.Z;
+}
+
+/**
  * 所有文献类型的联合类型
  */
 export type ReferenceUnion =
@@ -331,7 +367,11 @@ export type ReferenceUnion =
   | Map
   | Dataset
   | Preprint
-  | ComponentPart;
+  | ComponentPart
+  | Compilation
+  | ComputerProgram
+  | Database
+  | Other;
 
 /**
  * 解析选项

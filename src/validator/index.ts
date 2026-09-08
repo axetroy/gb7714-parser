@@ -183,6 +183,9 @@ export class Validator {
       case 'J':
         this.validateJournal(reference, errors);
         break;
+      case 'N':
+        this.validateNewspaper(reference, errors);
+        break;
       case 'M':
         this.validateBook(reference, errors);
         break;
@@ -238,6 +241,29 @@ export class Validator {
         field: 'volume/issue',
         message: '期刊应包含卷号或期号',
         level: 'warning',
+      });
+    }
+  }
+
+  /**
+   * 校验报纸
+   */
+  private validateNewspaper(ref: ReferenceUnion, errors: ValidationError[]): void {
+    const newspaper = ref as { newspaperTitle?: string; year?: string };
+
+    if (!newspaper.newspaperTitle) {
+      errors.push({
+        field: 'newspaperTitle',
+        message: '报纸名为必填字段',
+        level: 'error',
+      });
+    }
+
+    if (!newspaper.year) {
+      errors.push({
+        field: 'year',
+        message: '出版年为必填字段',
+        level: 'error',
       });
     }
   }
@@ -314,6 +340,16 @@ export class Validator {
         message: '标准编号为必填字段',
         level: 'error',
       });
+    } else {
+      // 校验标准编号格式：GB/T XXXX—YYYY 或 GB XXXX—YYYY 等
+      const standardNumberPattern = /^(GB|GB\/T|ISO|IEC|ASTM|BS|DIN|JIS|NF|EN|ANSI)[\/\s]?[A-Z]?\s*\d{2,6}[-—]\d{4}$/;
+      if (!standardNumberPattern.test(standard.standardNumber)) {
+        errors.push({
+          field: 'standardNumber',
+          message: '标准编号格式不正确，应符合如 "GB/T 3792—2021" 的格式',
+          level: 'warning',
+        });
+      }
     }
 
     if (!standard.standardName) {
@@ -337,6 +373,16 @@ export class Validator {
         message: '专利申请号为必填字段',
         level: 'error',
       });
+    } else {
+      // 校验专利申请号格式：CN/YYYYMMDDXXXX.X 或 USYYYYMMDDXXX 等
+      const patentNumberPattern = /^(CN|US|EP|JP|KR|WO)\d{8,12}[\.\/]?\d*$/;
+      if (!patentNumberPattern.test(patent.patentNumber)) {
+        errors.push({
+          field: 'patentNumber',
+          message: '专利申请号格式不正确，应符合如 "CN202310123456.7" 的格式',
+          level: 'warning',
+        });
+      }
     }
   }
 
