@@ -1555,6 +1555,8 @@ describe('Formatter', () => {
         startVolume: '33',
         startIssue: '2',
         continuationParts: ['2011, 33 (3): 26-30'],
+        authors: [],
+        title: '期刊名',
       };
       const result = format(reference);
       expect(result).toContain('2011, 33(2)—; 2011, 33 (3): 26-30');
@@ -1568,6 +1570,8 @@ describe('Formatter', () => {
         standardNumber: 'GB/T 7714-2025',
         standardName: '信息与文献 参考文献著录规则',
         includeTypeIndicator: false,
+        authors: [],
+        title: '信息与文献 参考文献著录规则',
       };
       const result = format(reference);
       expect(result).not.toContain('[S]');

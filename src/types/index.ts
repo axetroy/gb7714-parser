@@ -276,6 +276,8 @@ export interface Standard extends Reference {
   standardNumber: string;
   /** 标准名称（必备） */
   standardName: string;
+  /** 是否包含类型标识，默认 true */
+  includeTypeIndicator?: boolean;
 }
 
 /**

@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { parse, parseAll, validate, format, formatCitation, parseCitation } from '../index.js';
+import { ReferenceType } from '../types/index.js';
 
 describe('API', () => {
   describe('parse', () => {
@@ -114,7 +115,7 @@ describe('API', () => {
     it('应该格式化数字引用', () => {
       const reference = {
         id: '1',
-        type: 'J' as const,
+        type: ReferenceType.J,
         authors: [{ surname: '张三' }],
         title: '论文标题',
         journalTitle: '期刊名',
@@ -128,7 +129,7 @@ describe('API', () => {
     it('应该格式化作者-年份引用', () => {
       const reference = {
         id: '1',
-        type: 'J' as const,
+        type: ReferenceType.J,
         authors: [{ surname: '张三' }],
         title: '论文标题',
         journalTitle: '期刊名',
