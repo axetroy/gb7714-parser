@@ -1,4 +1,4 @@
-import type { Author, ReferenceType, MediaType } from '../types/index.js';
+import type { Author, MediaType } from '../types/index.js';
 import { MediaType as MediaTypeEnum } from '../types/index.js';
 
 /**
