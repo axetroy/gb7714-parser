@@ -84,5 +84,27 @@ describe('DatabaseParser', () => {
       expect(result.title).toBe('专利数据库');
       expect(result.authors).toHaveLength(0);
     });
+
+    it('should parse database with multiple authors', () => {
+      const tokens = tokenize('[2] 张三, 李四. 数据库[DB]. 北京: 出版社, 2025.');
+      const result = parser.parse(tokens);
+
+      expect(result.type).toBe('DB');
+      expect(result.authors.length).toBeGreaterThan(0);
+    });
+
+    it('should parse database with English author', () => {
+      const tokens = tokenize('[3] Smith J. Database[DB]. New York: Publisher, 2025.');
+      const result = parser.parse(tokens);
+
+      expect(result.type).toBe('DB');
+    });
+
+    it('should parse database with PID', () => {
+      const tokens = tokenize('[4] 数据库[DB]. 北京: 出版社, 2025. DOI:10.1234/test');
+      const result = parser.parse(tokens);
+
+      expect(result.type).toBe('DB');
+    });
   });
 });

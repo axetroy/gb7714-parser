@@ -93,7 +93,9 @@ export class AuthorDateParser implements ParserStrategy {
       let depth = 1;
       const parenContent: string[] = [];
       while (position < tokens.length && depth > 0) {
-        const token = tokens[position]!;
+        const token = tokens[position];
+        if (!token) break;
+        
         if (token.type === 'PAREN_OPEN') depth++;
         if (token.type === 'PAREN_CLOSE') depth--;
         if (depth === 0) break;
@@ -115,6 +117,7 @@ export class AuthorDateParser implements ParserStrategy {
         } else if (token.type === 'TEXT') {
           parenContent.push(token.value);
         }
+        position++;
       }
 
       // 解析作者

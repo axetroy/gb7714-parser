@@ -74,5 +74,34 @@ describe('ComputerProgramParser', () => {
       expect(result.title).toBe('工具软件');
       expect(result.url).toBe('https://example.com/software');
     });
+
+    it('should parse program without author', () => {
+      const tokens = tokenize('[2] 无名程序[CP]. 北京: 出版社, 2025.');
+      const result = parser.parse(tokens);
+
+      expect(result.type).toBe('CP');
+    });
+
+    it('should parse program with multiple authors', () => {
+      const tokens = tokenize('[3] 张三, 李四. 协作程序[CP]. 北京: 出版社, 2025.');
+      const result = parser.parse(tokens);
+
+      expect(result.type).toBe('CP');
+      expect(result.authors.length).toBeGreaterThan(0);
+    });
+
+    it('should parse program with English author', () => {
+      const tokens = tokenize('[4] Smith J. Software[CP]. New York: Publisher, 2025.');
+      const result = parser.parse(tokens);
+
+      expect(result.type).toBe('CP');
+    });
+
+    it('should parse program with PID', () => {
+      const tokens = tokenize('[5] 张三. 程序[CP]. 北京: 出版社, 2025. DOI:10.1234/test');
+      const result = parser.parse(tokens);
+
+      expect(result.type).toBe('CP');
+    });
   });
 });

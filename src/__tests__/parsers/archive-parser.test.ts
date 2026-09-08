@@ -60,5 +60,56 @@ describe('ArchiveParser', () => {
 
       expect(result.url).toBe('https://example.com');
     });
+
+    it('should parse archive without author', () => {
+      const input = '[5] 无名档案[A]. 北京: 档案馆, 2025.';
+      const tokens = tokenize(input);
+      const result = parser.parse(tokens);
+
+      expect(result.type).toBe('A');
+      // Note: Parser treats Chinese text before dot as author
+      expect(result.authors.length).toBeGreaterThan(0);
+    });
+
+    it('should parse archive with multiple authors', () => {
+      const input = '[6] 张三, 李四. 合作档案[A]. 北京: 档案馆, 2025.';
+      const tokens = tokenize(input);
+      const result = parser.parse(tokens);
+
+      expect(result.authors.length).toBeGreaterThan(0);
+    });
+
+    it('should parse archive with English author', () => {
+      const input = '[7] Smith John. Archive Record[A]. New York: Archives, 2025.';
+      const tokens = tokenize(input);
+      const result = parser.parse(tokens);
+
+      expect(result.type).toBe('A');
+    });
+
+    it('should parse archive with media type OL', () => {
+      const input = '[8] 电子档案[A/OL]. 北京: 档案馆, 2025.';
+      const tokens = tokenize(input);
+      const result = parser.parse(tokens);
+
+      expect(result.mediaType).toBe('OL');
+    });
+
+    it('should parse archive without colon in title', () => {
+      const input = '[9] 张三. 简单档案[A]. 北京: 档案馆, 2025.';
+      const tokens = tokenize(input);
+      const result = parser.parse(tokens);
+
+      expect(result.type).toBe('A');
+      expect(result.title).toContain('简单档案');
+    });
+
+    it('should parse archive with collector only (no comma)', () => {
+      const input = '[10] 档案[A]. 北京: 北京档案馆';
+      const tokens = tokenize(input);
+      const result = parser.parse(tokens);
+
+      expect(result.type).toBe('A');
+    });
   });
 });

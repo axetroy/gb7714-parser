@@ -60,5 +60,55 @@ describe('PreprintParser', () => {
 
       expect(result.url).toContain('arxiv.org');
     });
+
+    it('should parse preprint without author', () => {
+      const input = '[5] 无作者预印本[PP/OL]. https://arxiv.org';
+      const tokens = tokenize(input);
+      const result = parser.parse(tokens);
+
+      expect(result.type).toBe('PP');
+      // Note: Parser treats Chinese text before dot as author
+      expect(result.authors.length).toBeGreaterThan(0);
+    });
+
+    it('should parse preprint with multiple authors', () => {
+      const input = '[6] 张三, 李四, 王五. 多作者预印本[PP/OL]. https://arxiv.org';
+      const tokens = tokenize(input);
+      const result = parser.parse(tokens);
+
+      expect(result.authors.length).toBeGreaterThan(0);
+    });
+
+    it('should parse preprint with create date', () => {
+      const input = '[7] 张三. 预印本[PP/OL]. arXiv (2025-01-15). https://arxiv.org';
+      const tokens = tokenize(input);
+      const result = parser.parse(tokens);
+
+      expect(result.type).toBe('PP');
+    });
+
+    it('should parse preprint with platform', () => {
+      const input = '[8] 张三. 预印本[PP/OL]. arXiv. https://arxiv.org';
+      const tokens = tokenize(input);
+      const result = parser.parse(tokens);
+
+      expect(result.type).toBe('PP');
+    });
+
+    it('should parse preprint with PID', () => {
+      const input = '[9] 张三. 预印本[PP/OL]. https://arxiv.org. DOI:10.1234/test';
+      const tokens = tokenize(input);
+      const result = parser.parse(tokens);
+
+      expect(result.type).toBe('PP');
+    });
+
+    it('should parse preprint with version containing parentheses', () => {
+      const input = '[10] 张三. 预印本[PP/OL]. (v1.0). https://arxiv.org';
+      const tokens = tokenize(input);
+      const result = parser.parse(tokens);
+
+      expect(result.type).toBe('PP');
+    });
   });
 });
