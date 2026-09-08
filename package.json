@@ -56,9 +56,6 @@
     "url": "https://github.com/axetroy/gb7714-parser/issues"
   },
   "homepage": "https://github.com/axetroy/gb7714-parser#readme",
-  "engines": {
-    "node": ">=18"
-  },
   "devDependencies": {
     "@typescript-eslint/eslint-plugin": "^8.69.0",
     "@typescript-eslint/parser": "^8.69.0",
