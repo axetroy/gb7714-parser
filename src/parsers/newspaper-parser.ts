@@ -1,6 +1,7 @@
 import type { Token } from '../types/index.js';
 import type { Newspaper, ParseOptions } from '../types/index.js';
 import type { ParserStrategy } from './base.js';
+import { parseTypeIndicator } from '../utils/index.js';
 
 /**
  * 报纸解析器
@@ -51,7 +52,10 @@ export class NewspaperParser implements ParserStrategy {
 
     // 跳过文献类型标识 [N]
     const typeIndicator = tokens.find(t => t.type === 'TYPE_INDICATOR');
+    let mediaType: import('../types/index.js').MediaType | undefined;
     if (typeIndicator) {
+      const parsed = parseTypeIndicator(typeIndicator.value);
+      mediaType = parsed.mediaType;
       position = tokens.indexOf(typeIndicator) + 1;
     }
 
@@ -65,6 +69,7 @@ export class NewspaperParser implements ParserStrategy {
     position = this.skipWhitespace(tokens, position);
 
     // 解析报纸名（到 , 或 年份）
+    const newspaperTitle = this.readUntilCommaOrYear(tokens, position);
     position = this.findNextCommaOrYear(tokens, position);
 
     // 解析年份
@@ -75,24 +80,27 @@ export class NewspaperParser implements ParserStrategy {
       position = tokens.indexOf(yearToken) + 1;
     }
 
-    // 解析月日（跳过）
-    const monthDayTokens = tokens.slice(position).filter(t =>
-      t.type === 'NUMBER' || t.type === 'DASH' || t.type === 'TEXT'
-    );
-    if (monthDayTokens.length > 0) {
-      position += monthDayTokens.length;
+    // 解析月日
+    let monthDay = '';
+    const monthDayStart = position;
+    while (position < tokens.length && 
+           (tokens[position]?.type === 'NUMBER' || tokens[position]?.type === 'DASH' || tokens[position]?.type === 'TEXT')) {
+      position++;
+    }
+    if (position > monthDayStart) {
+      monthDay = tokens.slice(monthDayStart, position).map(t => t.value).join('');
     }
 
     // 解析版次
-    let pages = '';
+    let edition = '';
     const colonIndex = tokens.findIndex((t, i) => i >= position && (t.value === ':' || t.value === '：'));
     if (colonIndex >= position) {
       position = colonIndex + 1;
-      const pageTokens = tokens.slice(position).filter(t =>
+      const editionTokens = tokens.slice(position).filter(t =>
         t.type === 'NUMBER' || t.type === 'TEXT'
       );
-      if (pageTokens.length > 0) {
-        pages = pageTokens.map(t => t.value).join('').replace(/\.$/, '');
+      if (editionTokens.length > 0) {
+        edition = editionTokens.map(t => t.value).join('').replace(/\.$/, '');
       }
     }
 
@@ -108,11 +116,13 @@ export class NewspaperParser implements ParserStrategy {
       type: 'N' as never,
       authors,
       title,
-      newspaperTitle: '',
+      newspaperTitle: newspaperTitle.trim().replace(/\.$/, ''),
       year: year || '',
-      pages: pages || undefined,
+      monthDay: monthDay || undefined,
+      edition: edition || undefined,
       url: url || undefined,
       pid: pid || undefined,
+      mediaType,
     };
   }
 
@@ -166,6 +176,23 @@ export class NewspaperParser implements ParserStrategy {
       if (tokens[i]?.type === 'TYPE_INDICATOR') return i;
     }
     return tokens.length;
+  }
+
+  private readUntilCommaOrYear(tokens: Token[], start: number): string {
+    let result = '';
+    let i = start;
+    while (i < tokens.length) {
+      const token = tokens[i]!;
+      if (token.type === 'COMMA') break;
+      if (token.type === 'YEAR') break;
+      if (token.type === 'TEXT') {
+        result += token.value;
+      } else if (token.type === 'DOT') {
+        result += '.';
+      }
+      i++;
+    }
+    return result;
   }
 
   private findNextCommaOrYear(tokens: Token[], start: number): number {

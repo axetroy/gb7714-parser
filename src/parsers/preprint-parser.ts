@@ -1,6 +1,7 @@
 import type { Token } from '../types/index.js';
 import type { Preprint, ParseOptions } from '../types/index.js';
 import type { ParserStrategy } from './base.js';
+import { parseTypeIndicator } from '../utils/index.js';
 
 /**
  * 预印本解析器
@@ -56,7 +57,10 @@ export class PreprintParser implements ParserStrategy {
 
     // 跳过文献类型标识 [PP]
     const typeIndicator = tokens.find(t => t.type === 'TYPE_INDICATOR');
+    let mediaType: import('../types/index.js').MediaType | undefined;
     if (typeIndicator) {
+      const parsed = parseTypeIndicator(typeIndicator.value);
+      mediaType = parsed.mediaType;
       position = tokens.indexOf(typeIndicator) + 1;
     }
 
@@ -145,6 +149,7 @@ export class PreprintParser implements ParserStrategy {
       accessDate,
       url,
       pid: pid || undefined,
+      mediaType,
     };
   }
 

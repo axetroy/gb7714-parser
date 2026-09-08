@@ -1,6 +1,7 @@
 import type { Token } from '../types/index.js';
 import type { WebPage, ParseOptions } from '../types/index.js';
 import type { ParserStrategy } from './base.js';
+import { parseTypeIndicator } from '../utils/index.js';
 
 /**
  * 网站/网页解析器
@@ -57,7 +58,10 @@ export class WebPageParser implements ParserStrategy {
 
     // 跳过文献类型标识 [EB]
     const typeIndicator = tokens.find(t => t.type === 'TYPE_INDICATOR');
+    let mediaType: import('../types/index.js').MediaType | undefined;
     if (typeIndicator) {
+      const parsed = parseTypeIndicator(typeIndicator.value);
+      mediaType = parsed.mediaType;
       position = tokens.indexOf(typeIndicator) + 1;
     }
 
@@ -114,6 +118,7 @@ export class WebPageParser implements ParserStrategy {
       accessDate,
       url,
       pid: pid || undefined,
+      mediaType,
     };
   }
 

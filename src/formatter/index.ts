@@ -4,6 +4,7 @@ import type {
   Author,
   ComponentPart,
 } from '../types/index.js';
+import { buildTypeIndicator } from '../utils/index.js';
 
 /**
  * 格式化器
@@ -75,6 +76,7 @@ export class Formatter {
       edition?: string;
       url?: string;
       pid?: string;
+      mediaType?: import('../types/index.js').MediaType;
     };
 
     const parts: string[] = [];
@@ -87,7 +89,7 @@ export class Formatter {
       parts.push(this.formatAuthors(newspaper.authors));
     }
 
-    parts.push(`${newspaper.title}[N].`);
+    parts.push(`${newspaper.title}${buildTypeIndicator('N', newspaper.mediaType)}.`);
 
     if (newspaper.newspaperTitle) {
       let info = newspaper.newspaperTitle;
@@ -190,6 +192,7 @@ export class Formatter {
       pages?: string;
       url?: string;
       pid?: string;
+      mediaType?: import('../types/index.js').MediaType;
     };
 
     const parts: string[] = [];
@@ -203,7 +206,7 @@ export class Formatter {
     parts.push(this.formatAuthors(journal.authors));
 
     // 题名
-    parts.push(`${journal.title}[J].`);
+    parts.push(`${journal.title}${buildTypeIndicator('J', journal.mediaType)}.`);
 
     // 刊名, 年, 卷(期): 页码
     let journalInfo = journal.journalTitle;
@@ -253,6 +256,7 @@ export class Formatter {
       pages?: string;
       url?: string;
       pid?: string;
+      mediaType?: import('../types/index.js').MediaType;
     };
 
     const parts: string[] = [];
@@ -262,7 +266,7 @@ export class Formatter {
     }
 
     parts.push(this.formatAuthors(book.authors));
-    parts.push(`${book.title}[M].`);
+    parts.push(`${book.title}${buildTypeIndicator('M', book.mediaType)}.`);
 
     if (book.version) {
       parts.push(`${book.version}.`);
@@ -304,6 +308,7 @@ export class Formatter {
       awardYear?: string;
       pages?: string;
       url?: string;
+      mediaType?: import('../types/index.js').MediaType;
     };
 
     const parts: string[] = [];
@@ -313,7 +318,7 @@ export class Formatter {
     }
 
     parts.push(this.formatAuthors(thesis.authors));
-    parts.push(`${thesis.title}[D].`);
+    parts.push(`${thesis.title}${buildTypeIndicator('D', thesis.mediaType)}.`);
 
     if (thesis.awardPlace && thesis.awardInstitution && thesis.awardYear) {
       let info = `${thesis.awardPlace}: ${thesis.awardInstitution}, ${thesis.awardYear}`;
@@ -348,6 +353,7 @@ export class Formatter {
       conferenceYear?: string;
       pages?: string;
       url?: string;
+      mediaType?: import('../types/index.js').MediaType;
     };
 
     const parts: string[] = [];
@@ -357,7 +363,7 @@ export class Formatter {
     }
 
     parts.push(this.formatAuthors(proceedings.authors));
-    parts.push(`${proceedings.title}[C].`);
+    parts.push(`${proceedings.title}${buildTypeIndicator('C', proceedings.mediaType)}.`);
 
     if (proceedings.conferenceName && proceedings.conferenceYear) {
       let info = `//${proceedings.conferenceName}, ${proceedings.conferenceYear}`;
@@ -386,6 +392,7 @@ export class Formatter {
       releaseDate?: string;
       pages?: string;
       url?: string;
+      mediaType?: import('../types/index.js').MediaType;
     };
 
     const parts: string[] = [];
@@ -399,7 +406,7 @@ export class Formatter {
     if (report.reportNumber) {
       title += `: ${report.reportNumber}`;
     }
-    parts.push(`${title}[R].`);
+    parts.push(`${title}${buildTypeIndicator('R', report.mediaType)}.`);
 
     if (report.releaseDate) {
       let info = report.releaseDate;
@@ -425,6 +432,7 @@ export class Formatter {
       standardNumber: string;
       standardName: string;
       url?: string;
+      mediaType?: import('../types/index.js').MediaType;
     };
 
     const parts: string[] = [];
@@ -433,7 +441,7 @@ export class Formatter {
       parts.push(`[${standard.id}]`);
     }
 
-    parts.push(`${standard.standardNumber} ${standard.standardName}[S].`);
+    parts.push(`${standard.standardNumber} ${standard.standardName}${buildTypeIndicator('S', standard.mediaType)}.`);
 
     if (standard.url) {
       parts.push(standard.url);
@@ -454,6 +462,7 @@ export class Formatter {
       announceDate?: string;
       pages?: string;
       url?: string;
+      mediaType?: import('../types/index.js').MediaType;
     };
 
     const parts: string[] = [];
@@ -463,7 +472,7 @@ export class Formatter {
     }
 
     parts.push(this.formatAuthors(patent.authors));
-    parts.push(`${patent.title}: ${patent.patentNumber}[P].`);
+    parts.push(`${patent.title}: ${patent.patentNumber}${buildTypeIndicator('P', patent.mediaType)}.`);
 
     if (patent.announceDate) {
       let info = patent.announceDate;
@@ -491,6 +500,7 @@ export class Formatter {
       createDate?: string;
       accessDate: string;
       url?: string;
+      mediaType?: import('../types/index.js').MediaType;
     };
 
     const parts: string[] = [];
@@ -503,7 +513,7 @@ export class Formatter {
       parts.push(this.formatAuthors(webPage.authors));
     }
 
-    parts.push(`${webPage.title}[EB/OL].`);
+    parts.push(`${webPage.title}${buildTypeIndicator('EB', webPage.mediaType)}.`);
 
     if (webPage.createDate) {
       parts.push(`(${webPage.createDate})`);
@@ -533,6 +543,7 @@ export class Formatter {
       collector?: string;
       formedDate?: string;
       url?: string;
+      mediaType?: import('../types/index.js').MediaType;
     };
 
     const parts: string[] = [];
@@ -549,7 +560,7 @@ export class Formatter {
     if (archive.archiveNumber) {
       title += `: ${archive.archiveNumber}`;
     }
-    parts.push(`${title}[A].`);
+    parts.push(`${title}${buildTypeIndicator('A', archive.mediaType)}.`);
 
     if (archive.collectionPlace && archive.collector && archive.formedDate) {
       parts.push(`${archive.collectionPlace}: ${archive.collector}, ${archive.formedDate}.`);
@@ -577,6 +588,7 @@ export class Formatter {
       year?: string;
       dimensions?: string;
       url?: string;
+      mediaType?: import('../types/index.js').MediaType;
     };
 
     const parts: string[] = [];
@@ -593,7 +605,7 @@ export class Formatter {
     if (map.scale) {
       title += `. ${map.scale}`;
     }
-    parts.push(`${title}[CM].`);
+    parts.push(`${title}${buildTypeIndicator('CM', map.mediaType)}.`);
 
     if (map.version) {
       parts.push(`${map.version}.`);
@@ -627,6 +639,7 @@ export class Formatter {
       releaseDate?: string;
       accessDate: string;
       url?: string;
+      mediaType?: import('../types/index.js').MediaType;
     };
 
     const parts: string[] = [];
@@ -639,7 +652,7 @@ export class Formatter {
       parts.push(this.formatAuthors(dataset.authors));
     }
 
-    parts.push(`${dataset.title}[DS/OL].`);
+    parts.push(`${dataset.title}${buildTypeIndicator('DS', dataset.mediaType)}.`);
 
     if (dataset.version) {
       parts.push(`${dataset.version}.`);
@@ -673,6 +686,7 @@ export class Formatter {
       createDate?: string;
       accessDate: string;
       url?: string;
+      mediaType?: import('../types/index.js').MediaType;
     };
 
     const parts: string[] = [];
@@ -685,7 +699,7 @@ export class Formatter {
       parts.push(this.formatAuthors(preprint.authors));
     }
 
-    parts.push(`${preprint.title}[PP/OL].`);
+    parts.push(`${preprint.title}${buildTypeIndicator('PP', preprint.mediaType)}.`);
 
     if (preprint.version) {
       parts.push(`${preprint.version}.`);
@@ -720,7 +734,7 @@ export class Formatter {
       parts.push(this.formatAuthors(ref.authors));
     }
 
-    parts.push(`${ref.title}[${ref.type}].`);
+    parts.push(`${ref.title}${buildTypeIndicator(ref.type, ref.mediaType)}.`);
 
     if (ref.year) {
       parts.push(ref.year + '.');

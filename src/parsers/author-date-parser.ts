@@ -1,6 +1,7 @@
 import type { Token } from '../types/index.js';
 import type { Reference, ParseOptions } from '../types/index.js';
 import type { ParserStrategy } from './base.js';
+import { parseTypeIndicator } from '../utils/index.js';
 
 /**
  * 著者-出版年制解析器
@@ -140,8 +141,11 @@ export class AuthorDateParser implements ParserStrategy {
     // 跳过文献类型标识
     const typeIndicator = tokens.find(t => t.type === 'TYPE_INDICATOR');
     let referenceType = 'Z';
+    let mediaType: import('../types/index.js').MediaType | undefined;
     if (typeIndicator) {
-      referenceType = typeIndicator.value.replace(/[[\]]/g, '').split('/')[0] || 'Z';
+      const parsed = parseTypeIndicator(typeIndicator.value);
+      referenceType = parsed.baseType || 'Z';
+      mediaType = parsed.mediaType;
       position = tokens.indexOf(typeIndicator) + 1;
     }
 
@@ -206,6 +210,7 @@ export class AuthorDateParser implements ParserStrategy {
       pages: pages || undefined,
       url: url || undefined,
       pid: pid || undefined,
+      mediaType,
     };
   }
 

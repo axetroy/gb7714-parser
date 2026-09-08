@@ -201,4 +201,4 @@ export { Formatter } from './formatter/index.js';
 export { Tokenizer, tokenize } from './tokenizer/index.js';
 
 // 导出工具函数
-export { parseAuthors, formatAuthors, isValidDate, isValidYear } from './utils/index.js';
+export { parseAuthors, formatAuthors, isValidDate, isValidYear, parseTypeIndicator, buildTypeIndicator } from './utils/index.js';

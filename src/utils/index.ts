@@ -1,4 +1,5 @@
-import type { Author } from '../types/index.js';
+import type { Author, ReferenceType, MediaType } from '../types/index.js';
+import { MediaType as MediaTypeEnum } from '../types/index.js';
 
 /**
  * 解析作者字符串
@@ -116,4 +117,39 @@ export function removeTrailingDot(str: string): string {
  */
 export function normalizeWhitespace(str: string): string {
   return str.replace(/\s+/g, ' ').trim();
+}
+
+/**
+ * 解析类型指示符，提取基础类型和 mediaType
+ * 例如："[J/OL]" -> { baseType: "J", mediaType: MediaType.OL }
+ */
+export function parseTypeIndicator(indicator: string): { baseType: string; mediaType?: MediaType } {
+  // 移除方括号
+  const content = indicator.replace(/[[\]]/g, '');
+
+  // 分割基础类型和载体标识
+  const parts = content.split('/');
+
+  const baseType = parts[0] || '';
+  let mediaType: MediaType | undefined;
+
+  if (parts.length > 1) {
+    const mediaStr = parts[1]?.toUpperCase();
+    if (mediaStr && mediaStr in MediaTypeEnum) {
+      mediaType = MediaTypeEnum[mediaStr as keyof typeof MediaTypeEnum];
+    }
+  }
+
+  return { baseType, mediaType };
+}
+
+/**
+ * 构建类型指示符字符串
+ * 例如：baseType="J", mediaType=MediaType.OL -> "[J/OL]"
+ */
+export function buildTypeIndicator(baseType: string, mediaType?: MediaType): string {
+  if (mediaType) {
+    return `[${baseType}/${mediaType}]`;
+  }
+  return `[${baseType}]`;
 }

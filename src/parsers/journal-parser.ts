@@ -1,6 +1,7 @@
 import type { Token } from '../types/index.js';
 import type { Journal, ParseOptions } from '../types/index.js';
 import type { ParserStrategy } from './base.js';
+import { parseTypeIndicator } from '../utils/index.js';
 
 /**
  * 期刊解析器
@@ -51,7 +52,10 @@ export class JournalParser implements ParserStrategy {
 
     // 跳过文献类型标识 [J]
     const typeIndicator = tokens.find(t => t.type === 'TYPE_INDICATOR');
+    let mediaType: import('../types/index.js').MediaType | undefined;
     if (typeIndicator) {
+      const parsed = parseTypeIndicator(typeIndicator.value);
+      mediaType = parsed.mediaType;
       position = tokens.indexOf(typeIndicator) + 1;
     }
 
@@ -123,6 +127,7 @@ export class JournalParser implements ParserStrategy {
       issue: issue || undefined,
       pages: pages || undefined,
       pid: pid || undefined,
+      mediaType,
     };
   }
 

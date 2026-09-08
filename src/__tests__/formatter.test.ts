@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { Formatter, format } from '../formatter/index.js';
 import type { ReferenceUnion } from '../types/index.js';
-import { ReferenceType } from '../types/index.js';
+import { ReferenceType, MediaType } from '../types/index.js';
 
 describe('Formatter', () => {
   describe('format', () => {
@@ -56,6 +56,7 @@ describe('Formatter', () => {
         createDate: '2025-01-01',
         accessDate: '2025-09-07',
         url: 'https://example.com',
+        mediaType: MediaType.OL,
       };
       const result = format(reference);
       expect(result).toBe('张三 网站标题[EB/OL]. (2025-01-01) [2025-09-07]. https://example.com.');
@@ -291,6 +292,7 @@ describe('Formatter', () => {
         platform: '国家数据中心',
         releaseDate: '2025-09-07',
         accessDate: '2025-10-01',
+        mediaType: MediaType.OL,
       };
       const result = format(reference);
       expect(result).toBe('张三 数据集标题[DS/OL]. 国家数据中心 (2025-09-07) [2025-10-01].');
@@ -302,6 +304,7 @@ describe('Formatter', () => {
         authors: [{ surname: '张三' }],
         title: '数据集标题',
         accessDate: '2025-10-01',
+        mediaType: MediaType.OL,
       };
       const result = format(reference);
       expect(result).toBe('张三 数据集标题[DS/OL].');
@@ -315,6 +318,7 @@ describe('Formatter', () => {
         platform: 'arXiv',
         createDate: '2025-09-07',
         accessDate: '2025-10-01',
+        mediaType: MediaType.OL,
       };
       const result = format(reference);
       expect(result).toBe('张三 预印本标题[PP/OL]. arXiv (2025-09-07) [2025-10-01].');
@@ -326,6 +330,7 @@ describe('Formatter', () => {
         authors: [{ surname: '张三' }],
         title: '预印本标题',
         accessDate: '2025-10-01',
+        mediaType: MediaType.OL,
       };
       const result = format(reference);
       expect(result).toBe('张三 预印本标题[PP/OL].');
@@ -338,6 +343,7 @@ describe('Formatter', () => {
         title: '网页标题',
         accessDate: '2025-09-07',
         url: 'https://example.com',
+        mediaType: MediaType.OL,
       };
       const result = format(reference);
       expect(result).toBe('张三 网页标题[EB/OL]. [2025-09-07]. https://example.com.');
@@ -350,6 +356,7 @@ describe('Formatter', () => {
         title: '网页标题',
         accessDate: '2025-09-07',
         url: 'https://example.com',
+        mediaType: MediaType.OL,
       };
       const result = format(reference);
       expect(result).toBe('网页标题[EB/OL]. [2025-09-07]. https://example.com.');
@@ -466,6 +473,7 @@ describe('Formatter', () => {
         version: 'v2.0',
         platform: '国家数据中心',
         accessDate: '2025-10-01',
+        mediaType: MediaType.OL,
       };
       const result = format(reference);
       expect(result).toBe('张三 数据集标题[DS/OL]. v2.0. 国家数据中心 [2025-10-01].');
@@ -479,6 +487,7 @@ describe('Formatter', () => {
         version: 'v1.0',
         platform: 'arXiv',
         accessDate: '2025-10-01',
+        mediaType: MediaType.OL,
       };
       const result = format(reference);
       expect(result).toBe('张三 预印本标题[PP/OL]. v1.0. arXiv [2025-10-01].');
@@ -574,6 +583,7 @@ describe('Formatter', () => {
         authors: [{ surname: '张三' }],
         title: '数据集标题',
         accessDate: '2025-10-01',
+        mediaType: MediaType.OL,
       };
       const result = format(reference);
       expect(result).toBe('[43] 张三 数据集标题[DS/OL].');
@@ -586,6 +596,7 @@ describe('Formatter', () => {
         title: '数据集标题',
         accessDate: '2025-10-01',
         url: 'https://example.com',
+        mediaType: MediaType.OL,
       };
       const result = format(reference);
       expect(result).toBe('张三 数据集标题[DS/OL]. https://example.com');
@@ -598,6 +609,7 @@ describe('Formatter', () => {
         authors: [{ surname: '张三' }],
         title: '预印本标题',
         accessDate: '2025-10-01',
+        mediaType: MediaType.OL,
       };
       const result = format(reference);
       expect(result).toBe('[44] 张三 预印本标题[PP/OL].');
@@ -610,6 +622,7 @@ describe('Formatter', () => {
         title: '预印本标题',
         accessDate: '2025-10-01',
         url: 'https://example.com',
+        mediaType: MediaType.OL,
       };
       const result = format(reference);
       expect(result).toBe('张三 预印本标题[PP/OL]. https://example.com');
@@ -944,6 +957,7 @@ describe('Formatter', () => {
         createDate: '2025-01-01',
         accessDate: '2025-09-07',
         url: 'https://example.com',
+        mediaType: MediaType.OL,
       };
       const result = format(reference);
       expect(result).toBe('张三 网页标题[EB/OL]. (2025-01-01) [2025-09-07]. https://example.com.');
@@ -957,6 +971,7 @@ describe('Formatter', () => {
         platform: '国家数据中心',
         releaseDate: '2025-09-07',
         accessDate: '2025-10-01',
+        mediaType: MediaType.OL,
       };
       const result = format(reference);
       expect(result).toBe('张三 数据集标题[DS/OL]. 国家数据中心 (2025-09-07) [2025-10-01].');
@@ -970,6 +985,7 @@ describe('Formatter', () => {
         platform: 'arXiv',
         createDate: '2025-09-07',
         accessDate: '2025-10-01',
+        mediaType: MediaType.OL,
       };
       const result = format(reference);
       expect(result).toBe('张三 预印本标题[PP/OL]. arXiv (2025-09-07) [2025-10-01].');
