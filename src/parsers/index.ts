@@ -15,3 +15,5 @@ export { DatasetParser } from './dataset-parser.js';
 export { PreprintParser } from './preprint-parser.js';
 export { ComponentPartParser } from './component-part-parser.js';
 export { AuthorDateParser } from './author-date-parser.js';
+export { ComputerProgramParser } from './computer-program-parser.js';
+export { DatabaseParser } from './database-parser.js';

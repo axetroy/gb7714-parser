@@ -76,6 +76,8 @@ import { DatasetParser } from './parsers/index.js';
 import { PreprintParser } from './parsers/index.js';
 import { ComponentPartParser } from './parsers/index.js';
 import { AuthorDateParser } from './parsers/index.js';
+import { ComputerProgramParser } from './parsers/index.js';
+import { DatabaseParser } from './parsers/index.js';
 import { validate as validateFn } from './validator/index.js';
 import { format as formatFn } from './formatter/index.js';
 import type { ReferenceUnion, ParseOptions, FormatOptions, ValidationReport, StandardVersion } from './types/index.js';
@@ -97,6 +99,8 @@ defaultParser.register(new ArchiveParser());
 defaultParser.register(new MapParser());
 defaultParser.register(new DatasetParser());
 defaultParser.register(new PreprintParser());
+defaultParser.register(new ComputerProgramParser());
+defaultParser.register(new DatabaseParser());
 
 /**
  * 解析单条参考文献
@@ -199,6 +203,8 @@ export {
   PreprintParser,
   ComponentPartParser,
   AuthorDateParser,
+  ComputerProgramParser,
+  DatabaseParser,
 } from './parsers/index.js';
 export { Validator } from './validator/index.js';
 export { Formatter } from './formatter/index.js';
