@@ -57,13 +57,15 @@ describe('SerialParser', () => {
     });
 
     it('should parse serial with publisher info', () => {
-      const input = '[3] American Association for the Advancement of Science. Science[J]. 1883, 1(1)—. American Association for the Advancement of Science, 1883—.';
+      const input = '[3] American Association for the Advancement of Science. Science[J]. 1883, 1(1)—. Washington, D. C.: American Association for the Advancement of Science, 1883—.';
       const tokens = tokenize(input);
       const result = parser.parse(tokens);
 
       expect(result.type).toBe('J');
       expect(result.serialTitle).toBe('Science');
+      expect(result.publisherPlace).toBe('Washington, D. C.');
       expect(result.publisher).toBe('American Association for the Advancement of Science');
+      expect(result.publicationStartYear).toBe('1883');
     });
 
     it('should parse serial with URL', () => {

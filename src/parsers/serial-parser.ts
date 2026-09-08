@@ -174,8 +174,8 @@ export class SerialParser implements ParserStrategy {
     // 查找冒号（出版地前）
     const colonIndex = tokens.findIndex((t, i) => i >= position && t.type === 'COLON');
     if (colonIndex >= position) {
-      // 出版地在冒号前
-      publisherPlace = this.readTextUntil(tokens, position, colonIndex).trim().replace(/\.$/, '');
+      // 出版地在冒号前 - 保留尾部的点（可能是缩写如 D. C.）
+      publisherPlace = this.readTextUntil(tokens, position, colonIndex).trim();
       position = colonIndex + 1;
     }
 
@@ -239,15 +239,20 @@ export class SerialParser implements ParserStrategy {
 
   private readUntilDot(tokens: Token[], start: number): string {
     let result = '';
+    let needsSpace = false;
     let i = start;
     while (i < tokens.length && tokens[i]?.type !== 'DOT') {
       const token = tokens[i]!;
       if (token.type === 'TEXT') {
+        if (needsSpace && result.length > 0) result += ' ';
         result += token.value;
+        needsSpace = true;
       } else if (token.type === 'COMMA') {
         result += ',';
+        needsSpace = false;
       } else if (token.type === 'NUMBER') {
         result += token.value;
+        needsSpace = false;
       }
       i++;
     }
@@ -277,26 +282,27 @@ export class SerialParser implements ParserStrategy {
 
   private readTextUntil(tokens: Token[], start: number, end: number): string {
     let result = '';
-    let needsSpace = false;
+    let prevType: string | null = null;
     for (let i = start; i < end; i++) {
       const token = tokens[i]!;
       if (token.type === 'TEXT') {
-        if (needsSpace && result.length > 0) result += ' ';
+        // Add space before TEXT if preceded by COMMA, COLON, DOT, or another TEXT
+        if (prevType === 'COMMA' || prevType === 'COLON' || prevType === 'DOT' || prevType === 'TEXT') {
+          result += ' ';
+        }
         result += token.value;
-        needsSpace = true;
       } else if (token.type === 'DOT') {
         result += '.';
-        needsSpace = false;
       } else if (token.type === 'DATE') {
         result += token.value;
-        needsSpace = false;
       } else if (token.type === 'COMMA') {
         result += ',';
-        needsSpace = false;
       } else if (token.type === 'COLON') {
         result += ':';
-        needsSpace = false;
+      } else if (token.type === 'NUMBER') {
+        result += token.value;
       }
+      prevType = token.type;
     }
     return result;
   }

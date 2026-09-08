@@ -154,6 +154,43 @@ describe('Formatter', () => {
       const result = format(reference);
       expect(result).toBe('李四 书名[M]. 第3版. 北京: 出版社, 2025.');
     });
+
+    it('should format serial publication', () => {
+      const reference: ReferenceUnion = {
+        type: 'J' as never,
+        authors: [{ surname: '中华医学会湖北分会' }],
+        title: '临床内科杂志',
+        serialTitle: '临床内科杂志',
+        startYear: '1984',
+        startVolume: '1',
+        startIssue: '1',
+        endYear: undefined,
+        publisherPlace: '武汉',
+        publisher: '中华医学会湖北分会',
+        publicationStartYear: '1984',
+      };
+      const result = format(reference);
+      expect(result).toBe('中华医学会湖北分会 临床内科杂志[J]. 1984, 1(1)—. 武汉: 中华医学会湖北分会, 1984—.');
+    });
+
+    it('should format serial publication with year range', () => {
+      const reference: ReferenceUnion = {
+        type: 'J' as never,
+        authors: [{ surname: '中国图书馆学会' }],
+        title: '图书馆学通讯',
+        serialTitle: '图书馆学通讯',
+        startYear: '1957',
+        startIssue: '1',
+        endYear: '1990',
+        endIssue: '4',
+        publisherPlace: '北京',
+        publisher: '北京图书馆',
+        publicationStartYear: '1957',
+        publicationEndYear: '1990',
+      };
+      const result = format(reference);
+      expect(result).toBe('中国图书馆学会 图书馆学通讯[J]. 1957(1)—1990(4). 北京: 北京图书馆, 1957—1990.');
+    });
   });
 
   describe('version-specific formatting', () => {
