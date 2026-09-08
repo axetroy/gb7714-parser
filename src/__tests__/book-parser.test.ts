@@ -63,5 +63,42 @@ describe('BookParser', () => {
       expect(result.publisherPlace).toBe('上海');
       expect(result.publisher).toBe('上海交通大学出版社');
     });
+
+    it('should parse book with version', () => {
+      const input = '[5] 张三. 机器学习导论[M]. 第3版. 北京: 清华大学出版社, 2025.';
+      const tokens = tokenize(input);
+      const result = parser.parse(tokens);
+
+      expect(result.type).toBe('M');
+      expect(result.version).toBe('第3版');
+    });
+
+    it('should parse book without year', () => {
+      const input = '[7] 张三. 论文标题[M]. 北京: 出版社.';
+      const tokens = tokenize(input);
+      const result = parser.parse(tokens);
+
+      expect(result.type).toBe('M');
+      expect(result.year).toBeUndefined();
+    });
+
+    it('should parse book without publisher', () => {
+      const input = '[8] 张三. 论文标题[M]. 北京, 2025.';
+      const tokens = tokenize(input);
+      const result = parser.parse(tokens);
+
+      expect(result.type).toBe('M');
+      expect(result.publisher).toBeUndefined();
+    });
+
+    it('should parse book with multiple authors as single text', () => {
+      const input = '[9] 张三李四王五. 机器学习导论[M]. 北京: 清华大学出版社, 2025.';
+      const tokens = tokenize(input);
+      const result = parser.parse(tokens);
+
+      expect(result.type).toBe('M');
+      expect(result.authors).toHaveLength(1);
+      expect(result.authors[0].surname).toBe('张三李四王五');
+    });
   });
 });

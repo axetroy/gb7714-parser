@@ -73,5 +73,34 @@ describe('JournalParser', () => {
       expect(result.type).toBe('J');
       expect(result.pages).toBeUndefined();
     });
+
+    it('should parse journal without volume', () => {
+      const input = '[5] 周八. 机器学习综述[J]. 人工智能，2025(2)：1-10.';
+      const tokens = tokenize(input);
+      const result = parser.parse(tokens);
+
+      expect(result.type).toBe('J');
+      expect(result.volume).toBeUndefined();
+      expect(result.issue).toBe('2');
+    });
+
+    it('should parse journal without year', () => {
+      const input = '[8] 张三. 论文标题[J]. 期刊名，35(2)：15-22.';
+      const tokens = tokenize(input);
+      const result = parser.parse(tokens);
+
+      expect(result.type).toBe('J');
+      expect(result.year).toBe('');
+    });
+
+    it('should parse journal without volume and issue', () => {
+      const input = '[9] 张三. 论文标题[J]. 期刊名，2025：15-22.';
+      const tokens = tokenize(input);
+      const result = parser.parse(tokens);
+
+      expect(result.type).toBe('J');
+      expect(result.volume).toBeUndefined();
+      expect(result.issue).toBeUndefined();
+    });
   });
 });

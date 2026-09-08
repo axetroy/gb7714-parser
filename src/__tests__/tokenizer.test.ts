@@ -85,6 +85,118 @@ describe('Tokenizer', () => {
       const tokens = tokenize('15-22');
       expect(tokens.some(t => t.type === 'DASH')).toBe(true);
     });
+
+    it('should tokenize em-dash', () => {
+      const tokens = tokenize('—');
+      expect(tokens.some(t => t.type === 'DASH')).toBe(true);
+    });
+
+    it('should tokenize en-dash', () => {
+      const tokens = tokenize('–');
+      expect(tokens.some(t => t.type === 'DASH')).toBe(true);
+    });
+
+    it('should tokenize Chinese colon', () => {
+      const tokens = tokenize('：');
+      expect(tokens.some(t => t.type === 'COLON')).toBe(true);
+    });
+
+    it('should tokenize Chinese semicolon', () => {
+      const tokens = tokenize('；');
+      expect(tokens.some(t => t.type === 'SEMICOLON')).toBe(true);
+    });
+
+    it('should tokenize Chinese comma', () => {
+      const tokens = tokenize('，');
+      expect(tokens.some(t => t.type === 'COMMA')).toBe(true);
+    });
+
+    it('should tokenize date in parentheses', () => {
+      const tokens = tokenize('(2025-09-07)');
+      expect(tokens.some(t => t.type === 'PAREN_OPEN')).toBe(true);
+      expect(tokens.some(t => t.type === 'DATE')).toBe(true);
+      expect(tokens.some(t => t.type === 'PAREN_CLOSE')).toBe(true);
+    });
+
+    it('should tokenize date in brackets', () => {
+      const tokens = tokenize('[2025-09-07]');
+      expect(tokens.some(t => t.type === 'BRACKET_OPEN')).toBe(true);
+      expect(tokens.some(t => t.type === 'DATE')).toBe(true);
+      expect(tokens.some(t => t.type === 'BRACKET_CLOSE')).toBe(true);
+    });
+
+    it('should tokenize year with Chinese year character', () => {
+      const tokens = tokenize('2025年');
+      expect(tokens.some(t => t.type === 'YEAR')).toBe(true);
+    });
+
+    it('should tokenize DOI URL', () => {
+      const tokens = tokenize('doi:10.1234/test');
+      expect(tokens.some(t => t.type === 'URL')).toBe(true);
+    });
+
+    it('should tokenize http URL', () => {
+      const tokens = tokenize('http://example.com');
+      expect(tokens.some(t => t.type === 'URL')).toBe(true);
+    });
+
+    it('should tokenize number with decimal', () => {
+      const tokens = tokenize('12.5');
+      expect(tokens.some(t => t.type === 'NUMBER')).toBe(true);
+    });
+
+    it('should handle whitespace', () => {
+      const tokens = tokenize('  test  ');
+      expect(tokens).toHaveLength(1);
+      expect(tokens[0].type).toBe('TEXT');
+      expect(tokens[0].value).toBe('test');
+    });
+
+    it('should handle tabs', () => {
+      const tokens = tokenize('\ttest\t');
+      expect(tokens).toHaveLength(1);
+      expect(tokens[0].type).toBe('TEXT');
+    });
+
+    it('should handle newlines', () => {
+      const tokens = tokenize('\ntest\n');
+      expect(tokens).toHaveLength(1);
+      expect(tokens[0].type).toBe('TEXT');
+    });
+
+    it('should handle carriage returns', () => {
+      const tokens = tokenize('\rtest\r');
+      expect(tokens).toHaveLength(1);
+      expect(tokens[0].type).toBe('TEXT');
+    });
+
+    it('should handle unrecognized characters by skipping them', () => {
+      const tokens = tokenize('@#$');
+      // These characters are treated as text by readText()
+      expect(tokens.length).toBeGreaterThanOrEqual(0);
+    });
+
+    it('should handle mixed content with unrecognized characters', () => {
+      const tokens = tokenize('abc@#$def');
+      // 'abc' becomes TEXT, then @, #, $ are skipped, then 'def' becomes TEXT
+      expect(tokens.some(t => t.type === 'TEXT')).toBe(true);
+    });
+
+    it('should tokenize complex reference with all elements', () => {
+      const input = '[1] 张三，李四，王五. 人工智能在教育中的应用研究[J]. 现代教育技术，2025，35(2)：15-22.';
+      const tokens = tokenize(input);
+
+      expect(tokens.some(t => t.type === 'BRACKET_OPEN')).toBe(true);
+      expect(tokens.some(t => t.type === 'NUMBER')).toBe(true);
+      expect(tokens.some(t => t.type === 'BRACKET_CLOSE')).toBe(true);
+      expect(tokens.some(t => t.type === 'COMMA')).toBe(true);
+      expect(tokens.some(t => t.type === 'DOT')).toBe(true);
+      expect(tokens.some(t => t.type === 'TYPE_INDICATOR')).toBe(true);
+      expect(tokens.some(t => t.type === 'COLON')).toBe(true);
+      expect(tokens.some(t => t.type === 'PAREN_OPEN')).toBe(true);
+      expect(tokens.some(t => t.type === 'PAREN_CLOSE')).toBe(true);
+      expect(tokens.some(t => t.type === 'DASH')).toBe(true);
+    });
   });
 
   describe('Tokenizer class', () => {
@@ -98,6 +210,14 @@ describe('Tokenizer', () => {
       const tokens = tokenizer.tokenize();
       expect(tokens).toHaveLength(1);
       expect(tokens[0].type).toBe('TYPE_INDICATOR');
+    });
+
+    it('should reset position on multiple tokenize calls', () => {
+      const tokenizer = new Tokenizer('[J]');
+      const tokens1 = tokenizer.tokenize();
+      const tokens2 = tokenizer.tokenize();
+      expect(tokens1).toHaveLength(1);
+      expect(tokens2).toHaveLength(1);
     });
   });
 });

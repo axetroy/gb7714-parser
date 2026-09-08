@@ -378,7 +378,7 @@ describe('真实案例测试', () => {
     });
 
     it('应该处理带括号的期号', () => {
-      const { reference } = parse('[1] 张三. 研究论文[J]. 期刊名, 2025, 35(2): 100-115.');
+      const { reference } = parse<Journal>('[1] 张三. 研究论文[J]. 期刊名, 2025, 35(2): 100-115.');
 
       expect(reference.issue).toBe('2');
     });
@@ -522,13 +522,13 @@ describe('真实案例测试', () => {
     });
 
     it('应该处理带卷号的参考文献', () => {
-      const { reference } = parse('[1] 张三. 研究论文[J]. 期刊名, 2025, 35(2): 100-115.');
+      const { reference } = parse<Journal>('[1] 张三. 研究论文[J]. 期刊名, 2025, 35(2): 100-115.');
 
       expect(reference.volume).toBe('35');
     });
 
     it('应该处理带期号的参考文献', () => {
-      const { reference } = parse('[1] 张三. 研究论文[J]. 期刊名, 2025, 35(2): 100-115.');
+      const { reference } = parse<Journal>('[1] 张三. 研究论文[J]. 期刊名, 2025, 35(2): 100-115.');
 
       expect(reference.issue).toBe('2');
     });

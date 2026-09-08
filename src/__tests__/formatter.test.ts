@@ -346,6 +346,7 @@ describe('Formatter', () => {
     it('should format webPage without authors', () => {
       const reference: ReferenceUnion = {
         type: ReferenceType.EB,
+        authors: [],
         title: '网页标题',
         accessDate: '2025-09-07',
         url: 'https://example.com',
@@ -665,59 +666,351 @@ describe('Formatter', () => {
     });
 
     it('should handle generic type', () => {
-      const reference: ReferenceUnion = {
-        type: 'X' as any,
+      const reference = {
+        type: 'X' as ReferenceUnion['type'],
         authors: [{ surname: '张三' }],
         title: '通用标题',
         year: '2025',
-      };
+      } as ReferenceUnion;
       const result = format(reference);
       expect(result).toBe('张三 通用标题[X]. 2025.');
     });
 
     it('should handle generic type with publisher info', () => {
-      const reference: ReferenceUnion = {
-        type: 'X' as any,
+      const reference = {
+        type: 'X' as ReferenceUnion['type'],
         authors: [{ surname: '张三' }],
         title: '通用标题',
         year: '2025',
         publisherPlace: '北京',
         publisher: '出版社',
-      };
+      } as ReferenceUnion;
       const result = format(reference);
       expect(result).toBe('张三 通用标题[X]. 2025. 北京: 出版社.');
     });
 
     it('should handle generic type with url', () => {
-      const reference: ReferenceUnion = {
-        type: 'X' as any,
+      const reference = {
+        type: 'X' as ReferenceUnion['type'],
         authors: [{ surname: '张三' }],
         title: '通用标题',
         url: 'https://example.com',
-      };
+      } as ReferenceUnion;
       const result = format(reference);
       expect(result).toBe('张三 通用标题[X]. https://example.com');
     });
 
     it('should handle generic type without year', () => {
-      const reference: ReferenceUnion = {
-        type: 'X' as any,
+      const reference = {
+        type: 'X' as ReferenceUnion['type'],
         authors: [{ surname: '张三' }],
         title: '通用标题',
-      };
+      } as ReferenceUnion;
       const result = format(reference);
       expect(result).toBe('张三 通用标题[X].');
     });
 
     it('should handle generic type with id', () => {
-      const reference: ReferenceUnion = {
-        type: 'X' as any,
+      const reference = {
+        type: 'X' as ReferenceUnion['type'],
         id: '42',
         authors: [{ surname: '张三' }],
         title: '通用标题',
-      };
+      } as ReferenceUnion;
       const result = format(reference);
       expect(result).toBe('[42] 张三 通用标题[X].');
+    });
+
+    it('should handle generic type without authors', () => {
+      const reference = {
+        type: 'X' as ReferenceUnion['type'],
+        authors: [],
+        title: '通用标题',
+      } as ReferenceUnion;
+      const result = format(reference);
+      expect(result).toBe('通用标题[X].');
+    });
+
+    it('should handle generic type without publisherPlace and publisher', () => {
+      const reference = {
+        type: 'X' as ReferenceUnion['type'],
+        authors: [{ surname: '张三' }],
+        title: '通用标题',
+        year: '2025',
+      } as ReferenceUnion;
+      const result = format(reference);
+      expect(result).toBe('张三 通用标题[X]. 2025.');
+    });
+  });
+
+  describe('version-specific formatting', () => {
+    it('should use DOI for book in 2015 version', () => {
+      const reference: ReferenceUnion = {
+        type: ReferenceType.M,
+        authors: [{ surname: '李四' }],
+        title: '书名',
+        publisherPlace: '北京',
+        publisher: '出版社',
+        year: '2025',
+        pid: '10.1234/test',
+      };
+      const formatter = new Formatter({ version: '2015' });
+      const result = formatter.format(reference);
+      expect(result).toBe('李四 书名[M]. 北京: 出版社, 2025. DOI:10.1234/test');
+    });
+
+    it('should use PID for book in 2025 version', () => {
+      const reference: ReferenceUnion = {
+        type: ReferenceType.M,
+        authors: [{ surname: '李四' }],
+        title: '书名',
+        publisherPlace: '北京',
+        publisher: '出版社',
+        year: '2025',
+        pid: '10.1234/test',
+      };
+      const formatter = new Formatter({ version: '2025' });
+      const result = formatter.format(reference);
+      expect(result).toBe('李四 书名[M]. 北京: 出版社, 2025. PID:10.1234/test');
+    });
+  });
+
+  describe('type-specific formatting', () => {
+    it('should format standard with url', () => {
+      const reference: ReferenceUnion = {
+        type: ReferenceType.S,
+        authors: [],
+        title: '标准名称',
+        standardNumber: 'GB/T 3792—2021',
+        standardName: '信息与文献馆藏操作',
+        url: 'https://example.com',
+      };
+      const result = format(reference);
+      expect(result).toBe('GB/T 3792—2021 信息与文献馆藏操作[S]. https://example.com');
+    });
+
+    it('should format standard with id', () => {
+      const reference: ReferenceUnion = {
+        type: ReferenceType.S,
+        id: '45',
+        authors: [],
+        title: '标准名称',
+        standardNumber: 'GB/T 3792—2021',
+        standardName: '信息与文献馆藏操作',
+      };
+      const result = format(reference);
+      expect(result).toBe('[45] GB/T 3792—2021 信息与文献馆藏操作[S].');
+    });
+
+    it('should format patent with pages', () => {
+      const reference: ReferenceUnion = {
+        type: ReferenceType.P,
+        authors: [{ surname: '张三' }],
+        title: '发明名称',
+        patentNumber: 'CN2025001',
+        announceDate: '2025-09-07',
+        pages: '10',
+      };
+      const result = format(reference);
+      expect(result).toBe('张三 发明名称: CN2025001[P]. 2025-09-07: 10.');
+    });
+
+    it('should format report with pages', () => {
+      const reference: ReferenceUnion = {
+        type: ReferenceType.R,
+        authors: [{ surname: '张三' }],
+        title: '技术报告',
+        reportNumber: 'TR-2025-001',
+        releaseDate: '2025-09-07',
+        pages: '50',
+      };
+      const result = format(reference);
+      expect(result).toBe('张三 技术报告: TR-2025-001[R]. 2025-09-07: 50.');
+    });
+
+    it('should format report without reportNumber', () => {
+      const reference: ReferenceUnion = {
+        type: ReferenceType.R,
+        authors: [{ surname: '张三' }],
+        title: '技术报告',
+        releaseDate: '2025-09-07',
+      };
+      const result = format(reference);
+      expect(result).toBe('张三 技术报告[R]. 2025-09-07.');
+    });
+
+    it('should format map with dimensions', () => {
+      const reference: ReferenceUnion = {
+        type: ReferenceType.CM,
+        authors: [{ surname: '张三' }],
+        title: '地图标题',
+        scale: '1:25000',
+        publisherPlace: '北京',
+        publisher: '地图出版社',
+        year: '2025',
+        dimensions: '128 cm × 84 cm',
+      };
+      const result = format(reference);
+      expect(result).toBe('张三 地图标题. 1:25000[CM]. 北京: 地图出版社, 2025. 128 cm × 84 cm.');
+    });
+
+    it('should format archive with archiveNumber', () => {
+      const reference: ReferenceUnion = {
+        type: ReferenceType.A,
+        authors: [{ surname: '张三' }],
+        title: '档案标题',
+        archiveNumber: 'ABC123',
+      };
+      const result = format(reference);
+      expect(result).toBe('张三 档案标题: ABC123[A].');
+    });
+
+    it('should format archive without archiveNumber', () => {
+      const reference: ReferenceUnion = {
+        type: ReferenceType.A,
+        authors: [{ surname: '张三' }],
+        title: '档案标题',
+      };
+      const result = format(reference);
+      expect(result).toBe('张三 档案标题[A].');
+    });
+
+    it('should format proceedings without conferenceName', () => {
+      const reference: ReferenceUnion = {
+        type: ReferenceType.C,
+        authors: [{ surname: '张三' }],
+        title: '会议论文集',
+      };
+      const result = format(reference);
+      expect(result).toBe('张三 会议论文集[C].');
+    });
+
+    it('should format thesis without pages', () => {
+      const reference: ReferenceUnion = {
+        type: ReferenceType.D,
+        authors: [{ surname: '王五' }],
+        title: '深度学习研究',
+        awardPlace: '北京',
+        awardInstitution: '北京大学',
+        awardYear: '2025',
+      };
+      const result = format(reference);
+      expect(result).toBe('王五 深度学习研究[D]. 北京: 北京大学, 2025.');
+    });
+
+    it('should format book with id', () => {
+      const reference: ReferenceUnion = {
+        type: ReferenceType.M,
+        id: '50',
+        authors: [{ surname: '李四' }],
+        title: '书名',
+      };
+      const result = format(reference);
+      expect(result).toBe('[50] 李四 书名[M].');
+    });
+
+    it('should format journal with pid', () => {
+      const reference: ReferenceUnion = {
+        type: ReferenceType.J,
+        authors: [{ surname: '张三' }],
+        title: '论文标题',
+        journalTitle: '期刊名',
+        year: '2025',
+        pid: '10.1234/test',
+      };
+      const result = format(reference);
+      expect(result).toBe('张三 论文标题[J]. 期刊名, 2025. PID:10.1234/test');
+    });
+
+    it('should format thesis with url', () => {
+      const reference: ReferenceUnion = {
+        type: ReferenceType.D,
+        authors: [{ surname: '王五' }],
+        title: '深度学习研究',
+        awardPlace: '北京',
+        awardInstitution: '北京大学',
+        awardYear: '2025',
+        url: 'https://example.com',
+      };
+      const result = format(reference);
+      expect(result).toBe('王五 深度学习研究[D]. 北京: 北京大学, 2025. https://example.com');
+    });
+
+    it('should format webPage with authors', () => {
+      const reference: ReferenceUnion = {
+        type: ReferenceType.EB,
+        authors: [{ surname: '张三' }],
+        title: '网页标题',
+        createDate: '2025-01-01',
+        accessDate: '2025-09-07',
+        url: 'https://example.com',
+      };
+      const result = format(reference);
+      expect(result).toBe('张三 网页标题[EB/OL]. (2025-01-01) [2025-09-07]. https://example.com.');
+    });
+
+    it('should format dataset with releaseDate', () => {
+      const reference: ReferenceUnion = {
+        type: ReferenceType.DS,
+        authors: [{ surname: '张三' }],
+        title: '数据集标题',
+        platform: '国家数据中心',
+        releaseDate: '2025-09-07',
+        accessDate: '2025-10-01',
+      };
+      const result = format(reference);
+      expect(result).toBe('张三 数据集标题[DS/OL]. 国家数据中心 (2025-09-07) [2025-10-01].');
+    });
+
+    it('should format preprint with createDate', () => {
+      const reference: ReferenceUnion = {
+        type: ReferenceType.PP,
+        authors: [{ surname: '张三' }],
+        title: '预印本标题',
+        platform: 'arXiv',
+        createDate: '2025-09-07',
+        accessDate: '2025-10-01',
+      };
+      const result = format(reference);
+      expect(result).toBe('张三 预印本标题[PP/OL]. arXiv (2025-09-07) [2025-10-01].');
+    });
+
+    it('should format archive with collectionPlace', () => {
+      const reference: ReferenceUnion = {
+        type: ReferenceType.A,
+        authors: [{ surname: '张三' }],
+        title: '档案标题',
+        collectionPlace: '北京',
+        collector: '档案馆',
+        formedDate: '1887',
+      };
+      const result = format(reference);
+      expect(result).toBe('张三 档案标题[A]. 北京: 档案馆, 1887.');
+    });
+  });
+
+  describe('Formatter class', () => {
+    it('should create Formatter with default options', () => {
+      const formatter = new Formatter();
+      expect(formatter).toBeDefined();
+    });
+
+    it('should create Formatter with 2015 version', () => {
+      const formatter = new Formatter({ version: '2015' });
+      expect(formatter).toBeDefined();
+    });
+
+    it('should format reference using format method', () => {
+      const formatter = new Formatter();
+      const reference: ReferenceUnion = {
+        type: ReferenceType.J,
+        authors: [{ surname: '张三' }],
+        title: '论文标题',
+        journalTitle: '期刊名',
+        year: '2025',
+      };
+      const result = formatter.format(reference);
+      expect(result).toBe('张三 论文标题[J]. 期刊名, 2025.');
     });
   });
 });
