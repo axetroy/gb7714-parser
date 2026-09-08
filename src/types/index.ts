@@ -399,6 +399,8 @@ export interface FormatOptions {
   citationStyle?: CitationStyle;
   /** 是否输出引用日期（网站/网页必备） */
   includeAccessDate?: boolean;
+  /** 输出语言，默认 'zh'（影响"等"/"et al."） */
+  locale?: 'zh' | 'en';
 }
 
 /**

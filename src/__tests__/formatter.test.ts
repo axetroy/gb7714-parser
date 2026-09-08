@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { Formatter, format } from '../formatter/index.js';
+import { Formatter, format, formatCitation } from '../formatter/index.js';
 import type { ReferenceUnion } from '../types/index.js';
 import { ReferenceType, MediaType } from '../types/index.js';
 
@@ -101,7 +101,7 @@ describe('Formatter', () => {
         year: '2025',
       };
       const result = format(reference);
-      expect(result).toBe('张三, 李四, 王五, et al. 论文标题[J]. 期刊名, 2025.');
+      expect(result).toBe('张三, 李四, 王五, 等 论文标题[J]. 期刊名, 2025.');
     });
 
     it('should format organization as author', () => {
@@ -244,7 +244,7 @@ describe('Formatter', () => {
         releaseDate: '2025-09-07',
       };
       const result = format(reference);
-      expect(result).toBe('张三 技术报告: TR-2025-001[R]. 2025-09-07.');
+      expect(result).toBe('张三 技术报告;TR-2025-001[R]. 2025-09-07.');
     });
 
     it('should format archive', () => {
@@ -370,7 +370,7 @@ describe('Formatter', () => {
         reportNumber: 'TR-2025-001',
       };
       const result = format(reference);
-      expect(result).toBe('张三 技术报告: TR-2025-001[R].');
+      expect(result).toBe('张三 技术报告;TR-2025-001[R].');
     });
 
     it('should format patent without announceDate', () => {
@@ -527,7 +527,7 @@ describe('Formatter', () => {
         url: 'https://example.com',
       };
       const result = format(reference);
-      expect(result).toBe('张三 技术报告: TR-2025-001[R]. https://example.com');
+      expect(result).toBe('张三 技术报告;TR-2025-001[R]. https://example.com');
     });
 
     it('should format archive with url', () => {
@@ -838,7 +838,7 @@ describe('Formatter', () => {
         pages: '50',
       };
       const result = format(reference);
-      expect(result).toBe('张三 技术报告: TR-2025-001[R]. 2025-09-07: 50.');
+      expect(result).toBe('张三 技术报告;TR-2025-001[R]. 2025-09-07;50.');
     });
 
     it('should format report without reportNumber', () => {
@@ -1005,6 +1005,174 @@ describe('Formatter', () => {
     });
   });
 
+  describe('locale support', () => {
+    it('should use "等" for Chinese locale (default)', () => {
+      const reference: ReferenceUnion = {
+        type: ReferenceType.J,
+        authors: [
+          { surname: '张三' },
+          { surname: '李四' },
+          { surname: '王五' },
+          { surname: '赵六' },
+        ],
+        title: '论文标题',
+        journalTitle: '期刊名',
+        year: '2025',
+      };
+      const result = format(reference);
+      expect(result).toContain('等');
+      expect(result).not.toContain('et al.');
+    });
+
+    it('should use "et al." for English locale', () => {
+      const reference: ReferenceUnion = {
+        type: ReferenceType.J,
+        authors: [
+          { surname: 'Smith' },
+          { surname: 'Johnson' },
+          { surname: 'Williams' },
+          { surname: 'Brown' },
+        ],
+        title: 'Paper Title',
+        journalTitle: 'Journal Name',
+        year: '2025',
+      };
+      const formatter = new Formatter({ locale: 'en' });
+      const result = formatter.format(reference);
+      expect(result).toContain('et al.');
+      expect(result).not.toContain('等');
+    });
+  });
+
+  describe('subtitle support', () => {
+    it('should format book with subtitle', () => {
+      const reference: ReferenceUnion = {
+        type: ReferenceType.M,
+        authors: [{ surname: '李四' }],
+        title: '机器学习',
+        subtitle: '理论与实践',
+        publisherPlace: '北京',
+        publisher: '出版社',
+        year: '2025',
+      };
+      const result = format(reference);
+      expect(result).toBe('李四 机器学习: 理论与实践[M]. 北京: 出版社, 2025.');
+    });
+
+    it('should format journal with subtitle', () => {
+      const reference: ReferenceUnion = {
+        type: ReferenceType.J,
+        authors: [{ surname: '张三' }],
+        title: '人工智能研究',
+        subtitle: '综述篇',
+        journalTitle: '计算机学报',
+        year: '2025',
+        volume: '48',
+        issue: '1',
+      };
+      const result = format(reference);
+      expect(result).toBe('张三 人工智能研究: 综述篇[J]. 计算机学报, 2025, 48(1).');
+    });
+
+    it('should format thesis with subtitle', () => {
+      const reference: ReferenceUnion = {
+        type: ReferenceType.D,
+        authors: [{ surname: '王五' }],
+        title: '深度学习',
+        subtitle: '基于Transformer的研究',
+        awardPlace: '北京',
+        awardInstitution: '北京大学',
+        awardYear: '2025',
+      };
+      const result = format(reference);
+      expect(result).toBe('王五 深度学习: 基于Transformer的研究[D]. 北京: 北京大学, 2025.');
+    });
+  });
+
+  describe('otherAuthors support', () => {
+    it('should format book with otherAuthors (translator)', () => {
+      const reference: ReferenceUnion = {
+        type: ReferenceType.M,
+        authors: [{ surname: 'Smith' }],
+        title: 'AI Handbook',
+        otherAuthors: [{ surname: '张三' }],
+        publisherPlace: '北京',
+        publisher: '出版社',
+        year: '2025',
+      };
+      const result = format(reference);
+      expect(result).toBe('Smith AI Handbook[M]. 张三. 北京: 出版社, 2025.');
+    });
+
+    it('should format book with multiple otherAuthors', () => {
+      const reference: ReferenceUnion = {
+        type: ReferenceType.M,
+        authors: [{ surname: 'Smith' }],
+        title: 'AI Handbook',
+        otherAuthors: [
+          { surname: '张三' },
+          { surname: '李四' },
+        ],
+        publisherPlace: '北京',
+        publisher: '出版社',
+        year: '2025',
+      };
+      const result = format(reference);
+      expect(result).toBe('Smith AI Handbook[M]. 张三, 李四. 北京: 出版社, 2025.');
+    });
+  });
+
+  describe('component part with pages', () => {
+    it('should format component part with host info and pages', () => {
+      const reference: ReferenceUnion = {
+        type: 'Z' as ReferenceUnion['type'],
+        authors: [{ surname: '张三' }],
+        title: '析出文献标题',
+        host: {
+          authors: [{ surname: '李四' }],
+          title: '图书标题',
+          publisherPlace: '北京',
+          publisher: '出版社',
+          year: '2025',
+        },
+        pages: '100-110',
+      } as ReferenceUnion;
+      const result = format(reference);
+      expect(result).toBe('张三 析出文献标题// 李四 图书标题. 北京: 出版社, 2025: 100-110.');
+    });
+
+    it('should format component part without pages', () => {
+      const reference: ReferenceUnion = {
+        type: 'Z' as ReferenceUnion['type'],
+        authors: [{ surname: '张三' }],
+        title: '析出文献标题',
+        host: {
+          authors: [{ surname: '李四' }],
+          title: '图书标题',
+          publisherPlace: '北京',
+          publisher: '出版社',
+          year: '2025',
+        },
+      } as ReferenceUnion;
+      const result = format(reference);
+      expect(result).toBe('张三 析出文献标题// 李四 图书标题. 北京: 出版社, 2025.');
+    });
+
+    it('should format component part with subtitle', () => {
+      const reference: ReferenceUnion = {
+        type: 'Z' as ReferenceUnion['type'],
+        authors: [{ surname: '张三' }],
+        title: '析出文献',
+        subtitle: '副标题',
+        host: {
+          title: '图书标题',
+        },
+      } as ReferenceUnion;
+      const result = format(reference);
+      expect(result).toBe('张三 析出文献: 副标题// 图书标题.');
+    });
+  });
+
   describe('Formatter class', () => {
     it('should create Formatter with default options', () => {
       const formatter = new Formatter();
@@ -1027,6 +1195,162 @@ describe('Formatter', () => {
       };
       const result = formatter.format(reference);
       expect(result).toBe('张三 论文标题[J]. 期刊名, 2025.');
+    });
+  });
+
+  describe('formatCitation', () => {
+    it('should format numeric citation', () => {
+      const reference: ReferenceUnion = {
+        type: ReferenceType.J,
+        id: '5',
+        authors: [{ surname: '张三' }],
+        title: '论文标题',
+        journalTitle: '期刊名',
+        year: '2025',
+      };
+      expect(formatCitation(reference)).toBe('[5]');
+    });
+
+    it('should format numeric citation without id', () => {
+      const reference: ReferenceUnion = {
+        type: ReferenceType.J,
+        authors: [{ surname: '张三' }],
+        title: '论文标题',
+        journalTitle: '期刊名',
+        year: '2025',
+      };
+      expect(formatCitation(reference)).toBe('');
+    });
+
+    it('should format author-date citation', () => {
+      const reference: ReferenceUnion = {
+        type: ReferenceType.J,
+        authors: [{ surname: '张三' }],
+        title: '论文标题',
+        journalTitle: '期刊名',
+        year: '2025',
+      };
+      const result = formatCitation(reference, { citationStyle: 'author-date' });
+      expect(result).toBe('(张三, 2025)');
+    });
+
+    it('should format author-date citation with multiple authors', () => {
+      const reference: ReferenceUnion = {
+        type: ReferenceType.J,
+        authors: [
+          { surname: '张三' },
+          { surname: '李四' },
+          { surname: '王五' },
+        ],
+        title: '论文标题',
+        journalTitle: '期刊名',
+        year: '2025',
+      };
+      const result = formatCitation(reference, { citationStyle: 'author-date' });
+      expect(result).toBe('(张三, 等, 2025)');
+    });
+
+    it('should format author-date citation in English', () => {
+      const reference: ReferenceUnion = {
+        type: ReferenceType.J,
+        authors: [
+          { surname: 'Smith' },
+          { surname: 'Johnson' },
+        ],
+        title: 'Paper Title',
+        journalTitle: 'Journal Name',
+        year: '2025',
+      };
+      const result = formatCitation(reference, { citationStyle: 'author-date', locale: 'en' });
+      expect(result).toBe('(Smith, et al., 2025)');
+    });
+
+    it('should format author-date citation with single author', () => {
+      const reference: ReferenceUnion = {
+        type: ReferenceType.J,
+        authors: [{ surname: 'Smith' }],
+        title: 'Paper Title',
+        journalTitle: 'Journal Name',
+        year: '2025',
+      };
+      const result = formatCitation(reference, { citationStyle: 'author-date', locale: 'en' });
+      expect(result).toBe('(Smith, 2025)');
+    });
+
+    it('should format author-date citation without year', () => {
+      const reference: ReferenceUnion = {
+        type: ReferenceType.J,
+        authors: [{ surname: '张三' }],
+        title: '论文标题',
+        journalTitle: '期刊名',
+        year: '',
+      };
+      const result = formatCitation(reference, { citationStyle: 'author-date' });
+      expect(result).toBe('');
+    });
+
+    it('should format author-date citation without authors', () => {
+      const reference: ReferenceUnion = {
+        type: ReferenceType.J,
+        authors: [],
+        title: '论文标题',
+        journalTitle: '期刊名',
+        year: '2025',
+      };
+      const result = formatCitation(reference, { citationStyle: 'author-date' });
+      expect(result).toBe('(2025)');
+    });
+  });
+
+  describe('author-date journal format', () => {
+    it('should format journal with year after author in author-date style', () => {
+      const reference: ReferenceUnion = {
+        type: ReferenceType.J,
+        authors: [{ surname: '张三' }],
+        title: '论文标题',
+        journalTitle: '期刊名',
+        year: '2025',
+        volume: '35',
+        issue: '2',
+        pages: '15-22',
+      };
+      const formatter = new Formatter({ citationStyle: 'author-date' });
+      const result = formatter.format(reference);
+      expect(result).toBe('张三, 2025. 论文标题[J]. 期刊名, 35(2): 15-22.');
+    });
+
+    it('should format journal with year after author and multiple authors', () => {
+      const reference: ReferenceUnion = {
+        type: ReferenceType.J,
+        authors: [
+          { surname: '张三' },
+          { surname: '李四' },
+          { surname: '王五' },
+          { surname: '赵六' },
+        ],
+        title: '论文标题',
+        journalTitle: '期刊名',
+        year: '2025',
+        volume: '10',
+        issue: '1',
+      };
+      const formatter = new Formatter({ citationStyle: 'author-date' });
+      const result = formatter.format(reference);
+      // 参考文献表: 前3个 + "等" (§7.1.2)
+      expect(result).toBe('张三, 李四, 王五, 等, 2025. 论文标题[J]. 期刊名, 10(1).');
+    });
+
+    it('should format journal in author-date style without volume/issue', () => {
+      const reference: ReferenceUnion = {
+        type: ReferenceType.J,
+        authors: [{ surname: '张三' }],
+        title: '论文标题',
+        journalTitle: '期刊名',
+        year: '2025',
+      };
+      const formatter = new Formatter({ citationStyle: 'author-date' });
+      const result = formatter.format(reference);
+      expect(result).toBe('张三, 2025. 论文标题[J]. 期刊名.');
     });
   });
 });

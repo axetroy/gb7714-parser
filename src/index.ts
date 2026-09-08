@@ -79,7 +79,7 @@ import { AuthorDateParser } from './parsers/index.js';
 import { ComputerProgramParser } from './parsers/index.js';
 import { DatabaseParser } from './parsers/index.js';
 import { validate as validateFn } from './validator/index.js';
-import { format as formatFn } from './formatter/index.js';
+import { format as formatFn, formatCitation as formatCitationFn } from './formatter/index.js';
 import type { ReferenceUnion, ParseOptions, FormatOptions, ValidationReport, StandardVersion } from './types/index.js';
 
 // 创建默认解析器实例并注册策略
@@ -183,6 +183,25 @@ export function validate(
  */
 export function format(reference: ReferenceUnion, options?: FormatOptions): string {
   return formatFn(reference, options);
+}
+
+/**
+ * 格式化正文引用标注
+ *
+ * @example
+ * ```typescript
+ * import { formatCitation } from 'gb7714-parser';
+ *
+ * // 顺序编码制
+ * const ref = parse('[1] 张三. 论文[J]. 期刊, 2025.').reference;
+ * console.log(formatCitation(ref)); // "[1]"
+ *
+ * // 著者-出版年制
+ * console.log(formatCitation(ref, { citationStyle: 'author-date' })); // "(张三, 2025)"
+ * ```
+ */
+export function formatCitation(reference: ReferenceUnion, options?: FormatOptions): string {
+  return formatCitationFn(reference, options);
 }
 
 // 导出类以便高级用法

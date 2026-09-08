@@ -16,6 +16,7 @@ export class Formatter {
   constructor(options?: FormatOptions) {
     this.options = {
       version: '2025',
+      locale: 'zh',
       ...options,
     };
   }
@@ -122,6 +123,7 @@ export class Formatter {
 
   /**
    * 格式化析出文献
+   * 格式: 作者. 析出文献题名[M]//宿主作者. 宿主题名. 版本. 出版地: 出版者, 出版年: 析出文献页码.
    */
   private formatComponentPart(ref: ReferenceUnion): string {
     const component = ref as ComponentPart;
@@ -150,16 +152,26 @@ export class Formatter {
       }
       parts.push(`${component.host.title}.`);
 
-      if (component.host.publisherPlace && component.host.publisher && component.host.year) {
-        parts.push(`${component.host.publisherPlace}: ${component.host.publisher}, ${component.host.year}.`);
-      } else if (component.host.year) {
-        parts.push(`${component.host.year}.`);
+      if (component.host.version) {
+        parts.push(`${component.host.version}.`);
       }
-    }
 
-    // 析出文献页码
-    if (component.pages) {
-      parts.push(`: ${component.pages}.`);
+      if (component.host.publisherPlace && component.host.publisher && component.host.year) {
+        let hostInfo = `${component.host.publisherPlace}: ${component.host.publisher}, ${component.host.year}`;
+        // 析出文献页码紧跟在出版年后面
+        if (component.pages) {
+          hostInfo += `: ${component.pages}`;
+        }
+        parts.push(hostInfo + '.');
+      } else if (component.host.year) {
+        let hostInfo = `${component.host.year}`;
+        if (component.pages) {
+          hostInfo += `: ${component.pages}`;
+        }
+        parts.push(hostInfo + '.');
+      } else if (component.pages) {
+        parts.push(`: ${component.pages}.`);
+      }
     }
 
     if (component.url) {
@@ -179,12 +191,15 @@ export class Formatter {
 
   /**
    * 格式化期刊
+   * 顺序编码制: 作者. 题名[J]. 刊名, 年, 卷(期): 页码.
+   * 著者-出版年制: 作者, 年. 题名[J]. 刊名, 卷(期): 页码.
    */
   private formatJournal(ref: ReferenceUnion): string {
     const journal = ref as {
       id?: string;
       authors: Author[];
       title: string;
+      subtitle?: string;
       journalTitle: string;
       year: string;
       volume?: string;
@@ -197,20 +212,27 @@ export class Formatter {
 
     const parts: string[] = [];
 
-    // 序号
     if (journal.id) {
       parts.push(`[${journal.id}]`);
     }
 
-    // 作者
-    parts.push(this.formatAuthors(journal.authors));
+    // 著者-出版年制: 作者, 年.
+    if (this.options.citationStyle === 'author-date' && journal.year) {
+      parts.push(`${this.formatAuthors(journal.authors)}, ${journal.year}.`);
+    } else {
+      parts.push(this.formatAuthors(journal.authors));
+    }
 
-    // 题名
-    parts.push(`${journal.title}${buildTypeIndicator('J', journal.mediaType)}.`);
+    let title = journal.title;
+    if (journal.subtitle) {
+      title += `: ${journal.subtitle}`;
+    }
+    parts.push(`${title}${buildTypeIndicator('J', journal.mediaType)}.`);
 
-    // 刊名, 年, 卷(期): 页码
+    // 刊名, [年,] 卷(期): 页码
     let journalInfo = journal.journalTitle;
-    if (journal.year) {
+    // 著者-出版年制时，年已移至作者后，此处不再重复
+    if (this.options.citationStyle !== 'author-date' && journal.year) {
       journalInfo += `, ${journal.year}`;
     }
     if (journal.volume) {
@@ -224,12 +246,10 @@ export class Formatter {
     }
     parts.push(journalInfo + '.');
 
-    // URL
     if (journal.url) {
       parts.push(journal.url);
     }
 
-    // PID/DOI
     if (journal.pid) {
       if (this.options.version === '2015') {
         parts.push(`DOI:${journal.pid}`);
@@ -243,12 +263,15 @@ export class Formatter {
 
   /**
    * 格式化图书
+   * 格式: 作者. 题名: 副标题[M]. 其他责任者. 版本. 出版地: 出版者, 出版年: 页码.
    */
   private formatBook(ref: ReferenceUnion): string {
     const book = ref as {
       id?: string;
       authors: Author[];
       title: string;
+      subtitle?: string;
+      otherAuthors?: Author[];
       version?: string;
       publisherPlace?: string;
       publisher?: string;
@@ -266,18 +289,28 @@ export class Formatter {
     }
 
     parts.push(this.formatAuthors(book.authors));
-    parts.push(`${book.title}${buildTypeIndicator('M', book.mediaType)}.`);
+
+    let title = book.title;
+    if (book.subtitle) {
+      title += `: ${book.subtitle}`;
+    }
+    parts.push(`${title}${buildTypeIndicator('M', book.mediaType)}.`);
+
+    // 其他责任者（译者、编者等）
+    if (book.otherAuthors && book.otherAuthors.length > 0) {
+      parts.push(this.formatAuthors(book.otherAuthors) + '.');
+    }
 
     if (book.version) {
       parts.push(`${book.version}.`);
     }
 
     if (book.publisherPlace && book.publisher && book.year) {
-      parts.push(`${book.publisherPlace}: ${book.publisher}, ${book.year}`);
+      let info = `${book.publisherPlace}: ${book.publisher}, ${book.year}`;
       if (book.pages) {
-        parts[parts.length - 1] += `: ${book.pages}`;
+        info += `: ${book.pages}`;
       }
-      parts[parts.length - 1] += '.';
+      parts.push(info + '.');
     }
 
     if (book.url) {
@@ -297,12 +330,14 @@ export class Formatter {
 
   /**
    * 格式化学位论文
+   * 格式: 作者. 题名: 副标题[D]. 学位授予单位所在地: 学位授予单位, 学位授予年: 页码.
    */
   private formatThesis(ref: ReferenceUnion): string {
     const thesis = ref as {
       id?: string;
       authors: Author[];
       title: string;
+      subtitle?: string;
       awardPlace?: string;
       awardInstitution: string;
       awardYear?: string;
@@ -318,7 +353,12 @@ export class Formatter {
     }
 
     parts.push(this.formatAuthors(thesis.authors));
-    parts.push(`${thesis.title}${buildTypeIndicator('D', thesis.mediaType)}.`);
+
+    let title = thesis.title;
+    if (thesis.subtitle) {
+      title += `: ${thesis.subtitle}`;
+    }
+    parts.push(`${title}${buildTypeIndicator('D', thesis.mediaType)}.`);
 
     if (thesis.awardPlace && thesis.awardInstitution && thesis.awardYear) {
       let info = `${thesis.awardPlace}: ${thesis.awardInstitution}, ${thesis.awardYear}`;
@@ -382,6 +422,7 @@ export class Formatter {
 
   /**
    * 格式化报告
+   * 格式: 作者. 题名;报告编号[R]. 发布日期;引文页码.
    */
   private formatReport(ref: ReferenceUnion): string {
     const report = ref as {
@@ -402,16 +443,17 @@ export class Formatter {
     }
 
     parts.push(this.formatAuthors(report.authors));
+
     let title = report.title;
     if (report.reportNumber) {
-      title += `: ${report.reportNumber}`;
+      title += `;${report.reportNumber}`;
     }
     parts.push(`${title}${buildTypeIndicator('R', report.mediaType)}.`);
 
     if (report.releaseDate) {
       let info = report.releaseDate;
       if (report.pages) {
-        info += `: ${report.pages}`;
+        info += `;${report.pages}`;
       }
       parts.push(info + '.');
     }
@@ -752,7 +794,68 @@ export class Formatter {
   }
 
   /**
+   * 格式化正文引用标注
+   * - 顺序编码制: [序号]
+   * - 著者-出版年制: (作者, 年) 或 (作者 et al., 年)
+   *
+   * §9.3.1.2: 多责任者文献，欧美责任者只标第一个姓 + "et al."；中国责任者标第一责任者姓名 + "等"
+   */
+  formatCitation(reference: ReferenceUnion): string {
+    if (this.options.citationStyle === 'author-date') {
+      return this.formatAuthorDateCitation(reference);
+    }
+    // 顺序编码制
+    return reference.id ? `[${reference.id}]` : '';
+  }
+
+  /**
+   * 格式化著者-出版年制引用标注
+   * 格式: (作者, 年) 或 (作者 et al., 年)
+   */
+  private formatAuthorDateCitation(ref: ReferenceUnion): string {
+    const year = this.getYear(ref);
+    if (!year) return '';
+
+    const authors = ref.authors;
+    if (authors.length === 0) {
+      return `(${year})`;
+    }
+
+    // §9.3.1.2: 多责任者 → 第一个姓 + "等"/"et al."
+    let authorStr: string;
+    if (authors.length > 1) {
+      const first = authors[0]!;
+      const surname = first.isOrganization ? first.surname : first.surname;
+      const suffix = this.options.locale === 'en' ? 'et al.' : '等';
+      authorStr = `${surname}, ${suffix}`;
+    } else {
+      authorStr = authors[0]!.surname;
+    }
+
+    return `(${authorStr}, ${year})`;
+  }
+
+  /**
+   * 获取文献的年份
+   */
+  private getYear(ref: ReferenceUnion): string {
+    // 各类型有不同的年份字段名
+    const r = ref as unknown as Record<string, unknown>;
+    for (const key of ['year', 'awardYear', 'conferenceYear', 'releaseDate', 'formedDate']) {
+      const val = r[key];
+      if (typeof val === 'string' && val) {
+        // 提取 YYYY 部分
+        const match = val.match(/^(\d{4})/);
+        if (match) return match[1]!;
+      }
+    }
+    return '';
+  }
+
+  /**
    * 格式化作者列表
+   * - 超过3个责任者 → 前3个 + "等"或"et al."
+   * - 无责任者 → 空字符串（顺序编码制可省略，§7.1.3）
    */
   private formatAuthors(authors: Author[]): string {
     if (authors.length === 0) return '';
@@ -768,7 +871,8 @@ export class Formatter {
     });
 
     if (formatted.length > 3) {
-      return formatted.slice(0, 3).join(', ') + ', et al.';
+      const suffix = this.options.locale === 'en' ? 'et al.' : '等';
+      return formatted.slice(0, 3).join(', ') + `, ${suffix}`;
     }
 
     return formatted.join(', ');
@@ -781,4 +885,12 @@ export class Formatter {
 export function format(reference: ReferenceUnion, options?: FormatOptions): string {
   const formatter = new Formatter(options);
   return formatter.format(reference);
+}
+
+/**
+ * 便捷函数：格式化正文引用标注
+ */
+export function formatCitation(reference: ReferenceUnion, options?: FormatOptions): string {
+  const formatter = new Formatter(options);
+  return formatter.formatCitation(reference);
 }
