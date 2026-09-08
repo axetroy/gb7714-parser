@@ -1,0 +1,228 @@
+:root {
+  --vp-c-brand-1: #3451b2;
+  --vp-c-brand-2: #3a5ccc;
+  --vp-c-brand-3: #5273ff;
+  --vp-c-brand-soft: rgba(100, 108, 255, 0.14);
+}
+
+.dark {
+  --vp-c-brand-1: #a8b1ff;
+  --vp-c-brand-2: #5273ff;
+  --vp-c-brand-3: #3451b2;
+}
+
+.playground-container {
+  border: 1px solid var(--vp-c-border);
+  border-radius: 8px;
+  padding: 20px;
+  margin: 20px 0;
+}
+
+.playground-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.playground-tabs {
+  display: flex;
+  gap: 8px;
+}
+
+.playground-tab {
+  padding: 8px 16px;
+  border: 1px solid var(--vp-c-border);
+  border-radius: 6px;
+  background: transparent;
+  color: var(--vp-c-text-1);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.playground-tab:hover {
+  background: var(--vp-c-brand-soft);
+}
+
+.playground-tab.active {
+  background: var(--vp-c-brand-1);
+  color: white;
+  border-color: var(--vp-c-brand-1);
+}
+
+.playground-input {
+  width: 100%;
+  min-height: 120px;
+  padding: 12px;
+  border: 1px solid var(--vp-c-border);
+  border-radius: 6px;
+  background: var(--vp-c-bg-soft);
+  color: var(--vp-c-text-1);
+  font-family: monospace;
+  font-size: 14px;
+  resize: vertical;
+  margin-bottom: 16px;
+}
+
+.playground-input:focus {
+  outline: none;
+  border-color: var(--vp-c-brand-1);
+}
+
+.playground-actions {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.playground-button {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 6px;
+  background: var(--vp-c-brand-1);
+  color: white;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.playground-button:hover {
+  background: var(--vp-c-brand-2);
+}
+
+.playground-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.playground-result {
+  border: 1px solid var(--vp-c-border);
+  border-radius: 6px;
+  background: var(--vp-c-bg-soft);
+  overflow: hidden;
+}
+
+.playground-result-header {
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--vp-c-border);
+  font-weight: 500;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.playground-result-content {
+  padding: 16px;
+  font-family: monospace;
+  font-size: 14px;
+  white-space: pre-wrap;
+  word-break: break-all;
+}
+
+.playground-error {
+  color: var(--vp-c-danger-1);
+  background: rgba(234, 84, 85, 0.1);
+  padding: 16px;
+  border-radius: 6px;
+  margin-top: 12px;
+}
+
+.playground-success {
+  color: var(--vp-c-green-1);
+  background: rgba(52, 211, 153, 0.1);
+  padding: 16px;
+  border-radius: 6px;
+  margin-top: 12px;
+}
+
+.playground-warnings {
+  color: var(--vp-c-warning-1);
+  background: rgba(255, 193, 7, 0.1);
+  padding: 16px;
+  border-radius: 6px;
+  margin-top: 12px;
+}
+
+.playground-section {
+  margin-bottom: 24px;
+}
+
+.playground-section-title {
+  font-size: 16px;
+  font-weight: 600;
+  margin-bottom: 12px;
+}
+
+.playground-options {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-bottom: 16px;
+}
+
+.playground-option {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.playground-option label {
+  font-size: 14px;
+  color: var(--vp-c-text-2);
+}
+
+.playground-option select {
+  padding: 6px 12px;
+  border: 1px solid var(--vp-c-border);
+  border-radius: 4px;
+  background: var(--vp-c-bg-soft);
+  color: var(--vp-c-text-1);
+}
+
+.playground-copy-button {
+  padding: 4px 8px;
+  border: 1px solid var(--vp-c-border);
+  border-radius: 4px;
+  background: transparent;
+  color: var(--vp-c-text-2);
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.playground-copy-button:hover {
+  background: var(--vp-c-brand-soft);
+  color: var(--vp-c-brand-1);
+}
+
+.playground-examples {
+  margin-bottom: 16px;
+}
+
+.playground-examples-title {
+  font-size: 14px;
+  color: var(--vp-c-text-2);
+  margin-bottom: 8px;
+}
+
+.playground-example-buttons {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.playground-example-button {
+  padding: 6px 12px;
+  border: 1px solid var(--vp-c-border);
+  border-radius: 4px;
+  background: transparent;
+  color: var(--vp-c-text-1);
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.playground-example-button:hover {
+  background: var(--vp-c-brand-soft);
+  border-color: var(--vp-c-brand-1);
+}

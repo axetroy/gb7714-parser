@@ -30,6 +30,9 @@
     "lint": "eslint src --ext .ts",
     "typecheck": "tsc --noEmit && tsc --noEmit -p tsconfig.test.json",
     "prepublishOnly": "npm run build",
+    "docs:dev": "vitepress dev docs",
+    "docs:build": "vitepress build docs",
+    "docs:preview": "vitepress preview docs",
     "crawl": "node scripts/crawl-wanfang.mjs",
     "crawl:install": "PLAYWRIGHT_DOWNLOAD_HOST=https://npmmirror.com/mirrors/playwright npx playwright install chromium"
   },
@@ -64,6 +67,8 @@
     "playwright": "^1.63.0",
     "tsup": "^8.5.1",
     "typescript": "^6.0.3",
-    "vitest": "^5.0.0"
+    "vitepress": "^1.6.4",
+    "vitest": "^5.0.0",
+    "vue": "^3.5.42"
   }
 }
