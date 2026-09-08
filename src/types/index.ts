@@ -172,12 +172,43 @@ export interface Newspaper extends Reference {
   type: ReferenceType.N;
   /** 报纸名 */
   newspaperTitle: string;
-  /** 年 */
+  /** 出版日期（YYYY-MM-DD） */
   year: string;
   /** 月日（如 "09-07"） */
   monthDay?: string;
-  /** 版次（如 "第5版"） */
+  /** 版次（如 "15"） */
   edition?: string;
+}
+
+/**
+ * 连续出版物接口（§8.4）
+ */
+export interface Serial extends Reference {
+  type: ReferenceType.J;
+  /** 刊名 */
+  serialTitle: string;
+  /** 刊名其他题名信息 */
+  serialSubtitle?: string;
+  /** 起始年 */
+  startYear: string;
+  /** 起始卷 */
+  startVolume?: string;
+  /** 起始期 */
+  startIssue?: string;
+  /** 结束年（无限期发行时为空） */
+  endYear?: string;
+  /** 结束卷 */
+  endVolume?: string;
+  /** 结束期 */
+  endIssue?: string;
+  /** 出版地 */
+  publisherPlace?: string;
+  /** 出版者 */
+  publisher?: string;
+  /** 出版年起始 */
+  publicationStartYear?: string;
+  /** 出版年结束（无限期发行时为空） */
+  publicationEndYear?: string;
 }
 
 /**
@@ -356,6 +387,7 @@ export type ReferenceUnion =
   | Reference
   | Journal
   | Newspaper
+  | Serial
   | Book
   | Thesis
   | Proceedings

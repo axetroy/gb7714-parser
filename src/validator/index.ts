@@ -249,7 +249,7 @@ export class Validator {
    * 校验报纸
    */
   private validateNewspaper(ref: ReferenceUnion, errors: ValidationError[]): void {
-    const newspaper = ref as { newspaperTitle?: string; year?: string };
+    const newspaper = ref as { newspaperTitle?: string; year?: string; monthDay?: string };
 
     if (!newspaper.newspaperTitle) {
       errors.push({
@@ -262,9 +262,18 @@ export class Validator {
     if (!newspaper.year) {
       errors.push({
         field: 'year',
-        message: '出版年为必填字段',
+        message: '出版日期为必填字段',
         level: 'error',
       });
+    } else {
+      // 标准 §8.5.1.4 要求报纸出版日期为 YYYY-MM-DD 格式
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(newspaper.year)) {
+        errors.push({
+          field: 'year',
+          message: '报纸出版日期格式应为 YYYY-MM-DD',
+          level: 'warning',
+        });
+      }
     }
   }
 
@@ -324,8 +333,17 @@ export class Validator {
   /**
    * 校验报告
    */
-  private validateReport(_ref: ReferenceUnion, _errors: ValidationError[]): void {
-    // 报告的校验规则相对宽松
+  private validateReport(ref: ReferenceUnion, errors: ValidationError[]): void {
+    const report = ref as { reportNumber?: string; releaseDate?: string };
+
+    // 标准 §8.8 要求报告发布日期为 YYYY-MM-DD 格式
+    if (report.releaseDate && !/^\d{4}-\d{2}-\d{2}$/.test(report.releaseDate)) {
+      errors.push({
+        field: 'releaseDate',
+        message: '报告发布日期格式应为 YYYY-MM-DD',
+        level: 'warning',
+      });
+    }
   }
 
   /**
@@ -341,12 +359,13 @@ export class Validator {
         level: 'error',
       });
     } else {
-      // 校验标准编号格式：GB/T XXXX—YYYY 或 GB XXXX—YYYY 等
-      const standardNumberPattern = /^(GB|GB\/T|ISO|IEC|ASTM|BS|DIN|JIS|NF|EN|ANSI)[\/\s]?[A-Z]?\s*\d{2,6}[-—]\d{4}$/;
+      // 校验标准编号格式：支持多种国际标准格式
+      // GB/T XXXX—YYYY, GB XXXX—YYYY, ISO XXXX:YYYY, IEC XXXX:YYYY, IEEE XXXX—YYYY 等
+      const standardNumberPattern = /^(GB|GB\/T|ISO|IEC|IEEE|ASTM|BS|DIN|JIS|NF|EN|ANSI|NB|DB|SJ|GA|JB|YD|HJ)[\/\-]?\w*\s*[\d\.]+[-—:]\d{2,4}(\.\d+)?$/;
       if (!standardNumberPattern.test(standard.standardNumber)) {
         errors.push({
           field: 'standardNumber',
-          message: '标准编号格式不正确，应符合如 "GB/T 3792—2021" 的格式',
+          message: '标准编号格式不正确，应符合如 "GB/T 3792—2021" 或 "ISO 21378:2019" 的格式',
           level: 'warning',
         });
       }
@@ -365,7 +384,7 @@ export class Validator {
    * 校验专利
    */
   private validatePatent(ref: ReferenceUnion, errors: ValidationError[]): void {
-    const patent = ref as { patentNumber?: string };
+    const patent = ref as { patentNumber?: string; announceDate?: string };
 
     if (!patent.patentNumber) {
       errors.push({
@@ -375,7 +394,7 @@ export class Validator {
       });
     } else {
       // 校验专利申请号格式：CN/YYYYMMDDXXXX.X 或 USYYYYMMDDXXX 等
-      const patentNumberPattern = /^(CN|US|EP|JP|KR|WO)\d{8,12}[\.\/]?\d*$/;
+      const patentNumberPattern = /^(CN|US|EP|JP|KR|WO|AU)\d{8,12}[\.\/]?\d*$/;
       if (!patentNumberPattern.test(patent.patentNumber)) {
         errors.push({
           field: 'patentNumber',
@@ -383,6 +402,15 @@ export class Validator {
           level: 'warning',
         });
       }
+    }
+
+    // 标准 §8.10 要求专利公告日期为 YYYY-MM-DD 格式
+    if (patent.announceDate && !/^\d{4}-\d{2}-\d{2}$/.test(patent.announceDate)) {
+      errors.push({
+        field: 'announceDate',
+        message: '专利公告日期格式应为 YYYY-MM-DD',
+        level: 'warning',
+      });
     }
   }
 
@@ -412,22 +440,41 @@ export class Validator {
   /**
    * 校验档案
    */
-  private validateArchive(_ref: ReferenceUnion, _errors: ValidationError[]): void {
-    // 档案的校验规则相对宽松
+  private validateArchive(ref: ReferenceUnion, errors: ValidationError[]): void {
+    const archive = ref as { archiveNumber?: string; formedDate?: string };
+
+    // 标准 §8.12 要求档案形成日期格式
+    if (archive.formedDate && !/^\d{4}(-\d{2}(-\d{2})?)?$/.test(archive.formedDate)) {
+      errors.push({
+        field: 'formedDate',
+        message: '档案形成日期格式应为 YYYY-MM-DD 或 YYYY-MM 或 YYYY',
+        level: 'warning',
+      });
+    }
   }
 
   /**
    * 校验地图
    */
-  private validateMap(_ref: ReferenceUnion, _errors: ValidationError[]): void {
-    // 地图的校验规则相对宽松
+  private validateMap(ref: ReferenceUnion, errors: ValidationError[]): void {
+    const map = ref as { scale?: string; dimensions?: string };
+
+    // 标准 §8.13.2 要求纸质单幅地图必须有尺寸
+    // 这里只做警告提示，因为无法判断是否为纸质单幅地图
+    if (!map.dimensions) {
+      errors.push({
+        field: 'dimensions',
+        message: '地图建议包含尺寸信息（如 "128 cm × 84 cm"）',
+        level: 'warning',
+      });
+    }
   }
 
   /**
    * 校验数据集
    */
   private validateDataset(ref: ReferenceUnion, errors: ValidationError[]): void {
-    const dataset = ref as { accessDate?: string };
+    const dataset = ref as { accessDate?: string; releaseDate?: string };
 
     if (!dataset.accessDate) {
       errors.push({
@@ -436,13 +483,22 @@ export class Validator {
         level: 'error',
       });
     }
+
+    // 标准 §8.14 要求数据集发布日期为 YYYY-MM-DD 格式
+    if (dataset.releaseDate && !/^\d{4}-\d{2}-\d{2}$/.test(dataset.releaseDate)) {
+      errors.push({
+        field: 'releaseDate',
+        message: '数据集发布日期格式应为 YYYY-MM-DD',
+        level: 'warning',
+      });
+    }
   }
 
   /**
    * 校验预印本
    */
   private validatePreprint(ref: ReferenceUnion, errors: ValidationError[]): void {
-    const preprint = ref as { accessDate?: string; url?: string };
+    const preprint = ref as { accessDate?: string; url?: string; createDate?: string };
 
     if (!preprint.accessDate) {
       errors.push({
@@ -457,6 +513,15 @@ export class Validator {
         field: 'url',
         message: '获取和访问路径为必填字段',
         level: 'error',
+      });
+    }
+
+    // 标准 §8.15 要求预印本创建日期为 YYYY-MM-DD 格式
+    if (preprint.createDate && !/^\d{4}-\d{2}-\d{2}$/.test(preprint.createDate)) {
+      errors.push({
+        field: 'createDate',
+        message: '预印本创建日期格式应为 YYYY-MM-DD',
+        level: 'warning',
       });
     }
   }

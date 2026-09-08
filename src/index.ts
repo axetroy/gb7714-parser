@@ -28,6 +28,7 @@ export type {
   ReferenceUnion,
   Journal,
   Newspaper,
+  Serial,
   Book,
   Thesis,
   Proceedings,
@@ -63,6 +64,7 @@ import { tokenize } from './tokenizer/index.js';
 import { Parser } from './parsers/index.js';
 import { JournalParser } from './parsers/index.js';
 import { NewspaperParser } from './parsers/index.js';
+import { SerialParser } from './parsers/index.js';
 import { BookParser } from './parsers/index.js';
 import { ThesisParser } from './parsers/index.js';
 import { ProceedingsParser } from './parsers/index.js';
@@ -88,6 +90,7 @@ defaultParser.register(new AuthorDateParser()); // 著者-出版年制优先
 defaultParser.register(new ComponentPartParser()); // 析出文献解析器优先
 defaultParser.register(new JournalParser());
 defaultParser.register(new NewspaperParser());
+defaultParser.register(new SerialParser()); // 连续出版物解析器
 defaultParser.register(new BookParser());
 defaultParser.register(new ThesisParser());
 defaultParser.register(new ProceedingsParser());
@@ -209,6 +212,7 @@ export {
   Parser,
   JournalParser,
   NewspaperParser,
+  SerialParser,
   BookParser,
   ThesisParser,
   ProceedingsParser,

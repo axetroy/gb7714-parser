@@ -1138,7 +1138,8 @@ describe('Formatter', () => {
         pages: '100-110',
       } as ReferenceUnion;
       const result = format(reference);
-      expect(result).toBe('张三 析出文献标题// 李四 图书标题. 北京: 出版社, 2025: 100-110.');
+      // 标准 §8.3.2 要求析出文献题名后需有文献类型标识
+      expect(result).toBe('张三 析出文献标题[Z]// 李四 图书标题. 北京: 出版社, 2025: 100-110.');
     });
 
     it('should format component part without pages', () => {
@@ -1155,7 +1156,8 @@ describe('Formatter', () => {
         },
       } as ReferenceUnion;
       const result = format(reference);
-      expect(result).toBe('张三 析出文献标题// 李四 图书标题. 北京: 出版社, 2025.');
+      // 标准 §8.3.2 要求析出文献题名后需有文献类型标识
+      expect(result).toBe('张三 析出文献标题[Z]// 李四 图书标题. 北京: 出版社, 2025.');
     });
 
     it('should format component part with subtitle', () => {
@@ -1169,7 +1171,8 @@ describe('Formatter', () => {
         },
       } as ReferenceUnion;
       const result = format(reference);
-      expect(result).toBe('张三 析出文献: 副标题// 图书标题.');
+      // 标准 §8.3.2 要求析出文献题名后需有文献类型标识
+      expect(result).toBe('张三 析出文献: 副标题[Z]// 图书标题.');
     });
   });
 

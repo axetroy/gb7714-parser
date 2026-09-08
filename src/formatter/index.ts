@@ -138,12 +138,14 @@ export class Formatter {
       parts.push(this.formatAuthors(component.authors));
     }
 
-    // 析出文献题名
+    // 析出文献题名 + 文献类型标识
     let title = component.title;
     if (component.subtitle) {
       title += `: ${component.subtitle}`;
     }
-    parts.push(title + '//');
+    // 标准 §8.3.2 要求析出文献题名后需有文献类型标识
+    const typeIndicator = buildTypeIndicator(component.type, component.mediaType);
+    parts.push(`${title}${typeIndicator}//`);
 
     // 出处文献
     if (component.host) {
