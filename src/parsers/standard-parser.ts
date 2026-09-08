@@ -85,6 +85,10 @@ export class StandardParser implements ParserStrategy {
       url = urlToken.value.replace(/\.$/, '');
     }
 
+    // 解析 DOI/PID
+    const pidToken = tokens.find(t => t.type === 'PID');
+    const pid = pidToken?.value;
+
     return {
       type: 'S' as never,
       authors: [],
@@ -92,6 +96,7 @@ export class StandardParser implements ParserStrategy {
       standardNumber,
       standardName: standardName || standardNumber,
       url,
+      pid: pid || undefined,
     };
   }
 

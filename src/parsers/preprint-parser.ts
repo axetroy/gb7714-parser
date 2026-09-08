@@ -131,6 +131,10 @@ export class PreprintParser implements ParserStrategy {
       url = urlToken.value.replace(/\.$/, '');
     }
 
+    // 解析 DOI/PID
+    const pidToken = tokens.find(t => t.type === 'PID');
+    const pid = pidToken?.value;
+
     return {
       type: 'PP' as never,
       authors,
@@ -140,6 +144,7 @@ export class PreprintParser implements ParserStrategy {
       createDate: _createDate || undefined,
       accessDate,
       url,
+      pid: pid || undefined,
     };
   }
 

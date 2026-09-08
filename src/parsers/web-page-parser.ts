@@ -102,6 +102,10 @@ export class WebPageParser implements ParserStrategy {
       url = urlToken.value.replace(/\.$/, '');
     }
 
+    // 解析 DOI/PID
+    const pidToken = tokens.find(t => t.type === 'PID');
+    const pid = pidToken?.value;
+
     return {
       type: 'EB' as never,
       authors,
@@ -109,6 +113,7 @@ export class WebPageParser implements ParserStrategy {
       createDate: createDate || undefined,
       accessDate,
       url,
+      pid: pid || undefined,
     };
   }
 

@@ -10,6 +10,7 @@ GB/T 7714 参考文献格式解析库，适用于中文学术论文的参考文�
 - ✅ 完整支持 GB/T 7714-2015 和 GB/T 7714-2025 标准
 - ✅ 支持 17 种文献类型（期刊、图书、学位论文、会议录、报告、标准、专利、网站/网页、档案、地图、数据集、预印本等）
 - ✅ 支持顺序编码制和著者-出版年制
+- ✅ 支持 DOI 解析（自动提取到 pid 字段）
 - ✅ TypeScript 编写，提供完整类型定义
 - ✅ ESM/CJS 双格式输出
 - ✅ 容错性强，对常见格式偏差有容忍度
@@ -27,7 +28,7 @@ import { parse, format, validate } from "gb7714-parser";
 
 // 解析参考文献
 const result = parse(
-  "[1] 张三，李四. 人工智能在教育中的应用[J]. 现代教育技术，2025，35(2)：15-22.",
+  "[1] 张三，李四. 人工智能在教育中的应用[J]. 现代教育技术，2025，35(2)：15-22. DOI:10.1234/test",
 );
 console.log(result.reference);
 // {
@@ -38,7 +39,8 @@ console.log(result.reference);
 //   year: '2025',
 //   volume: '35',
 //   issue: '2',
-//   pages: '15-22'
+//   pages: '15-22',
+//   pid: 'DOI:10.1234/test'
 // }
 
 // 校验格式
@@ -48,7 +50,7 @@ console.log(report.valid); // true
 // 格式化输出
 const str = format(result.reference);
 console.log(str);
-// 张三, 李四 人工智能在教育中的应用[J]. 现代教育技术, 2025, 35(2): 15-22.
+// 张三, 李四 人工智能在教育中的应用[J]. 现代教育技术, 2025, 35(2): 15-22. PID:10.1234/test
 ```
 
 ## API
@@ -191,6 +193,15 @@ const result = parse(
 const result = parse(
   "[1] Myburg A A, Grattapaglia D, Tuskan G A, et al. The genome of Eucalyptus grandis[J/OL]. Nature, 2014, 510: 356-362. https://www.nature.com/articles/nature13308.pdf.",
 );
+```
+
+### 带 DOI 的文献
+
+```typescript
+const result = parse(
+  "[1] 张三. 人工智能[J]. 现代教育技术, 2025, 35(2): 15-22. DOI:10.1234/test",
+);
+console.log(result.reference.pid); // 'DOI:10.1234/test'
 ```
 
 ## 高级用法

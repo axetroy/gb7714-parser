@@ -131,6 +131,10 @@ export class DatasetParser implements ParserStrategy {
       url = urlToken.value.replace(/\.$/, '');
     }
 
+    // 解析 DOI/PID
+    const pidToken = tokens.find(t => t.type === 'PID');
+    const pid = pidToken?.value;
+
     return {
       type: 'DS' as never,
       authors,
@@ -140,6 +144,7 @@ export class DatasetParser implements ParserStrategy {
       releaseDate: releaseDate || undefined,
       accessDate,
       url,
+      pid: pid || undefined,
     };
   }
 

@@ -92,6 +92,10 @@ export class ProceedingsParser implements ParserStrategy {
       }
     }
 
+    // 解析 DOI/PID
+    const pidToken = tokens.find(t => t.type === 'PID');
+    const pid = pidToken?.value;
+
     return {
       type: 'C' as never,
       authors,
@@ -99,6 +103,7 @@ export class ProceedingsParser implements ParserStrategy {
       conferenceName: conferenceName.trim().replace(/\.$/, '') || undefined,
       conferenceYear: conferenceYear || undefined,
       pages: pages || undefined,
+      pid: pid || undefined,
     };
   }
 

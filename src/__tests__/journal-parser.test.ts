@@ -102,5 +102,23 @@ describe('JournalParser', () => {
       expect(result.volume).toBeUndefined();
       expect(result.issue).toBeUndefined();
     });
+
+    it('should parse journal with DOI', () => {
+      const input = '[10] 张三. 人工智能[J]. 现代教育技术，2025，35(2)：15-22. DOI:10.1234/test';
+      const tokens = tokenize(input);
+      const result = parser.parse(tokens);
+
+      expect(result.type).toBe('J');
+      expect(result.pid).toBe('DOI:10.1234/test');
+    });
+
+    it('should parse journal with DOI at end', () => {
+      const input = '[11] 张三. 人工智能[J]. 现代教育技术，2025，35(2)：15-22. DOI:10.1234/test.';
+      const tokens = tokenize(input);
+      const result = parser.parse(tokens);
+
+      expect(result.type).toBe('J');
+      expect(result.pid).toContain('DOI:10.1234/test');
+    });
   });
 });

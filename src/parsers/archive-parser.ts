@@ -118,6 +118,10 @@ export class ArchiveParser implements ParserStrategy {
       url = urlToken.value.replace(/\.$/, '');
     }
 
+    // 解析 DOI/PID
+    const pidToken = tokens.find(t => t.type === 'PID');
+    const pid = pidToken?.value;
+
     return {
       type: 'A' as never,
       authors,
@@ -127,6 +131,7 @@ export class ArchiveParser implements ParserStrategy {
       collector: collector || undefined,
       formedDate: formedDate || undefined,
       url,
+      pid: pid || undefined,
     };
   }
 

@@ -86,4 +86,27 @@ describe('API', () => {
       expect(typeof formatted).toBe('string');
     });
   });
+
+  describe('DOI parsing', () => {
+    it('should parse DOI from journal reference', () => {
+      const input = '[1] 张三. 论文标题[J]. 期刊名，2025，1：1-10. DOI:10.1234/test';
+      const result = parse(input);
+
+      expect(result.reference.pid).toBe('DOI:10.1234/test');
+    });
+
+    it('should parse DOI from book reference', () => {
+      const input = '[1] 张三. 书名[M]. 北京: 出版社, 2025. DOI:10.1234/test';
+      const result = parse(input);
+
+      expect(result.reference.pid).toBe('DOI:10.1234/test');
+    });
+
+    it('should handle reference without DOI', () => {
+      const input = '[1] 张三. 论文标题[J]. 期刊名，2025，1：1-10.';
+      const result = parse(input);
+
+      expect(result.reference.pid).toBeUndefined();
+    });
+  });
 });

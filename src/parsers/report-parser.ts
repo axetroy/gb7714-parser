@@ -98,6 +98,10 @@ export class ReportParser implements ParserStrategy {
       }
     }
 
+    // 解析 DOI/PID
+    const pidToken = tokens.find(t => t.type === 'PID');
+    const pid = pidToken?.value;
+
     return {
       type: 'R' as never,
       authors,
@@ -105,6 +109,7 @@ export class ReportParser implements ParserStrategy {
       reportNumber: reportNumber || undefined,
       releaseDate: releaseDate || undefined,
       pages: pages || undefined,
+      pid: pid || undefined,
     };
   }
 

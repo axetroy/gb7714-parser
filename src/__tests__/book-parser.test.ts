@@ -100,5 +100,14 @@ describe('BookParser', () => {
       expect(result.authors).toHaveLength(1);
       expect(result.authors[0].surname).toBe('张三李四王五');
     });
+
+    it('should parse book with DOI', () => {
+      const input = '[10] 张三. 机器学习导论[M]. 北京: 清华大学出版社, 2025. DOI:10.1234/test';
+      const tokens = tokenize(input);
+      const result = parser.parse(tokens);
+
+      expect(result.type).toBe('M');
+      expect(result.pid).toBe('DOI:10.1234/test');
+    });
   });
 });

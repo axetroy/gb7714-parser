@@ -130,9 +130,21 @@ describe('Tokenizer', () => {
       expect(tokens.some(t => t.type === 'YEAR')).toBe(true);
     });
 
-    it('should tokenize DOI URL', () => {
+    it('should tokenize DOI as PID', () => {
       const tokens = tokenize('doi:10.1234/test');
-      expect(tokens.some(t => t.type === 'URL')).toBe(true);
+      expect(tokens.some(t => t.type === 'PID')).toBe(true);
+    });
+
+    it('should tokenize DOI with space', () => {
+      const tokens = tokenize('doi: 10.1234/test');
+      expect(tokens.some(t => t.type === 'PID')).toBe(true);
+    });
+
+    it('should tokenize DOI at end of reference', () => {
+      const tokens = tokenize('[1] 张三. 论文[J]. 期刊, 2025. DOI:10.1234/test');
+      const pidTokens = tokens.filter(t => t.type === 'PID');
+      expect(pidTokens.length).toBe(1);
+      expect(pidTokens[0].value).toBe('DOI:10.1234/test');
     });
 
     it('should tokenize http URL', () => {

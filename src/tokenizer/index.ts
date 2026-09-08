@@ -103,6 +103,12 @@ export class Tokenizer {
         continue;
       }
 
+      // DOI (优先于 URL 检查)
+      if (this.isDoi()) {
+        this.readDoi();
+        continue;
+      }
+
       // URL
       if (this.isUrl()) {
         this.readUrl();
@@ -187,10 +193,32 @@ export class Tokenizer {
   }
 
   /**
+   * 检查当前位置是否是 DOI
+   */
+  private isDoi(): boolean {
+    const doiPattern = /^(doi:\s*10\.\d{4,}\/)/i;
+    const remaining = this.input.slice(this.position);
+    return doiPattern.test(remaining);
+  }
+
+  /**
+   * 读取 DOI
+   */
+  private readDoi(): void {
+    let i = this.position;
+    // DOI 包含数字、字母、点号、斜杠、连字符等
+    while (i < this.input.length && !this.isWhitespace(this.input[i]!) && this.input[i] !== '\n') {
+      i++;
+    }
+    const value = this.input.slice(this.position, i);
+    this.addToken('PID', value);
+  }
+
+  /**
    * 检查当前位置是否是 URL
    */
   private isUrl(): boolean {
-    const urlPattern = /^(https?:\/\/|doi:|http:\/\/)/i;
+    const urlPattern = /^(https?:\/\/|http:\/\/)/i;
     const remaining = this.input.slice(this.position);
     return urlPattern.test(remaining);
   }

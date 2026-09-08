@@ -148,6 +148,10 @@ export class MapParser implements ParserStrategy {
       url = urlToken.value.replace(/\.$/, '');
     }
 
+    // 解析 DOI/PID
+    const pidToken = tokens.find(t => t.type === 'PID');
+    const pid = pidToken?.value;
+
     return {
       type: 'CM' as never,
       authors,
@@ -159,6 +163,7 @@ export class MapParser implements ParserStrategy {
       year: year || undefined,
       dimensions,
       url,
+      pid: pid || undefined,
     };
   }
 

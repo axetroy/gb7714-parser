@@ -109,6 +109,10 @@ export class JournalParser implements ParserStrategy {
       }
     }
 
+    // 解析 DOI/PID
+    const pidToken = tokens.find(t => t.type === 'PID');
+    const pid = pidToken?.value;
+
     return {
       type: 'J' as never,
       authors,
@@ -118,6 +122,7 @@ export class JournalParser implements ParserStrategy {
       volume: volume || undefined,
       issue: issue || undefined,
       pages: pages || undefined,
+      pid: pid || undefined,
     };
   }
 

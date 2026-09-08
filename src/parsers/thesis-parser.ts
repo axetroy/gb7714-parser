@@ -94,6 +94,10 @@ export class ThesisParser implements ParserStrategy {
       url = urlToken.value.replace(/\.$/, '');
     }
 
+    // 解析 DOI/PID
+    const pidToken = tokens.find(t => t.type === 'PID');
+    const pid = pidToken?.value;
+
     return {
       type: 'D' as never,
       authors,
@@ -103,6 +107,7 @@ export class ThesisParser implements ParserStrategy {
       awardYear: awardYear || undefined,
       pages,
       url,
+      pid: pid || undefined,
     };
   }
 

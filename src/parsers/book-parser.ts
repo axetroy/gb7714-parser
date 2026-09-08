@@ -103,6 +103,10 @@ export class BookParser implements ParserStrategy {
       }
     }
 
+    // 解析 DOI/PID
+    const pidToken = tokens.find(t => t.type === 'PID');
+    const pid = pidToken?.value;
+
     return {
       type: 'M' as never,
       authors,
@@ -112,6 +116,7 @@ export class BookParser implements ParserStrategy {
       year: year || undefined,
       version,
       pages,
+      pid: pid || undefined,
     };
   }
 

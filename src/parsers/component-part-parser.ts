@@ -136,6 +136,10 @@ export class ComponentPartParser implements ParserStrategy {
       url = urlToken.value.replace(/\.$/, '');
     }
 
+    // 解析 DOI/PID
+    const pidToken = tokens.find(t => t.type === 'PID');
+    const pid = pidToken?.value;
+
     return {
       type: 'Z' as never, // 析出文献使用通用类型
       authors,
@@ -149,6 +153,7 @@ export class ComponentPartParser implements ParserStrategy {
       },
       pages: pages || undefined,
       url,
+      pid: pid || undefined,
     };
   }
 
