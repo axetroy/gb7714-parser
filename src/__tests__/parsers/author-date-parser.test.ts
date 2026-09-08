@@ -6,34 +6,34 @@ describe('AuthorDateParser', () => {
   const parser = new AuthorDateParser();
 
   describe('match', () => {
-    it('should match author-date format', () => {
+    it('应该匹配作者-年份格式', () => {
       const tokens = tokenize('(张三, 2025). 论文标题[J]. 期刊名, 2025, 1(1): 1-10.');
       expect(parser.match(tokens)).toBe(true);
     });
 
-    it('should match with multiple authors', () => {
+    it('应该匹配带有多个作者的格式', () => {
       const tokens = tokenize('(张三, 李四, 2025). 论文标题[J]. 期刊名, 2025, 1(1): 1-10.');
       expect(parser.match(tokens)).toBe(true);
     });
 
-    it('should not match numeric format', () => {
+    it('不应该匹配数字格式', () => {
       const tokens = tokenize('[1] 张三. 论文标题[J]. 期刊名, 2025, 1(1): 1-10.');
       expect(parser.match(tokens)).toBe(false);
     });
 
-    it('should not match when no parentheses', () => {
+    it('当没有括号时不应该匹配', () => {
       const tokens = tokenize('张三, 2025. 论文标题[J]. 期刊名, 2025, 1(1): 1-10.');
       expect(parser.match(tokens)).toBe(false);
     });
 
-    it('should not match when no year', () => {
+    it('当没有年份时不应该匹配', () => {
       const tokens = tokenize('(张三, 论文标题)[J]. 期刊名, 2025, 1(1): 1-10.');
       expect(parser.match(tokens)).toBe(false);
     });
   });
 
   describe('parse', () => {
-    it('should parse author-date reference', () => {
+    it('应该解析作者-年份引用', () => {
       const input = '(张三, 2025). 论文标题[J]. 期刊名, 2025, 1(1): 1-10.';
       const tokens = tokenize(input);
       const result = parser.parse(tokens);
@@ -44,7 +44,7 @@ describe('AuthorDateParser', () => {
       expect(result.year).toBe('2025');
     });
 
-    it('should parse with multiple authors', () => {
+    it('应该解析带有多个作者的格式', () => {
       const input = '(张三, 李四, 2025). 论文标题[J]. 期刊名, 2025, 1(1): 1-10.';
       const tokens = tokenize(input);
       const result = parser.parse(tokens);
@@ -52,7 +52,7 @@ describe('AuthorDateParser', () => {
       expect(result.authors.length).toBeGreaterThan(0);
     });
 
-    it('should parse with id', () => {
+    it('应该解析带有 id 的格式', () => {
       const input = '[1] (张三, 2025). 论文标题[J]. 期刊名, 2025, 1(1): 1-10.';
       const tokens = tokenize(input);
       const result = parser.parse(tokens, { preserveId: true });

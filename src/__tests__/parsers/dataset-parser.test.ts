@@ -6,29 +6,29 @@ describe('DatasetParser', () => {
   const parser = new DatasetParser();
 
   describe('match', () => {
-    it('should match [DS] type indicator', () => {
+    it('应该匹配 [DS] 类型标识', () => {
       const tokens = tokenize('[1] 数据集标题[DS/OL]. https://example.com');
       expect(parser.match(tokens)).toBe(true);
     });
 
-    it('should match [DS/OL] type indicator', () => {
+    it('应该匹配 [DS/OL] 类型标识', () => {
       const tokens = tokenize('[1] 数据集标题[DS/OL]. https://example.com');
       expect(parser.match(tokens)).toBe(true);
     });
 
-    it('should not match [M] type indicator', () => {
+    it('不应该匹配 [M] 类型标识', () => {
       const tokens = tokenize('[1] 张三. 书名[M].');
       expect(parser.match(tokens)).toBe(false);
     });
 
-    it('should not match when no type indicator', () => {
+    it('当没有类型标识时不应该匹配', () => {
       const tokens = tokenize('[1] 数据集标题. https://example.com');
       expect(parser.match(tokens)).toBe(false);
     });
   });
 
   describe('parse', () => {
-    it('should parse a dataset reference', () => {
+    it('应该解析数据集引用', () => {
       const input = '[1] 张三. 测试数据集[DS/OL]. https://example.com';
       const tokens = tokenize(input);
       const result = parser.parse(tokens);
@@ -37,7 +37,7 @@ describe('DatasetParser', () => {
       expect(result.title).toBe('测试数据集');
     });
 
-    it('should parse dataset with access date', () => {
+    it('应该解析带有访问日期的数据集', () => {
       const input = '[2] 李四. 研究数据集[DS/OL]. [2025-09-07]. https://example.com';
       const tokens = tokenize(input);
       const result = parser.parse(tokens);
@@ -45,7 +45,7 @@ describe('DatasetParser', () => {
       expect(result.accessDate).toBeDefined();
     });
 
-    it('should parse dataset with version', () => {
+    it('应该解析带有版本的数据集', () => {
       const input = '[3] 王五. 人口数据集[DS/OL]. v2.0. https://example.com';
       const tokens = tokenize(input);
       const result = parser.parse(tokens);
@@ -53,7 +53,7 @@ describe('DatasetParser', () => {
       expect(result.version).toBeDefined();
     });
 
-    it('should parse dataset with URL', () => {
+    it('应该解析带有 URL 的数据集', () => {
       const input = '[4] 孙七. 经济数据集[DS/OL]. https://data.example.com';
       const tokens = tokenize(input);
       const result = parser.parse(tokens);

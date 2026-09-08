@@ -6,24 +6,24 @@ describe('BookParser', () => {
   const parser = new BookParser();
 
   describe('match', () => {
-    it('should match [M] type indicator', () => {
+    it('应该匹配 [M] 类型标识', () => {
       const tokens = tokenize('[1] 张三. 书名[M]. 北京: 清华大学出版社, 2025.');
       expect(parser.match(tokens)).toBe(true);
     });
 
-    it('should match [M/OL] type indicator', () => {
+    it('应该匹配 [M/OL] 类型标识', () => {
       const tokens = tokenize('[1] 张三. 书名[M/OL]. 北京: 清华大学出版社, 2025.');
       expect(parser.match(tokens)).toBe(true);
     });
 
-    it('should not match [J] type indicator', () => {
+    it('不应该匹配 [J] 类型标识', () => {
       const tokens = tokenize('[1] 张三. 题名[J]. 刊名，2025，35(2)：15-22.');
       expect(parser.match(tokens)).toBe(false);
     });
   });
 
   describe('parse', () => {
-    it('should parse a complete book reference', () => {
+    it('应该解析完整的图书引用', () => {
       const input = '[1] 李四. 机器学习导论[M]. 北京: 清华大学出版社, 2024: 156.';
       const tokens = tokenize(input);
       const result = parser.parse(tokens);
@@ -38,7 +38,7 @@ describe('BookParser', () => {
       expect(result.pages).toBe('156');
     });
 
-    it('should parse book with single author (Chinese)', () => {
+    it('应该解析单个作者的图书（中文）', () => {
       const input = '[2] 张三. 人工智能原理[M]. 北京: 科学出版社, 2025.';
       const tokens = tokenize(input);
       const result = parser.parse(tokens);
@@ -47,7 +47,7 @@ describe('BookParser', () => {
       expect(result.authors[0].surname).toBe('张三');
     });
 
-    it('should parse book without pages', () => {
+    it('应该解析没有页码的图书', () => {
       const input = '[3] 孙七. 数据结构与算法[M]. 北京: 人民邮电出版社, 2024.';
       const tokens = tokenize(input);
       const result = parser.parse(tokens);
@@ -55,7 +55,7 @@ describe('BookParser', () => {
       expect(result.pages).toBeUndefined();
     });
 
-    it('should parse book with publisher info', () => {
+    it('应该解析带有出版者信息的图书', () => {
       const input = '[4] 周八. 计算机网络[M]. 上海: 上海交通大学出版社, 2025.';
       const tokens = tokenize(input);
       const result = parser.parse(tokens);
@@ -64,7 +64,7 @@ describe('BookParser', () => {
       expect(result.publisher).toBe('上海交通大学出版社');
     });
 
-    it('should parse book with version', () => {
+    it('应该解析带有版本的图书', () => {
       const input = '[5] 张三. 机器学习导论[M]. 第3版. 北京: 清华大学出版社, 2025.';
       const tokens = tokenize(input);
       const result = parser.parse(tokens);
@@ -73,7 +73,7 @@ describe('BookParser', () => {
       expect(result.version).toBe('第3版');
     });
 
-    it('should parse book without year', () => {
+    it('应该解析没有年份的图书', () => {
       const input = '[7] 张三. 论文标题[M]. 北京: 出版社.';
       const tokens = tokenize(input);
       const result = parser.parse(tokens);
@@ -82,7 +82,7 @@ describe('BookParser', () => {
       expect(result.year).toBeUndefined();
     });
 
-    it('should parse book without publisher', () => {
+    it('应该解析没有出版者的图书', () => {
       const input = '[8] 张三. 论文标题[M]. 北京, 2025.';
       const tokens = tokenize(input);
       const result = parser.parse(tokens);
@@ -91,7 +91,7 @@ describe('BookParser', () => {
       expect(result.publisher).toBeUndefined();
     });
 
-    it('should parse book with multiple authors as single text', () => {
+    it('应该将多个作者解析为单个文本', () => {
       const input = '[9] 张三李四王五. 机器学习导论[M]. 北京: 清华大学出版社, 2025.';
       const tokens = tokenize(input);
       const result = parser.parse(tokens);
@@ -101,7 +101,7 @@ describe('BookParser', () => {
       expect(result.authors[0].surname).toBe('张三李四王五');
     });
 
-    it('should parse book with DOI', () => {
+    it('应该解析带有 DOI 的图书', () => {
       const input = '[10] 张三. 机器学习导论[M]. 北京: 清华大学出版社, 2025. DOI:10.1234/test';
       const tokens = tokenize(input);
       const result = parser.parse(tokens);
@@ -110,7 +110,7 @@ describe('BookParser', () => {
       expect(result.pid).toBe('DOI:10.1234/test');
     });
 
-    it('should parse book with version format "第3版"', () => {
+    it('应该解析版本格式为 "第3版" 的图书', () => {
       const input = '[11] 张三. 机器学习导论[M]. 第3版. 北京: 清华大学出版社, 2025.';
       const tokens = tokenize(input);
       const result = parser.parse(tokens);
@@ -118,7 +118,7 @@ describe('BookParser', () => {
       expect(result.version).toBe('第3版');
     });
 
-    it('should parse book with version format "新1版"', () => {
+    it('应该解析版本格式为 "新1版" 的图书', () => {
       const input = '[12] 张三. 机器学习导论[M]. 新1版. 北京: 清华大学出版社, 2025.';
       const tokens = tokenize(input);
       const result = parser.parse(tokens);
@@ -126,7 +126,7 @@ describe('BookParser', () => {
       expect(result.version).toBe('新1版');
     });
 
-    it('should parse book with version format "V1.0"', () => {
+    it('应该解析版本格式为 "V1.0" 的图书', () => {
       const input = '[13] 张三. 机器学习导论[M]. V1.0. 北京: 清华大学出版社, 2025.';
       const tokens = tokenize(input);
       const result = parser.parse(tokens);
@@ -136,7 +136,7 @@ describe('BookParser', () => {
       expect(result.type).toBe('M');
     });
 
-    it('should parse book with version format "Rev. ed"', () => {
+    it('应该解析版本格式为 "Rev. ed" 的图书', () => {
       const input = '[14] Smith J. Machine Learning[M]. Rev. ed. New York: Springer, 2025.';
       const tokens = tokenize(input);
       const result = parser.parse(tokens);

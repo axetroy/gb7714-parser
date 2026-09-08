@@ -5,7 +5,7 @@ import { ReferenceType } from '../types/index.js';
 
 describe('Validator', () => {
   describe('validate', () => {
-    it('should validate a correct journal reference', () => {
+    it('应该验证正确的期刊引用', () => {
       const reference: ReferenceUnion = {
         type: ReferenceType.J,
         authors: [{ surname: '张三' }],
@@ -17,7 +17,7 @@ describe('Validator', () => {
       expect(report.valid).toBe(true);
     });
 
-    it('should report error for missing title', () => {
+    it('应该报告缺少标题的错误', () => {
       const reference: ReferenceUnion = {
         type: ReferenceType.J,
         authors: [{ surname: '张三' }],
@@ -30,7 +30,7 @@ describe('Validator', () => {
       expect(report.errors.some(e => e.field === 'title')).toBe(true);
     });
 
-    it('should report error for missing authors when required', () => {
+    it('应该在必需时报告缺少作者的错误', () => {
       const reference: ReferenceUnion = {
         type: ReferenceType.J,
         authors: [],
@@ -43,7 +43,7 @@ describe('Validator', () => {
       expect(report.errors.some(e => e.field === 'authors')).toBe(true);
     });
 
-    it('should validate year format', () => {
+    it('应该验证年份格式', () => {
       const reference: ReferenceUnion = {
         type: ReferenceType.J,
         authors: [{ surname: '张三' }],
@@ -56,7 +56,7 @@ describe('Validator', () => {
       expect(report.errors.some(e => e.field === 'year')).toBe(true);
     });
 
-    it('should validate access date format', () => {
+    it('应该验证访问日期格式', () => {
       const reference: ReferenceUnion = {
         type: ReferenceType.EB,
         authors: [{ surname: '张三' }],
@@ -69,7 +69,7 @@ describe('Validator', () => {
       expect(report.errors.some(e => e.field === 'accessDate')).toBe(true);
     });
 
-    it('should warn when authors exceed 3', () => {
+    it('当作者超过 3 个时应该发出警告', () => {
       const reference: ReferenceUnion = {
         type: ReferenceType.J,
         authors: [
@@ -87,7 +87,7 @@ describe('Validator', () => {
       expect(report.errors.some(e => e.field === 'authors' && e.level === 'warning')).toBe(true);
     });
 
-    it('should not warn when authors exceed 3 in strict mode', () => {
+    it('在严格模式下作者超过 3 个时不应该发出警告', () => {
       const reference: ReferenceUnion = {
         type: ReferenceType.J,
         authors: [
@@ -107,7 +107,7 @@ describe('Validator', () => {
   });
 
   describe('version-specific validation', () => {
-    it('should warn about unsupported types in 2015', () => {
+    it('应该在 2015 版本中对不支持的类型发出警告', () => {
       const reference: ReferenceUnion = {
         type: ReferenceType.A,
         authors: [{ surname: '张三' }],
@@ -118,7 +118,7 @@ describe('Validator', () => {
       expect(report.errors.some(e => e.field === 'type')).toBe(true);
     });
 
-    it('should warn about CM type in 2015', () => {
+    it('应该在 2015 版本中对 CM 类型发出警告', () => {
       const reference: ReferenceUnion = {
         type: ReferenceType.CM,
         authors: [{ surname: '张三' }],
@@ -129,7 +129,7 @@ describe('Validator', () => {
       expect(report.errors.some(e => e.field === 'type')).toBe(true);
     });
 
-    it('should warn about DS type in 2015', () => {
+    it('应该在 2015 版本中对 DS 类型发出警告', () => {
       const reference: ReferenceUnion = {
         type: ReferenceType.DS,
         authors: [{ surname: '张三' }],
@@ -141,7 +141,7 @@ describe('Validator', () => {
       expect(report.errors.some(e => e.field === 'type')).toBe(true);
     });
 
-    it('should warn about PP type in 2015', () => {
+    it('应该在 2015 版本中对 PP 类型发出警告', () => {
       const reference: ReferenceUnion = {
         type: ReferenceType.PP,
         authors: [{ surname: '张三' }],
@@ -153,7 +153,7 @@ describe('Validator', () => {
       expect(report.errors.some(e => e.field === 'type')).toBe(true);
     });
 
-    it('should suggest PID instead of DOI for 2015', () => {
+    it('应该在 2015 版本中建议使用 PID 而不是 DOI', () => {
       const reference: ReferenceUnion = {
         type: ReferenceType.J,
         authors: [{ surname: '张三' }],
@@ -167,7 +167,7 @@ describe('Validator', () => {
       expect(report.errors.some(e => e.field === 'pid')).toBe(true);
     });
 
-    it('should warn about missing mediaType for electronic resources in 2025', () => {
+    it('应该在 2025 版本中对电子资源缺少 mediaType 发出警告', () => {
       const reference: ReferenceUnion = {
         type: ReferenceType.EB,
         authors: [{ surname: '张三' }],
@@ -180,7 +180,7 @@ describe('Validator', () => {
       expect(report.errors.some(e => e.field === 'mediaType')).toBe(true);
     });
 
-    it('should warn about missing mediaType for DS in 2025', () => {
+    it('应该在 2025 版本中对 DS 缺少 mediaType 发出警告', () => {
       const reference: ReferenceUnion = {
         type: ReferenceType.DS,
         authors: [{ surname: '张三' }],
@@ -192,7 +192,7 @@ describe('Validator', () => {
       expect(report.errors.some(e => e.field === 'mediaType')).toBe(true);
     });
 
-    it('should warn about missing mediaType for PP in 2025', () => {
+    it('应该在 2025 版本中对 PP 缺少 mediaType 发出警告', () => {
       const reference: ReferenceUnion = {
         type: ReferenceType.PP,
         authors: [{ surname: '张三' }],
@@ -206,7 +206,7 @@ describe('Validator', () => {
   });
 
   describe('type-specific validation', () => {
-    it('should validate journal requires journalTitle', () => {
+    it('应该验证期刊需要期刊名', () => {
       const reference: ReferenceUnion = {
         type: ReferenceType.J,
         authors: [{ surname: '张三' }],
@@ -218,7 +218,7 @@ describe('Validator', () => {
       expect(report.errors.some(e => e.field === 'journalTitle')).toBe(true);
     });
 
-    it('should validate journal warns when no volume or issue', () => {
+    it('应该验证期刊在没有卷号或期号时发出警告', () => {
       const reference: ReferenceUnion = {
         type: ReferenceType.J,
         authors: [{ surname: '张三' }],
@@ -230,7 +230,7 @@ describe('Validator', () => {
       expect(report.errors.some(e => e.field === 'volume/issue')).toBe(true);
     });
 
-    it('should validate book requires publisherPlace', () => {
+    it('应该验证图书需要出版地', () => {
       const reference: ReferenceUnion = {
         type: ReferenceType.M,
         authors: [{ surname: '张三' }],
@@ -243,7 +243,7 @@ describe('Validator', () => {
       expect(report.errors.some(e => e.field === 'publisherPlace')).toBe(true);
     });
 
-    it('should validate book requires publisher', () => {
+    it('应该验证图书需要出版者', () => {
       const reference: ReferenceUnion = {
         type: ReferenceType.M,
         authors: [{ surname: '张三' }],
@@ -256,7 +256,7 @@ describe('Validator', () => {
       expect(report.errors.some(e => e.field === 'publisher')).toBe(true);
     });
 
-    it('should validate thesis requires awardInstitution', () => {
+    it('应该验证学位论文需要授予机构', () => {
       const reference: ReferenceUnion = {
         type: ReferenceType.D,
         authors: [{ surname: '张三' }],
@@ -267,7 +267,7 @@ describe('Validator', () => {
       expect(report.errors.some(e => e.field === 'awardInstitution')).toBe(true);
     });
 
-    it('should validate standard requires standardNumber', () => {
+    it('应该验证标准需要标准号', () => {
       const reference: ReferenceUnion = {
         type: ReferenceType.S,
         authors: [],
@@ -279,7 +279,7 @@ describe('Validator', () => {
       expect(report.errors.some(e => e.field === 'standardNumber')).toBe(true);
     });
 
-    it('should validate standard requires standardName', () => {
+    it('应该验证标准需要标准名称', () => {
       const reference: ReferenceUnion = {
         type: ReferenceType.S,
         authors: [],
@@ -291,7 +291,7 @@ describe('Validator', () => {
       expect(report.errors.some(e => e.field === 'standardName')).toBe(true);
     });
 
-    it('should validate patent requires patentNumber', () => {
+    it('应该验证专利需要专利号', () => {
       const reference: ReferenceUnion = {
         type: ReferenceType.P,
         authors: [{ surname: '张三' }],
@@ -302,7 +302,7 @@ describe('Validator', () => {
       expect(report.errors.some(e => e.field === 'patentNumber')).toBe(true);
     });
 
-    it('should validate webPage requires accessDate', () => {
+    it('应该验证网页需要访问日期', () => {
       const reference: ReferenceUnion = {
         type: ReferenceType.EB,
         authors: [{ surname: '张三' }],
@@ -314,7 +314,7 @@ describe('Validator', () => {
       expect(report.errors.some(e => e.field === 'accessDate')).toBe(true);
     });
 
-    it('should validate webPage requires url', () => {
+    it('应该验证网页需要 URL', () => {
       const reference: ReferenceUnion = {
         type: ReferenceType.EB,
         authors: [{ surname: '张三' }],
@@ -326,7 +326,7 @@ describe('Validator', () => {
       expect(report.errors.some(e => e.field === 'url')).toBe(true);
     });
 
-    it('should validate archive requires title', () => {
+    it('应该验证档案需要标题', () => {
       const reference: ReferenceUnion = {
         type: ReferenceType.A,
         authors: [],
@@ -336,7 +336,7 @@ describe('Validator', () => {
       expect(report.errors.some(e => e.field === 'title')).toBe(true);
     });
 
-    it('should validate map requires title', () => {
+    it('应该验证地图需要标题', () => {
       const reference: ReferenceUnion = {
         type: ReferenceType.CM,
         authors: [{ surname: '张三' }],
@@ -346,7 +346,7 @@ describe('Validator', () => {
       expect(report.errors.some(e => e.field === 'title')).toBe(true);
     });
 
-    it('should validate dataset requires accessDate', () => {
+    it('应该验证数据集需要访问日期', () => {
       const reference: ReferenceUnion = {
         type: ReferenceType.DS,
         authors: [{ surname: '张三' }],
@@ -357,7 +357,7 @@ describe('Validator', () => {
       expect(report.errors.some(e => e.field === 'accessDate')).toBe(true);
     });
 
-    it('should validate preprint requires accessDate', () => {
+    it('应该验证预印本需要访问日期', () => {
       const reference: ReferenceUnion = {
         type: ReferenceType.PP,
         authors: [{ surname: '张三' }],
@@ -368,7 +368,7 @@ describe('Validator', () => {
       expect(report.errors.some(e => e.field === 'accessDate')).toBe(true);
     });
 
-    it('should validate report requires title', () => {
+    it('应该验证报告需要标题', () => {
       const reference: ReferenceUnion = {
         type: ReferenceType.R,
         authors: [{ surname: '张三' }],
@@ -378,7 +378,7 @@ describe('Validator', () => {
       expect(report.errors.some(e => e.field === 'title')).toBe(true);
     });
 
-    it('should validate proceedings requires title', () => {
+    it('应该验证会议录需要标题', () => {
       const reference: ReferenceUnion = {
         type: ReferenceType.C,
         authors: [{ surname: '张三' }],
@@ -388,7 +388,7 @@ describe('Validator', () => {
       expect(report.errors.some(e => e.field === 'title')).toBe(true);
     });
 
-    it('should validate newspaper requires newspaperTitle', () => {
+    it('应该验证报纸需要报纸名', () => {
       const reference: ReferenceUnion = {
         type: ReferenceType.N,
         authors: [{ surname: '张三' }],
@@ -400,7 +400,7 @@ describe('Validator', () => {
       expect(report.errors.some(e => e.field === 'newspaperTitle')).toBe(true);
     });
 
-    it('should validate newspaper requires year', () => {
+    it('应该验证报纸需要年份', () => {
       const reference: ReferenceUnion = {
         type: ReferenceType.N,
         authors: [{ surname: '张三' }],
@@ -412,7 +412,7 @@ describe('Validator', () => {
       expect(report.errors.some(e => e.field === 'year')).toBe(true);
     });
 
-    it('should validate standard number format', () => {
+    it('应该验证标准号格式', () => {
       const reference: ReferenceUnion = {
         type: ReferenceType.S,
         authors: [],
@@ -424,7 +424,7 @@ describe('Validator', () => {
       expect(report.errors.some(e => e.field === 'standardNumber' && e.level === 'warning')).toBe(true);
     });
 
-    it('should accept valid standard number format', () => {
+    it('应该接受有效的标准号格式', () => {
       const reference: ReferenceUnion = {
         type: ReferenceType.S,
         authors: [],
@@ -436,7 +436,7 @@ describe('Validator', () => {
       expect(report.errors.some(e => e.field === 'standardNumber')).toBe(false);
     });
 
-    it('should validate patent number format', () => {
+    it('应该验证专利号格式', () => {
       const reference: ReferenceUnion = {
         type: ReferenceType.P,
         authors: [{ surname: '张三' }],
@@ -447,7 +447,7 @@ describe('Validator', () => {
       expect(report.errors.some(e => e.field === 'patentNumber' && e.level === 'warning')).toBe(true);
     });
 
-    it('should accept valid patent number format', () => {
+    it('应该接受有效的专利号格式', () => {
       const reference: ReferenceUnion = {
         type: ReferenceType.P,
         authors: [{ surname: '张三' }],

@@ -3,7 +3,7 @@ import { parse, parseAll, validate, format, formatCitation, parseCitation } from
 
 describe('API', () => {
   describe('parse', () => {
-    it('should parse a journal reference', () => {
+    it('应该解析期刊引用', () => {
       const input = '[1] 张三，李四. 人工智能在教育中的应用[J]. 现代教育技术，2025，2：15-22.';
       const result = parse(input);
 
@@ -12,7 +12,7 @@ describe('API', () => {
       expect(result.reference.title).toBe('人工智能在教育中的应用');
     });
 
-    it('should parse a book reference', () => {
+    it('应该解析图书引用', () => {
       const input = '[1] 李四. 机器学习导论[M]. 北京: 清华大学出版社, 2024: 156.';
       const result = parse(input);
 
@@ -20,14 +20,14 @@ describe('API', () => {
       expect(result.reference.title).toBe('机器学习导论');
     });
 
-    it('should parse without preserveId by default', () => {
+    it('默认不应该保留 id', () => {
       const input = '[1] 张三. 论文标题[J]. 期刊名，2025，1：1-10.';
       const result = parse(input);
 
       expect(result.reference.id).toBeUndefined();
     });
 
-    it('should return warnings for unsupported format', () => {
+    it('应该对不支持的格式返回警告', () => {
       const input = '张三 论文标题';
       const result = parse(input);
 
@@ -36,7 +36,7 @@ describe('API', () => {
   });
 
   describe('parseAll', () => {
-    it('should parse multiple references', () => {
+    it('应该解析多个引用', () => {
       const inputs = [
         '[1] 张三. 论文1[J]. 期刊1，2025，1：1-10.',
         '[2] 李四. 书1[M]. 北京: 出版社, 2024.',
@@ -50,7 +50,7 @@ describe('API', () => {
   });
 
   describe('validate', () => {
-    it('should validate a correct reference', () => {
+    it('应该验证正确的引用', () => {
       const input = '[1] 张三. 论文标题[J]. 期刊名，2025，1：1-10.';
       const result = parse(input);
       const report = validate(result.reference);
@@ -58,7 +58,7 @@ describe('API', () => {
       expect(report.valid).toBe(true);
     });
 
-    it('should validate with version option', () => {
+    it('应该使用版本选项进行验证', () => {
       const input = '[1] 张三. 论文标题[J]. 期刊名，2025，1：1-10.';
       const result = parse(input);
       const report = validate(result.reference, { version: '2015' });
@@ -68,7 +68,7 @@ describe('API', () => {
   });
 
   describe('format', () => {
-    it('should format a reference to string', () => {
+    it('应该将引用格式化为字符串', () => {
       const input = '[1] 张三. 论文标题[J]. 期刊名，2025，1：1-10.';
       const result = parse(input);
       const formatted = format(result.reference);
@@ -78,7 +78,7 @@ describe('API', () => {
       expect(formatted).toContain('论文标题');
     });
 
-    it('should format with options', () => {
+    it('应该使用选项进行格式化', () => {
       const input = '[1] 张三. 论文标题[J]. 期刊名，2025，1：1-10.';
       const result = parse(input);
       const formatted = format(result.reference, { version: '2015' });
@@ -88,21 +88,21 @@ describe('API', () => {
   });
 
   describe('DOI parsing', () => {
-    it('should parse DOI from journal reference', () => {
+    it('应该从期刊引用中解析 DOI', () => {
       const input = '[1] 张三. 论文标题[J]. 期刊名，2025，1：1-10. DOI:10.1234/test';
       const result = parse(input);
 
       expect(result.reference.pid).toBe('DOI:10.1234/test');
     });
 
-    it('should parse DOI from book reference', () => {
+    it('应该从图书引用中解析 DOI', () => {
       const input = '[1] 张三. 书名[M]. 北京: 出版社, 2025. DOI:10.1234/test';
       const result = parse(input);
 
       expect(result.reference.pid).toBe('DOI:10.1234/test');
     });
 
-    it('should handle reference without DOI', () => {
+    it('应该处理没有 DOI 的引用', () => {
       const input = '[1] 张三. 论文标题[J]. 期刊名，2025，1：1-10.';
       const result = parse(input);
 
@@ -111,7 +111,7 @@ describe('API', () => {
   });
 
   describe('formatCitation', () => {
-    it('should format numeric citation', () => {
+    it('应该格式化数字引用', () => {
       const reference = {
         id: '1',
         type: 'J' as const,
@@ -125,7 +125,7 @@ describe('API', () => {
       expect(citation).toBe('[1]');
     });
 
-    it('should format author-date citation', () => {
+    it('应该格式化作者-年份引用', () => {
       const reference = {
         id: '1',
         type: 'J' as const,
@@ -142,32 +142,32 @@ describe('API', () => {
   });
 
   describe('parseCitation', () => {
-    it('should parse numeric citation [1]', () => {
+    it('应该解析数字引用 [1]', () => {
       const result = parseCitation('[1]');
       expect(result.type).toBe('numeric');
       expect(result.ids).toEqual(['1']);
     });
 
-    it('should parse numeric citation [1,2,3]', () => {
+    it('应该解析数字引用 [1,2,3]', () => {
       const result = parseCitation('[1,2,3]');
       expect(result.type).toBe('numeric');
       expect(result.ids).toEqual(['1', '2', '3']);
     });
 
-    it('should parse numeric citation [1-5]', () => {
+    it('应该解析数字引用 [1-5]', () => {
       const result = parseCitation('[1-5]');
       expect(result.type).toBe('numeric');
       expect(result.ids).toEqual(['1', '2', '3', '4', '5']);
     });
 
-    it('should parse author-date citation (张三, 2025)', () => {
+    it('应该解析作者-年份引用 (张三, 2025)', () => {
       const result = parseCitation('(张三, 2025)');
       expect(result.type).toBe('author-date');
       expect(result.author).toBe('张三');
       expect(result.year).toBe('2025');
     });
 
-    it('should parse author-date citation with suffix', () => {
+    it('应该解析带有后缀的作者-年份引用', () => {
       const result = parseCitation('(张三, 2025, p. 10)');
       expect(result.type).toBe('author-date');
       expect(result.author).toBe('张三');
@@ -175,7 +175,7 @@ describe('API', () => {
       expect(result.suffix).toBe('p. 10');
     });
 
-    it('should handle unrecognized format', () => {
+    it('应该处理无法识别的格式', () => {
       const result = parseCitation('unknown format');
       expect(result.type).toBe('numeric');
       expect(result.ids).toEqual(['unknown format']);

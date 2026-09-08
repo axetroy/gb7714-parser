@@ -6,29 +6,29 @@ describe('JournalParser', () => {
   const parser = new JournalParser();
 
   describe('match', () => {
-    it('should match [J] type indicator', () => {
+    it('应该匹配 [J] 类型标识', () => {
       const tokens = tokenize('[1] 张三. 题名[J]. 刊名，2025，35(2)：15-22.');
       expect(parser.match(tokens)).toBe(true);
     });
 
-    it('should match [J/OL] type indicator', () => {
+    it('应该匹配 [J/OL] 类型标识', () => {
       const tokens = tokenize('[1] 张三. 题名[J/OL]. 刊名，2025，35(2)：15-22.');
       expect(parser.match(tokens)).toBe(true);
     });
 
-    it('should not match [M] type indicator', () => {
+    it('不应该匹配 [M] 类型标识', () => {
       const tokens = tokenize('[1] 张三. 题名[M]. 出版地: 出版社, 2025.');
       expect(parser.match(tokens)).toBe(false);
     });
 
-    it('should not match when no type indicator', () => {
+    it('当没有类型标识时不应该匹配', () => {
       const tokens = tokenize('[1] 张三. 题名.');
       expect(parser.match(tokens)).toBe(false);
     });
   });
 
   describe('parse', () => {
-    it('should parse a complete journal reference', () => {
+    it('应该解析完整的期刊引用', () => {
       const input = '[1] 张三，李四. 人工智能在教育中的应用[J]. 现代教育技术，2025，(2)：15-22.';
       const tokens = tokenize(input);
       const result = parser.parse(tokens);
@@ -44,7 +44,7 @@ describe('JournalParser', () => {
       expect(result.pages).toBe('15-22');
     });
 
-    it('should parse journal with single author', () => {
+    it('应该解析单个作者的期刊', () => {
       const input = '[2] 王五. 深度学习研究[J]. 计算机学报，2024，1：100-115.';
       const tokens = tokenize(input);
       const result = parser.parse(tokens);
@@ -56,7 +56,7 @@ describe('JournalParser', () => {
       expect(result.year).toBe('2024');
     });
 
-    it('should parse journal without issue', () => {
+    it('应该解析没有期号的期刊', () => {
       const input = '[3] 赵六. 机器学习综述[J]. 人工智能，2025：1-10.';
       const tokens = tokenize(input);
       const result = parser.parse(tokens);
@@ -65,7 +65,7 @@ describe('JournalParser', () => {
       expect(result.issue).toBeUndefined();
     });
 
-    it('should parse journal without pages', () => {
+    it('应该解析没有页码的期刊', () => {
       const input = '[4] 孙七. 自然语言处理[J]. 语言科学，2025，2.';
       const tokens = tokenize(input);
       const result = parser.parse(tokens);
@@ -74,7 +74,7 @@ describe('JournalParser', () => {
       expect(result.pages).toBeUndefined();
     });
 
-    it('should parse journal without volume', () => {
+    it('应该解析没有卷号的期刊', () => {
       const input = '[5] 周八. 机器学习综述[J]. 人工智能，2025(2)：1-10.';
       const tokens = tokenize(input);
       const result = parser.parse(tokens);
@@ -84,7 +84,7 @@ describe('JournalParser', () => {
       expect(result.issue).toBe('2');
     });
 
-    it('should parse journal without year', () => {
+    it('应该解析没有年份的期刊', () => {
       const input = '[8] 张三. 论文标题[J]. 期刊名，35(2)：15-22.';
       const tokens = tokenize(input);
       const result = parser.parse(tokens);
@@ -93,7 +93,7 @@ describe('JournalParser', () => {
       expect(result.year).toBe('');
     });
 
-    it('should parse journal without volume and issue', () => {
+    it('应该解析没有卷号和期号的期刊', () => {
       const input = '[9] 张三. 论文标题[J]. 期刊名，2025：15-22.';
       const tokens = tokenize(input);
       const result = parser.parse(tokens);
@@ -103,7 +103,7 @@ describe('JournalParser', () => {
       expect(result.issue).toBeUndefined();
     });
 
-    it('should parse journal with DOI', () => {
+    it('应该解析带有 DOI 的期刊', () => {
       const input = '[10] 张三. 人工智能[J]. 现代教育技术，2025，35(2)：15-22. DOI:10.1234/test';
       const tokens = tokenize(input);
       const result = parser.parse(tokens);
@@ -112,7 +112,7 @@ describe('JournalParser', () => {
       expect(result.pid).toBe('DOI:10.1234/test');
     });
 
-    it('should parse journal with DOI at end', () => {
+    it('应该解析 DOI 在末尾的期刊', () => {
       const input = '[11] 张三. 人工智能[J]. 现代教育技术，2025，35(2)：15-22. DOI:10.1234/test.';
       const tokens = tokenize(input);
       const result = parser.parse(tokens);

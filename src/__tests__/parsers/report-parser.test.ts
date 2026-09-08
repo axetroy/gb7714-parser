@@ -6,29 +6,29 @@ describe('ReportParser', () => {
   const parser = new ReportParser();
 
   describe('match', () => {
-    it('should match [R] type indicator', () => {
+    it('应该匹配 [R] 类型标识', () => {
       const tokens = tokenize('[1] 张三. 报告[R]. 2025.');
       expect(parser.match(tokens)).toBe(true);
     });
 
-    it('should match [R/OL] type indicator', () => {
+    it('应该匹配 [R/OL] 类型标识', () => {
       const tokens = tokenize('[1] 张三. 报告[R/OL]. 2025.');
       expect(parser.match(tokens)).toBe(true);
     });
 
-    it('should not match [M] type indicator', () => {
+    it('不应该匹配 [M] 类型标识', () => {
       const tokens = tokenize('[1] 张三. 书名[M].');
       expect(parser.match(tokens)).toBe(false);
     });
 
-    it('should not match when no type indicator', () => {
+    it('当没有类型标识时不应该匹配', () => {
       const tokens = tokenize('[1] 张三. 报告.');
       expect(parser.match(tokens)).toBe(false);
     });
   });
 
   describe('parse', () => {
-    it('should parse a report reference with report number', () => {
+    it('应该解析带有报告号的报告引用', () => {
       const input = '[1] 张三. 研究报告: No123[R]. 2025.';
       const tokens = tokenize(input);
       const result = parser.parse(tokens);
@@ -40,7 +40,7 @@ describe('ReportParser', () => {
       expect(result.reportNumber).toContain('No123');
     });
 
-    it('should parse a report reference without report number', () => {
+    it('应该解析没有报告号的报告引用', () => {
       const input = '[2] 李四. 调查报告[R]. 2024.';
       const tokens = tokenize(input);
       const result = parser.parse(tokens);
@@ -49,7 +49,7 @@ describe('ReportParser', () => {
       expect(result.title).toBe('调查报告');
     });
 
-    it('should parse report with release date', () => {
+    it('应该解析带有发布日期的报告', () => {
       const input = '[3] 王五. 技术报告[R]. 2025-01-01.';
       const tokens = tokenize(input);
       const result = parser.parse(tokens);
@@ -57,7 +57,7 @@ describe('ReportParser', () => {
       expect(result.releaseDate).toBeDefined();
     });
 
-    it('should parse report with pages', () => {
+    it('应该解析带有页码的报告', () => {
       const input = '[4] 孙七. 项目报告[R]. 2025: 50.';
       const tokens = tokenize(input);
       const result = parser.parse(tokens);

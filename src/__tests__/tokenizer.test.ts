@@ -3,7 +3,7 @@ import { Tokenizer, tokenize } from '../tokenizer/index.js';
 
 describe('Tokenizer', () => {
   describe('tokenize', () => {
-    it('should tokenize a simple journal reference', () => {
+    it('应该对简单的期刊引用进行词法分析', () => {
       const input = '[1] 张三，李四. 人工智能在教育中的应用[J]. 现代教育技术，2025，35(2)：15-22.';
       const tokens = tokenize(input);
 
@@ -18,12 +18,12 @@ describe('Tokenizer', () => {
       expect(types).toContain('TYPE_INDICATOR');
     });
 
-    it('should handle empty input', () => {
+    it('应该处理空输入', () => {
       const tokens = tokenize('');
       expect(tokens).toEqual([]);
     });
 
-    it('should tokenize brackets', () => {
+    it('应该对括号进行词法分析', () => {
       const tokens = tokenize('[1]');
       expect(tokens).toHaveLength(3);
       expect(tokens[0].type).toBe('BRACKET_OPEN');
@@ -31,36 +31,36 @@ describe('Tokenizer', () => {
       expect(tokens[2].type).toBe('BRACKET_CLOSE');
     });
 
-    it('should tokenize type indicators', () => {
+    it('应该对类型标识进行词法分析', () => {
       const tokens = tokenize('[J]');
       expect(tokens).toHaveLength(1);
       expect(tokens[0].type).toBe('TYPE_INDICATOR');
       expect(tokens[0].value).toBe('[J]');
     });
 
-    it('should tokenize type indicators with OL suffix', () => {
+    it('应该对带有 OL 后缀的类型标识进行词法分析', () => {
       const tokens = tokenize('[J/OL]');
       expect(tokens).toHaveLength(1);
       expect(tokens[0].type).toBe('TYPE_INDICATOR');
       expect(tokens[0].value).toBe('[J/OL]');
     });
 
-    it('should tokenize dates', () => {
+    it('应该对日期进行词法分析', () => {
       const tokens = tokenize('2025');
       expect(tokens.some(t => t.type === 'YEAR')).toBe(true);
     });
 
-    it('should tokenize full dates', () => {
+    it('应该对完整日期进行词法分析', () => {
       const tokens = tokenize('2025-09-07');
       expect(tokens.some(t => t.type === 'DATE')).toBe(true);
     });
 
-    it('should tokenize URLs', () => {
+    it('应该对 URL 进行词法分析', () => {
       const tokens = tokenize('https://example.com');
       expect(tokens.some(t => t.type === 'URL')).toBe(true);
     });
 
-    it('should tokenize punctuation', () => {
+    it('应该对标点符号进行词法分析', () => {
       const tokens = tokenize('.，：；/');
       expect(tokens.some(t => t.type === 'DOT')).toBe(true);
       expect(tokens.some(t => t.type === 'COMMA')).toBe(true);
@@ -69,132 +69,132 @@ describe('Tokenizer', () => {
       expect(tokens.some(t => t.type === 'SLASH')).toBe(true);
     });
 
-    it('should tokenize double slash', () => {
+    it('应该对双斜杠进行词法分析', () => {
       const tokens = tokenize('//');
       expect(tokens).toHaveLength(1);
       expect(tokens[0].type).toBe('DOUBLE_SLASH');
     });
 
-    it('should tokenize parentheses', () => {
+    it('应该对括号进行词法分析', () => {
       const tokens = tokenize('(2)');
       expect(tokens.some(t => t.type === 'PAREN_OPEN')).toBe(true);
       expect(tokens.some(t => t.type === 'PAREN_CLOSE')).toBe(true);
     });
 
-    it('should tokenize dashes', () => {
+    it('应该对破折号进行词法分析', () => {
       const tokens = tokenize('15-22');
       expect(tokens.some(t => t.type === 'DASH')).toBe(true);
     });
 
-    it('should tokenize em-dash', () => {
+    it('应该对全角破折号进行词法分析', () => {
       const tokens = tokenize('—');
       expect(tokens.some(t => t.type === 'DASH')).toBe(true);
     });
 
-    it('should tokenize en-dash', () => {
+    it('应该对半角破折号进行词法分析', () => {
       const tokens = tokenize('–');
       expect(tokens.some(t => t.type === 'DASH')).toBe(true);
     });
 
-    it('should tokenize Chinese colon', () => {
+    it('应该对中文冒号进行词法分析', () => {
       const tokens = tokenize('：');
       expect(tokens.some(t => t.type === 'COLON')).toBe(true);
     });
 
-    it('should tokenize Chinese semicolon', () => {
+    it('应该对中文分号进行词法分析', () => {
       const tokens = tokenize('；');
       expect(tokens.some(t => t.type === 'SEMICOLON')).toBe(true);
     });
 
-    it('should tokenize Chinese comma', () => {
+    it('应该对中文逗号进行词法分析', () => {
       const tokens = tokenize('，');
       expect(tokens.some(t => t.type === 'COMMA')).toBe(true);
     });
 
-    it('should tokenize date in parentheses', () => {
+    it('应该对括号中的日期进行词法分析', () => {
       const tokens = tokenize('(2025-09-07)');
       expect(tokens.some(t => t.type === 'PAREN_OPEN')).toBe(true);
       expect(tokens.some(t => t.type === 'DATE')).toBe(true);
       expect(tokens.some(t => t.type === 'PAREN_CLOSE')).toBe(true);
     });
 
-    it('should tokenize date in brackets', () => {
+    it('应该对方括号中的日期进行词法分析', () => {
       const tokens = tokenize('[2025-09-07]');
       expect(tokens.some(t => t.type === 'BRACKET_OPEN')).toBe(true);
       expect(tokens.some(t => t.type === 'DATE')).toBe(true);
       expect(tokens.some(t => t.type === 'BRACKET_CLOSE')).toBe(true);
     });
 
-    it('should tokenize year with Chinese year character', () => {
+    it('应该对带有中文年字符的年份进行词法分析', () => {
       const tokens = tokenize('2025年');
       expect(tokens.some(t => t.type === 'YEAR')).toBe(true);
     });
 
-    it('should tokenize DOI as PID', () => {
+    it('应该将 DOI 作为 PID 进行词法分析', () => {
       const tokens = tokenize('doi:10.1234/test');
       expect(tokens.some(t => t.type === 'PID')).toBe(true);
     });
 
-    it('should tokenize DOI with space', () => {
+    it('应该对带有空格的 DOI 进行词法分析', () => {
       const tokens = tokenize('doi: 10.1234/test');
       expect(tokens.some(t => t.type === 'PID')).toBe(true);
     });
 
-    it('should tokenize DOI at end of reference', () => {
+    it('应该对引用末尾的 DOI 进行词法分析', () => {
       const tokens = tokenize('[1] 张三. 论文[J]. 期刊, 2025. DOI:10.1234/test');
       const pidTokens = tokens.filter(t => t.type === 'PID');
       expect(pidTokens.length).toBe(1);
       expect(pidTokens[0].value).toBe('DOI:10.1234/test');
     });
 
-    it('should tokenize http URL', () => {
+    it('应该对 http URL 进行词法分析', () => {
       const tokens = tokenize('http://example.com');
       expect(tokens.some(t => t.type === 'URL')).toBe(true);
     });
 
-    it('should tokenize number with decimal', () => {
+    it('应该对带有小数的数字进行词法分析', () => {
       const tokens = tokenize('12.5');
       expect(tokens.some(t => t.type === 'NUMBER')).toBe(true);
     });
 
-    it('should handle whitespace', () => {
+    it('应该处理空白字符', () => {
       const tokens = tokenize('  test  ');
       expect(tokens).toHaveLength(1);
       expect(tokens[0].type).toBe('TEXT');
       expect(tokens[0].value).toBe('test');
     });
 
-    it('should handle tabs', () => {
+    it('应该处理制表符', () => {
       const tokens = tokenize('\ttest\t');
       expect(tokens).toHaveLength(1);
       expect(tokens[0].type).toBe('TEXT');
     });
 
-    it('should handle newlines', () => {
+    it('应该处理换行符', () => {
       const tokens = tokenize('\ntest\n');
       expect(tokens).toHaveLength(1);
       expect(tokens[0].type).toBe('TEXT');
     });
 
-    it('should handle carriage returns', () => {
+    it('应该处理回车符', () => {
       const tokens = tokenize('\rtest\r');
       expect(tokens).toHaveLength(1);
       expect(tokens[0].type).toBe('TEXT');
     });
 
-    it('should handle unrecognized characters by skipping them', () => {
+    it('应该通过跳过来处理无法识别的字符', () => {
       const tokens = tokenize('@#$');
       // These characters are treated as text by readText()
       expect(tokens.length).toBeGreaterThanOrEqual(0);
     });
 
-    it('should handle mixed content with unrecognized characters', () => {
+    it('应该处理带有无法识别字符的混合内容', () => {
       const tokens = tokenize('abc@#$def');
       // 'abc' becomes TEXT, then @, #, $ are skipped, then 'def' becomes TEXT
       expect(tokens.some(t => t.type === 'TEXT')).toBe(true);
     });
 
-    it('should tokenize complex reference with all elements', () => {
+    it('应该对包含所有元素的复杂引用进行词法分析', () => {
       const input = '[1] 张三，李四，王五. 人工智能在教育中的应用研究[J]. 现代教育技术，2025，35(2)：15-22.';
       const tokens = tokenize(input);
 
@@ -212,19 +212,19 @@ describe('Tokenizer', () => {
   });
 
   describe('Tokenizer class', () => {
-    it('should create a Tokenizer instance', () => {
+    it('应该创建 Tokenizer 实例', () => {
       const tokenizer = new Tokenizer('test');
       expect(tokenizer).toBeInstanceOf(Tokenizer);
     });
 
-    it('should tokenize input string', () => {
+    it('应该对输入字符串进行词法分析', () => {
       const tokenizer = new Tokenizer('[J]');
       const tokens = tokenizer.tokenize();
       expect(tokens).toHaveLength(1);
       expect(tokens[0].type).toBe('TYPE_INDICATOR');
     });
 
-    it('should reset position on multiple tokenize calls', () => {
+    it('应该在多次 tokenize 调用时重置位置', () => {
       const tokenizer = new Tokenizer('[J]');
       const tokens1 = tokenizer.tokenize();
       const tokens2 = tokenizer.tokenize();

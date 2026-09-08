@@ -6,29 +6,29 @@ describe('PatentParser', () => {
   const parser = new PatentParser();
 
   describe('match', () => {
-    it('should match [P] type indicator', () => {
+    it('应该匹配 [P] 类型标识', () => {
       const tokens = tokenize('[1] 张三. 发明: CN123[P].');
       expect(parser.match(tokens)).toBe(true);
     });
 
-    it('should match [P/OL] type indicator', () => {
+    it('应该匹配 [P/OL] 类型标识', () => {
       const tokens = tokenize('[1] 张三. 发明: CN123[P/OL].');
       expect(parser.match(tokens)).toBe(true);
     });
 
-    it('should not match [M] type indicator', () => {
+    it('不应该匹配 [M] 类型标识', () => {
       const tokens = tokenize('[1] 张三. 书名[M].');
       expect(parser.match(tokens)).toBe(false);
     });
 
-    it('should not match when no type indicator', () => {
+    it('当没有类型标识时不应该匹配', () => {
       const tokens = tokenize('[1] 张三. 发明: CN123.');
       expect(parser.match(tokens)).toBe(false);
     });
   });
 
   describe('parse', () => {
-    it('should parse a patent reference with patent number', () => {
+    it('应该解析带有专利号的专利引用', () => {
       const input = '[1] 张三. 人工智能方法: CN2025001[P]. 2025-09-07.';
       const tokens = tokenize(input);
       const result = parser.parse(tokens);
@@ -40,7 +40,7 @@ describe('PatentParser', () => {
       expect(result.patentNumber).toBe('CN2025001');
     });
 
-    it('should parse patent with announce date', () => {
+    it('应该解析带有公告日期的专利', () => {
       const input = '[2] 李四. 机器学习装置: CN2025002[P]. 2024-12-01.';
       const tokens = tokenize(input);
       const result = parser.parse(tokens);
@@ -48,7 +48,7 @@ describe('PatentParser', () => {
       expect(result.announceDate).toBeDefined();
     });
 
-    it('should parse patent with URL', () => {
+    it('应该解析带有 URL 的专利', () => {
       const input = '[3] 王五. 深度学习系统: CN2025003[P]. https://example.com';
       const tokens = tokenize(input);
       const result = parser.parse(tokens);
@@ -56,7 +56,7 @@ describe('PatentParser', () => {
       expect(result.url).toBe('https://example.com');
     });
 
-    it('should parse patent with multiple authors', () => {
+    it('应该解析带有多个作者的专利', () => {
       const input = '[4] 赵六，孙七. 数据处理方法: CN2025004[P].';
       const tokens = tokenize(input);
       const result = parser.parse(tokens);

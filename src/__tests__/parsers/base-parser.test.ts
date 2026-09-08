@@ -5,7 +5,7 @@ import { ReferenceType } from '../../types/index.js';
 
 describe('Parser (base.ts)', () => {
   describe('Parser class', () => {
-    it('should register and use a strategy', () => {
+    it('应该注册并使用策略', () => {
       const parser = new Parser();
       const mockStrategy: ParserStrategy = {
         match: (tokens) => tokens.some(t => t.value === 'test'),
@@ -24,7 +24,7 @@ describe('Parser (base.ts)', () => {
       expect(result.warnings).toHaveLength(0);
     });
 
-    it('should try multiple strategies in order', () => {
+    it('应该按顺序尝试多个策略', () => {
       const parser = new Parser();
       let matchOrder: string[] = [];
 
@@ -61,7 +61,7 @@ describe('Parser (base.ts)', () => {
       expect(matchOrder).toEqual(['strategy1', 'strategy2']);
     });
 
-    it('should catch errors from strategy.parse() and add warning', () => {
+    it('应该捕获 strategy.parse() 中的错误并添加警告', () => {
       const parser = new Parser();
       const errorStrategy: ParserStrategy = {
         match: () => true,
@@ -80,7 +80,7 @@ describe('Parser (base.ts)', () => {
       expect(result.warnings.some(w => w.includes('解析失败') || w.includes('通用解析器'))).toBe(true);
     });
 
-    it('should catch non-Error throws and add warning', () => {
+    it('应该捕获非 Error 抛出并添加警告', () => {
       const parser = new Parser();
       const errorStrategy: ParserStrategy = {
         match: () => true,
@@ -99,7 +99,7 @@ describe('Parser (base.ts)', () => {
       expect(result.warnings.some(w => w.includes('string error') || w.includes('通用解析器'))).toBe(true);
     });
 
-    it('should fall back to generic parser when no strategy matches', () => {
+    it('当没有策略匹配时应该回退到通用解析器', () => {
       const parser = new Parser();
       const falseStrategy: ParserStrategy = {
         match: () => false,
@@ -121,7 +121,7 @@ describe('Parser (base.ts)', () => {
   });
 
   describe('parseGeneric', () => {
-    it('should handle tokens with type indicator', () => {
+    it('应该处理带有类型标识的 token', () => {
       const parser = new Parser();
       const tokens = tokenize('[Z] 张三. 测试标题');
       const result = parser.parse(tokens);
@@ -131,7 +131,7 @@ describe('Parser (base.ts)', () => {
       expect(result.warnings).toContain('使用通用解析器，结果可能不完整');
     });
 
-    it('should handle tokens with two text tokens (author + title)', () => {
+    it('应该处理带有两个文本 token（作者 + 标题）的 token', () => {
       const parser = new Parser();
       const tokens = tokenize('张三. 测试标题');
       const result = parser.parse(tokens);
@@ -141,7 +141,7 @@ describe('Parser (base.ts)', () => {
       expect(result.reference.title).toBe('测试标题');
     });
 
-    it('should handle tokens with only one text token (title)', () => {
+    it('应该处理只有一个文本 token（标题）的 token', () => {
       const parser = new Parser();
       const tokens = tokenize('测试标题');
       const result = parser.parse(tokens);
@@ -150,7 +150,7 @@ describe('Parser (base.ts)', () => {
       expect(result.reference.title).toBe('测试标题');
     });
 
-    it('should handle multiple authors as single text', () => {
+    it('应该将多个作者作为单个文本处理', () => {
       const parser = new Parser();
       const tokens = tokenize('张三李四. 测试标题');
       const result = parser.parse(tokens);
@@ -160,7 +160,7 @@ describe('Parser (base.ts)', () => {
       expect(result.reference.authors[0].surname).toBe('张三李四');
     });
 
-    it('should preserve id when preserveId option is true', () => {
+    it('当 preserveId 选项为 true 时应该保留 id', () => {
       const parser = new Parser();
       const tokens = tokenize('[42] 测试标题');
       const result = parser.parse(tokens, { preserveId: true });
@@ -168,7 +168,7 @@ describe('Parser (base.ts)', () => {
       expect(result.reference.id).toBe('42');
     });
 
-    it('should not preserve id when preserveId option is false', () => {
+    it('当 preserveId 选项为 false 时不应该保留 id', () => {
       const parser = new Parser();
       const tokens = tokenize('[42] 测试标题');
       const result = parser.parse(tokens, { preserveId: false });
@@ -176,7 +176,7 @@ describe('Parser (base.ts)', () => {
       expect(result.reference.id).toBeUndefined();
     });
 
-    it('should handle tokens without type indicator', () => {
+    it('应该处理没有类型标识的 token', () => {
       const parser = new Parser();
       const tokens = tokenize('张三. 测试标题');
       const result = parser.parse(tokens);
@@ -184,7 +184,7 @@ describe('Parser (base.ts)', () => {
       expect(result.reference.type).toBe('Z');
     });
 
-    it('should handle tokens with only brackets and type', () => {
+    it('应该处理只有括号和类型的 token', () => {
       const parser = new Parser();
       const tokens = tokenize('[1] [J]');
       const result = parser.parse(tokens);
@@ -194,7 +194,7 @@ describe('Parser (base.ts)', () => {
   });
 
   describe('parseAuthors', () => {
-    it('should handle single author', () => {
+    it('应该处理单个作者', () => {
       const parser = new Parser();
       const tokens = tokenize('张三. 测试标题');
       const result = parser.parse(tokens);
