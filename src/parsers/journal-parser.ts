@@ -6,6 +6,7 @@ import { parseTypeIndicator } from '../utils/index.js';
 /**
  * 期刊解析器
  * 解析格式：[1] 作者. 题名[J]. 刊名, 年, 卷(期): 页码.
+ * 支持合期号格式：卷(8/9/10) 或 卷(S1) 等（标准 §8.5.1.2）
  */
 export class JournalParser implements ParserStrategy {
   /**

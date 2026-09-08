@@ -3,6 +3,7 @@ import type {
   FormatOptions,
   Author,
   ComponentPart,
+  Serial,
 } from '../types/index.js';
 import { buildTypeIndicator } from '../utils/index.js';
 
@@ -27,6 +28,10 @@ export class Formatter {
   format(reference: ReferenceUnion): string {
     switch (reference.type) {
       case 'J':
+        // 检查是否是连续出版物（有 serialTitle 字段）
+        if ('serialTitle' in reference && (reference as Serial).serialTitle) {
+          return this.formatSerial(reference);
+        }
         return this.formatJournal(reference);
       case 'N':
         return this.formatNewspaper(reference);
@@ -257,6 +262,104 @@ export class Formatter {
         parts.push(`DOI:${journal.pid}`);
       } else {
         parts.push(`PID:${journal.pid}`);
+      }
+    }
+
+    return parts.join(' ');
+  }
+
+  /**
+   * 格式化连续出版物
+   * 格式: 作者. 题名[J]. 年, 卷(期)—年, 卷(期). 出版地: 出版者, 出版年—.
+   */
+  private formatSerial(ref: ReferenceUnion): string {
+    const serial = ref as Serial;
+
+    const parts: string[] = [];
+
+    if (serial.id) {
+      parts.push(`[${serial.id}]`);
+    }
+
+    if (serial.authors && serial.authors.length > 0) {
+      parts.push(this.formatAuthors(serial.authors));
+    }
+
+    // 刊名 + 文献类型标识
+    let title = serial.serialTitle;
+    if (serial.serialSubtitle) {
+      title += `: ${serial.serialSubtitle}`;
+    }
+    parts.push(`${title}${buildTypeIndicator('J', serial.mediaType)}.`);
+
+    // 年卷期信息
+    let serialInfo = '';
+    if (serial.startYear) {
+      serialInfo += serial.startYear;
+    }
+    if (serial.startVolume) {
+      serialInfo += `, ${serial.startVolume}`;
+    }
+    if (serial.startIssue) {
+      serialInfo += `(${serial.startIssue})`;
+    }
+
+    // 连接符 —
+    if (serial.endYear !== undefined || serial.endVolume || serial.endIssue) {
+      serialInfo += '—';
+      if (serial.endYear) {
+        serialInfo += serial.endYear;
+      }
+      if (serial.endVolume) {
+        serialInfo += `, ${serial.endVolume}`;
+      }
+      if (serial.endIssue) {
+        serialInfo += `(${serial.endIssue})`;
+      }
+    } else {
+      serialInfo += '—';
+    }
+
+    parts.push(serialInfo + '.');
+
+    // 出版地: 出版者, 出版年—
+    if (serial.publisherPlace || serial.publisher || serial.publicationStartYear) {
+      let pubInfo = '';
+      if (serial.publisherPlace && serial.publisher) {
+        pubInfo = `${serial.publisherPlace}: ${serial.publisher}`;
+      } else if (serial.publisher) {
+        pubInfo = serial.publisher;
+      }
+
+      if (serial.publicationStartYear) {
+        if (pubInfo) {
+          pubInfo += `, ${serial.publicationStartYear}`;
+        } else {
+          pubInfo = serial.publicationStartYear;
+        }
+
+        // 出版年结束
+        if (serial.publicationEndYear !== undefined) {
+          pubInfo += `—${serial.publicationEndYear}`;
+        } else {
+          pubInfo += '—';
+        }
+      }
+
+      if (pubInfo) {
+        parts.push(pubInfo + '.');
+      }
+    }
+
+    if (serial.url) {
+      parts.push(serial.url);
+    }
+
+    if (serial.pid) {
+      if (this.options.version === '2015') {
+        parts.push(`DOI:${serial.pid}`);
+      } else {
+        parts.push(`PID:${serial.pid}`);
       }
     }
 

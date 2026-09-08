@@ -30,6 +30,7 @@ src/
 ├── parsers/
 │   ├── base.ts            # 解析器策略接口和分发器
 │   ├── journal-parser.ts  # 期刊 [J] 解析器
+│   ├── serial-parser.ts   # 连续出版物解析器（标准 §8.4）
 │   ├── book-parser.ts     # 图书 [M] 解析器
 │   ├── thesis-parser.ts   # 学位论文 [D] 解析器
 │   ├── proceedings-parser.ts  # 会议录 [C] 解析器

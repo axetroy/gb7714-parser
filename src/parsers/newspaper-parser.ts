@@ -5,7 +5,8 @@ import { parseTypeIndicator } from '../utils/index.js';
 
 /**
  * 报纸解析器
- * 解析格式：[1] 作者. 题名[N]. 报纸名, 出版地(可选), 出版日期: 版次(可选).
+ * 解析格式：[1] 作者. 题名[N]. 报纸名, 出版日期(YYYY-MM-DD): 版次.
+ * 标准 §8.5.1.4: 报纸应在报纸名后著录其出版日期与版次，如 2013-03-16 (1)
  */
 export class NewspaperParser implements ParserStrategy {
   /**

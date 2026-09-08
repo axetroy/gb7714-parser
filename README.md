@@ -10,7 +10,9 @@ GB/T 7714 参考文献格式解析库，适用于中文学术论文的参考文�
 - ✅ 完整支持 GB/T 7714-2015 和 GB/T 7714-2025 标准
 - ✅ 支持 17 种文献类型（期刊、图书、学位论文、会议录、报告、标准、专利、网站/网页、档案、地图、数据集、预印本等）
 - ✅ 支持顺序编码制和著者-出版年制
+- ✅ 支持连续出版物解析（标准 §8.4）
 - ✅ 支持 DOI 解析（自动提取到 pid 字段）
+- ✅ 支持正文引用标注解析（parseCitation API）
 - ✅ TypeScript 编写，提供完整类型定义
 - ✅ ESM/CJS 双格式输出
 - ✅ 容错性强，对常见格式偏差有容忍度
@@ -137,6 +139,43 @@ interface FormatOptions {
   citationStyle?: "citationStyle" | "author-date"; // 标引体系
   includeAccessDate?: boolean; // 是否输出引用日期
 }
+```
+
+### parseCitation(citation)
+
+解析正文中的引用标注。
+
+```typescript
+function parseCitation(citation: string): {
+  type: "numeric" | "author-date";
+  ids?: string[];
+  author?: string;
+  year?: string;
+  suffix?: string;
+};
+```
+
+**示例**
+
+```typescript
+import { parseCitation } from "gb7714-parser";
+
+// 顺序编码制
+const result1 = parseCitation("[1]");
+console.log(result1.type); // 'numeric'
+console.log(result1.ids); // ['1']
+
+const result2 = parseCitation("[1,2,3]");
+console.log(result2.ids); // ['1', '2', '3']
+
+const result3 = parseCitation("[1-5]");
+console.log(result3.ids); // ['1', '2', '3', '4', '5']
+
+// 著者-出版年制
+const result4 = parseCitation("(张三, 2025)");
+console.log(result4.type); // 'author-date'
+console.log(result4.author); // '张三'
+console.log(result4.year); // '2025'
 ```
 
 ## 支持的文献类型

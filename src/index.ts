@@ -207,6 +207,87 @@ export function formatCitation(reference: ReferenceUnion, options?: FormatOption
   return formatCitationFn(reference, options);
 }
 
+/**
+ * 解析正文中的引用标注
+ *
+ * 支持格式：
+ * - 顺序编码制：[1]、[1,2]、[1-3]
+ * - 著者-出版年制：(张三, 2025)、(张三等, 2025)
+ *
+ * @param citation - 引用标注字符串
+ * @returns 解析结果
+ *
+ * @example
+ * ```typescript
+ * import { parseCitation } from 'gb7714-parser';
+ *
+ * // 顺序编码制
+ * const result1 = parseCitation('[1]');
+ * console.log(result1.type); // 'numeric'
+ * console.log(result1.ids); // ['1']
+ *
+ * const result2 = parseCitation('[1,2,3]');
+ * console.log(result2.ids); // ['1', '2', '3']
+ *
+ * const result3 = parseCitation('[1-5]');
+ * console.log(result3.ids); // ['1', '2', '3', '4', '5']
+ *
+ * // 著者-出版年制
+ * const result4 = parseCitation('(张三, 2025)');
+ * console.log(result4.type); // 'author-date'
+ * console.log(result4.author); // '张三'
+ * console.log(result4.year); // '2025'
+ * ```
+ */
+export function parseCitation(citation: string): {
+  type: 'numeric' | 'author-date';
+  ids?: string[];
+  author?: string;
+  year?: string;
+  suffix?: string;
+} {
+  const trimmed = citation.trim();
+
+  // 顺序编码制：[1] 或 [1,2,3] 或 [1-5]
+  const numericMatch = trimmed.match(/^\[(\d+(?:[,，]\d+)*(?:[-—]\d+)?)\]$/);
+  if (numericMatch) {
+    const content = numericMatch[1]!;
+    const ids: string[] = [];
+
+    // 解析逗号分隔的序号
+    const parts = content.split(/[,，]/);
+    for (const part of parts) {
+      // 检查是否是范围（如 1-5）
+      const rangeMatch = part.match(/^(\d+)[-—](\d+)$/);
+      if (rangeMatch) {
+        const start = parseInt(rangeMatch[1]!, 10);
+        const end = parseInt(rangeMatch[2]!, 10);
+        for (let i = start; i <= end; i++) {
+          ids.push(String(i));
+        }
+      } else {
+        ids.push(part);
+      }
+    }
+
+    return { type: 'numeric', ids };
+  }
+
+  // 著者-出版年制：(张三, 2025) 或 (张三等, 2025)
+  const authorDateMatch = trimmed.match(/^\(([^,，]+)[,，]\s*(\d{4})\s*(?:,\s*([^)]+))?\)$/);
+  if (authorDateMatch) {
+    return {
+      type: 'author-date',
+      author: authorDateMatch[1]!.trim(),
+      year: authorDateMatch[2],
+      suffix: authorDateMatch[3]?.trim(),
+    };
+  }
+
+  // 无法识别的格式，返回原始内容
+  return { type: 'numeric', ids: [trimmed] };
+}
+
 // 导出类以便高级用法
 export {
   Parser,

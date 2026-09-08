@@ -97,20 +97,20 @@ export class SerialParser implements ParserStrategy {
     let endIssue = '';
 
     // 查找起始年份
-    const yearToken = tokens.slice(position).find(t => t.type === 'YEAR');
-    if (yearToken) {
-      startYear = yearToken.value;
-      position = tokens.indexOf(yearToken) + 1;
+    const yearIndex = tokens.findIndex((t, i) => i >= position && t.type === 'YEAR');
+    if (yearIndex >= position) {
+      startYear = tokens[yearIndex]!.value;
+      position = yearIndex + 1;
     }
 
     // 查找起始卷号（逗号后的数字）
     const commaIndex = tokens.findIndex((t, i) => i >= position && t.type === 'COMMA');
     if (commaIndex >= position) {
       position = commaIndex + 1;
-      const volumeToken = tokens.slice(position).find(t => t.type === 'NUMBER');
-      if (volumeToken) {
-        startVolume = volumeToken.value;
-        position = tokens.indexOf(volumeToken) + 1;
+      const volumeIndex = tokens.findIndex((t, i) => i >= position && t.type === 'NUMBER');
+      if (volumeIndex >= position) {
+        startVolume = tokens[volumeIndex]!.value;
+        position = volumeIndex + 1;
       }
     }
 
@@ -130,15 +130,39 @@ export class SerialParser implements ParserStrategy {
     if (dashIndex >= position) {
       position = dashIndex + 1;
 
-      // 查找结束年份
-      const endYearToken = tokens.slice(position).find(t => t.type === 'YEAR');
-      if (endYearToken) {
-        endYear = endYearToken.value;
-        position = tokens.indexOf(endYearToken) + 1;
-      } else {
+      // 检查 DASH 后是否紧跟 DOT（—. 表示无限期发行）
+      position = this.skipWhitespace(tokens, position);
+      if (position < tokens.length && tokens[position]?.type === 'DOT') {
         // 无限期发行，结束年份为空
         endYear = '';
+        position++; // 跳过 DOT
+      } else {
+        // 查找结束年份
+        const endYearIndex = tokens.findIndex((t, i) => i >= position && t.type === 'YEAR');
+        if (endYearIndex >= position) {
+          endYear = tokens[endYearIndex]!.value;
+          position = endYearIndex + 1;
+        } else {
+          endYear = '';
+        }
+
+        // 查找结束期号（如果有）- 在年份之后的括号
+        const endParenOpenIndex = tokens.findIndex((t, i) => i >= position && t.type === 'PAREN_OPEN');
+        if (endParenOpenIndex >= position && endParenOpenIndex < position + 5) {
+          position = endParenOpenIndex + 1;
+          const endParenCloseIndex = tokens.findIndex((t, i) => i > position && t.type === 'PAREN_CLOSE');
+          if (endParenCloseIndex > position) {
+            endIssue = tokens.slice(position, endParenCloseIndex).map(t => t.value).join('');
+            position = endParenCloseIndex + 1;
+          }
+        }
       }
+    }
+
+    // 跳过可能的 DOT（—. 后可能还有额外的 .）
+    position = this.skipWhitespace(tokens, position);
+    if (position < tokens.length && tokens[position]?.type === 'DOT') {
+      position++;
     }
 
     // 解析出版地、出版者、出版年
@@ -153,26 +177,26 @@ export class SerialParser implements ParserStrategy {
       // 出版地在冒号前
       publisherPlace = this.readTextUntil(tokens, position, colonIndex).trim().replace(/\.$/, '');
       position = colonIndex + 1;
+    }
 
-      // 查找出版者（到逗号）
-      const nextCommaIndex = tokens.findIndex((t, i) => i >= position && t.type === 'COMMA');
-      if (nextCommaIndex >= position) {
-        publisher = this.readTextUntil(tokens, position, nextCommaIndex).trim().replace(/\.$/, '');
-        position = nextCommaIndex + 1;
+    // 查找出版者（到逗号）
+    const nextCommaIndex = tokens.findIndex((t, i) => i >= position && t.type === 'COMMA');
+    if (nextCommaIndex >= position) {
+      publisher = this.readTextUntil(tokens, position, nextCommaIndex).trim().replace(/\.$/, '');
+      position = nextCommaIndex + 1;
 
-        // 查找出版年起始
-        const pubYearToken = tokens.slice(position).find(t => t.type === 'YEAR');
-        if (pubYearToken) {
-          publicationStartYear = pubYearToken.value;
-          position = tokens.indexOf(pubYearToken) + 1;
+      // 查找出版年起始
+      const pubYearIndex = tokens.findIndex((t, i) => i >= position && t.type === 'YEAR');
+      if (pubYearIndex >= position) {
+        publicationStartYear = tokens[pubYearIndex]!.value;
+        position = pubYearIndex + 1;
 
-          // 查找出版年结束（DASH）
-          const pubDashIndex = tokens.findIndex((t, i) => i >= position && t.type === 'DASH');
-          if (pubDashIndex >= position) {
-            position = pubDashIndex + 1;
-            // 无限期发行
-            publicationEndYear = '';
-          }
+        // 查找出版年结束（DASH）
+        const pubDashIndex = tokens.findIndex((t, i) => i >= position && t.type === 'DASH');
+        if (pubDashIndex >= position) {
+          position = pubDashIndex + 1;
+          // 无限期发行
+          publicationEndYear = '';
         }
       }
     }
@@ -253,14 +277,25 @@ export class SerialParser implements ParserStrategy {
 
   private readTextUntil(tokens: Token[], start: number, end: number): string {
     let result = '';
+    let needsSpace = false;
     for (let i = start; i < end; i++) {
       const token = tokens[i]!;
       if (token.type === 'TEXT') {
+        if (needsSpace && result.length > 0) result += ' ';
         result += token.value;
+        needsSpace = true;
       } else if (token.type === 'DOT') {
         result += '.';
+        needsSpace = false;
       } else if (token.type === 'DATE') {
         result += token.value;
+        needsSpace = false;
+      } else if (token.type === 'COMMA') {
+        result += ',';
+        needsSpace = false;
+      } else if (token.type === 'COLON') {
+        result += ':';
+        needsSpace = false;
       }
     }
     return result;
