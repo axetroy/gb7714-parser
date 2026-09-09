@@ -189,7 +189,7 @@ export abstract class BaseParser implements ParserStrategy {
     position: number,
     
     optionalAuthors: boolean = false,
-  ): { authors: Author[]; title: string; extraField: string; position: number } {
+  ): { authors: Author[]; title: string; extraField: string; subtitle?: string; position: number } {
     // 解析作者
     const authorParser = optionalAuthors ? this.parseOptionalAuthors : this.parseRequiredAuthors;
     const { authors, position: afterAuthors } = authorParser(tokens, position);
@@ -201,9 +201,37 @@ export abstract class BaseParser implements ParserStrategy {
 
     let title: string;
     let extraField: string;
+    let subtitle: string | undefined;
     if (colonIndex >= position && colonIndex < titleEnd) {
       title = this.readTextUntil(tokens, position, colonIndex).trim().replace(/\.$/, '');
-      extraField = this.readTextUntil(tokens, colonIndex + 1, titleEnd).trim().replace(/\.$/, '');
+      // 检查附加字段中是否有第二个冒号（题名: 副题名: 报告编号 格式）
+      const remainingTokens = tokens.slice(colonIndex + 1, titleEnd);
+      const secondColonIdx = remainingTokens.findIndex(t => t.type === 'COLON');
+      if (secondColonIdx >= 0) {
+        // 有第二个冒号：判断中间部分是否仅为年份 token
+        const betweenTokens = remainingTokens.slice(0, secondColonIdx);
+        const onlyYear = betweenTokens.length === 1 && betweenTokens[0]!.type === 'YEAR';
+        if (onlyYear) {
+          // 年份是题名结构的一部分（如"白皮书：2023：新时代..."）
+          // 第一个冒号后是年份，第二个冒号后是副题名
+          subtitle = this.readTextUntil(tokens, colonIndex + secondColonIdx + 2, titleEnd).trim();
+          extraField = '';
+        } else {
+          // 正常情况：第一个冒号后是副题名，第二个冒号后是报告编号
+          subtitle = this.readTextUntil(tokens, colonIndex + 1, colonIndex + secondColonIdx + 1).trim();
+          extraField = this.readTextUntil(tokens, colonIndex + secondColonIdx + 2, titleEnd).trim().replace(/\.$/, '');
+        }
+      } else {
+        extraField = this.readTextUntil(tokens, colonIndex + 1, titleEnd).trim().replace(/\.$/, '');
+        // 去掉附加字段末尾的年份 token（如 "7178999X-2006BAK04A 10/10. 2013" → "7178999X-2006BAK04A 10/10"）
+        // 只匹配合理年份范围（1900-2099），避免误匹配报告编号中的数字（如 "PB 91-194001"）
+        if (extraField) {
+          const yearMatch = extraField.match(/\.?\s*((?:19|20)\d{2})\s*$/);
+          if (yearMatch) {
+            extraField = extraField.replace(yearMatch[0]!, '').trim();
+          }
+        }
+      }
     } else {
       title = this.readTextUntil(tokens, position, titleEnd).trim().replace(/\.$/, '');
       extraField = '';
@@ -212,7 +240,7 @@ export abstract class BaseParser implements ParserStrategy {
     // 跳过文献类型标识
     position = titleEnd;
 
-    return { authors, title, extraField, position };
+    return { authors, title, extraField, subtitle, position };
   }
 
   /**
@@ -502,6 +530,9 @@ export abstract class BaseParser implements ParserStrategy {
         lastEndPosition = token.position + token.value.length;
         lastContentEnd = lastEndPosition;
       } else if (token.type === 'YEAR') {
+        if (result && lastEndPosition >= 0 && token.position > lastEndPosition) {
+          result += ' ';
+        }
         result += token.value;
         lastEndPosition = token.position + token.value.length;
         lastContentEnd = lastEndPosition;

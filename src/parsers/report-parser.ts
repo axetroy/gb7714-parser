@@ -43,7 +43,7 @@ export class ReportParser extends BaseParser {
     position = this.skipWhitespace(tokens, position);
 
     // 解析作者、题名和报告编号（到文献类型标识 [R]）
-    const { authors, title, extraField: reportNumber, position: _afterTitle } = this.parseTitleWithPrefix(tokens, position);
+    const { authors, title, extraField: reportNumber, subtitle, position: _afterTitle } = this.parseTitleWithPrefix(tokens, position);
 
     // 跳过文献类型标识 [R]
     const { mediaType, position: afterType } = this.skipTypeIndicator(tokens, position);
@@ -63,13 +63,18 @@ export class ReportParser extends BaseParser {
     // 解析 DOI/PID
     const pid = this.parsePID(tokens);
 
+    // 解析 URL
+    const url = this.parseURL(tokens);
+
     return {
       type: 'R' as never,
       authors,
       title,
+      subtitle: subtitle || undefined,
       reportNumber: reportNumber || undefined,
       releaseDate: releaseDate || undefined,
       pages: pages || undefined,
+      url: url || undefined,
       pid: pid || undefined,
       mediaType,
     };

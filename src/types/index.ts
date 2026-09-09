@@ -263,6 +263,8 @@ export interface Report extends Reference {
   reportNumber?: string;
   /** 发布日期（YYYY-MM-DD） */
   releaseDate?: string;
+  /** 副题名（题名含双冒号时，第二个冒号后的内容） */
+  subtitle?: string;
 }
 
 /**

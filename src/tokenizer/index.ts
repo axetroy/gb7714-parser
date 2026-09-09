@@ -54,6 +54,38 @@ export class Tokenizer {
         continue;
       }
 
+      // 缩写模式（如 "U.S."、"e.g."）：单字母+点号后跟另一个单字母+点号时合并为单个TEXT token
+      if (char === '.') {
+        const prevChar = this.input[this.position - 1]!;
+        const nextChar = this.peek(1);
+        const nextNextChar = this.peek(2);
+        // 检测 "X.Y." 或 "X.Y.Z." 格式（字母+点号+字母+点号）
+        if (prevChar && prevChar.match(/[A-Za-z]/) && nextChar && nextChar.match(/[A-Z]/) && nextNextChar === '.') {
+          const abbrStart = this.position - 1;
+          let end = this.position + 1; // 当前位置（点号之后）
+          while (end < this.input.length) {
+            const c = this.input[end]!;
+            if (c.match(/[A-Z]/)) {
+              end++;
+              if (end < this.input.length && this.input[end] === '.') {
+                end++;
+              } else {
+                break;
+              }
+            } else if (c === ' ') {
+              // 遇空格停止，不吞入下一个单词（保留后续空格和单词的自然分词）
+              break;
+            } else {
+              break;
+            }
+          }
+          const value = this.input.slice(abbrStart, end);
+          this.addToken('TEXT', value);
+          this.position = end;
+          continue;
+        }
+      }
+
       // 句点
       if (char === '.') {
         this.addToken('DOT', '.');
@@ -126,6 +158,30 @@ export class Tokenizer {
         continue;
       }
 
+      // 缩写模式（如 "U.S."、"e.g."）：检测字母+点号+字母+点号格式
+      if (char.match(/[A-Za-z]/) && this.peek(1) === '.' && this.peek(2).match(/[A-Z]/) && this.peek(3) === '.') {
+        const abbrStart = this.position;
+        let end = this.position + 1; // 吞掉当前字母
+        while (end < this.input.length) {
+          const c = this.input[end]!;
+          if (c === '.') {
+            end++;
+            if (end < this.input.length && this.input[end].match(/[A-Z]/)) {
+              end++;
+            } else {
+              break;
+            }
+          } else if (c === ' ') {
+            break; // 遇空格停止
+          } else {
+            break;
+          }
+        }
+        const value = this.input.slice(abbrStart, end);
+        this.addToken('TEXT', value);
+        this.position = end;
+        continue;
+      }
       // 文本内容（作者、题名等）
       this.readText();
     }
