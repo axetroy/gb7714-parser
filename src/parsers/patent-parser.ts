@@ -60,7 +60,7 @@ export class PatentParser extends BaseParser {
     if (colonIndex >= position && colonIndex < titleEnd) {
       title = this.readTextUntil(tokens, position, colonIndex).trim().replace(/\.$/, '');
       position = colonIndex + 1;
-      patentNumber = this.readTextUntil(tokens, position, titleEnd).trim().replace(/\.$/, '').replace(/\.\d+$/, '');
+      patentNumber = this.readTextUntil(tokens, position, titleEnd).trim().replace(/\.$/, '');
       position = titleEnd;
     } else {
       title = this.readTextUntil(tokens, position, titleEnd).trim().replace(/\.$/, '');
@@ -79,6 +79,9 @@ export class PatentParser extends BaseParser {
       position = tokens.indexOf(dateToken) + 1;
     }
 
+    // 解析页码（如果有）
+    const { pages } = this.parsePages(tokens, position);
+
     // 解析 URL
     const url = this.parseURL(tokens);
 
@@ -91,6 +94,7 @@ export class PatentParser extends BaseParser {
       title,
       patentNumber: patentNumber || '',
       announceDate: announceDate || undefined,
+      pages: pages || undefined,
       url,
       pid: pid || undefined,
       mediaType,
