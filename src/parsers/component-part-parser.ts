@@ -1,13 +1,29 @@
 import type { Token, Author } from '../types/index.js';
 import type { ComponentPart, ParseOptions } from '../types/index.js';
-import type { ParserStrategy } from './base.js';
-import { parseTypeIndicator, parseAuthors, readUntilDot, findNextDot } from '../utils/index.js';
+import { BaseParser } from './base.js';
+import { parseTypeIndicator, parseAuthors } from '../utils/index.js';
 
 /**
  * 析出文献解析器
- * 解析格式：[1] 作者. 析出文献题名//图书作者. 图书题名. 出版地: 出版者, 出版年: 析出文献页码.
+ *
+ * 解析格式：`[序号] 作者. 析出文献题名//图书作者. 图书题名. 出版地: 出版者, 出版年: 析出文献页码.`
+ *
+ * @example
+ * ```typescript
+ * const input = '[1] 王五. 深度学习在自然语言处理中的应用//李四. 人工智能前沿研究. 北京: 科学出版社, 2023: 125-150.';
+ * const { reference } = parse(input);
+ * // reference.type === 'Z'
+ * // reference.authors === [{ name: '王五' }]
+ * // reference.title === '深度学习在自然语言处理中的应用'
+ * // reference.host.authors === [{ name: '李四' }]
+ * // reference.host.title === '人工智能前沿研究'
+ * // reference.host.publisherPlace === '北京'
+ * // reference.host.publisher === '科学出版社'
+ * // reference.host.year === '2023'
+ * // reference.pages === '125-150'
+ * ```
  */
-export class ComponentPartParser implements ParserStrategy {
+export class ComponentPartParser extends BaseParser {
   /**
    * 检查是否匹配析出文献格式
    * 析出文献的特征是包含 // 分隔符
@@ -24,21 +40,14 @@ export class ComponentPartParser implements ParserStrategy {
     let position = 0;
 
     // 跳过序号 [1]
-    if (tokens[position]?.type === 'BRACKET_OPEN') {
-      position++;
-      while (position < tokens.length && tokens[position]?.type !== 'BRACKET_CLOSE') {
-        position++;
-      }
-      position++; // 跳过 ]
-    }
+    position = this.skipReferenceNumber(tokens, position);
 
     // 跳过空白
     position = this.skipWhitespace(tokens, position);
 
     // 解析析出文献作者
-    const authorsText = readUntilDot(tokens, position);
-    position = findNextDot(tokens, position) + 1;
-    const authors = parseAuthors(authorsText);
+    const { authors, position: afterAuthors } = this.parseRequiredAuthors(tokens, position);
+    position = afterAuthors;
 
     // 跳过空白
     position = this.skipWhitespace(tokens, position);
@@ -78,7 +87,7 @@ export class ComponentPartParser implements ParserStrategy {
 
     // 解析图书作者（如果有）
     let hostAuthors: Author[] = [];
-    const nextDotIndex = findNextDot(tokens, position);
+    const nextDotIndex = this.findNextDot(tokens, position);
     if (nextDotIndex > position) {
       const hostAuthorText = this.readTextUntil(tokens, position, nextDotIndex).trim();
       // 检查是否是作者（包含逗号或中文）
@@ -93,7 +102,7 @@ export class ComponentPartParser implements ParserStrategy {
 
     // 解析图书题名
     let hostTitle = '';
-    const hostTitleEnd = findNextDot(tokens, position);
+    const hostTitleEnd = this.findNextDot(tokens, position);
     if (hostTitleEnd > position) {
       hostTitle = this.readTextUntil(tokens, position, hostTitleEnd).trim().replace(/\.$/, '');
       position = hostTitleEnd + 1;
@@ -130,7 +139,7 @@ export class ComponentPartParser implements ParserStrategy {
       }
     }
 
-    // 跳过 . 
+    // 跳过 .
     position = this.skipWhitespace(tokens, position);
     if (tokens[position]?.type === 'DOT') {
       position++;
@@ -140,28 +149,13 @@ export class ComponentPartParser implements ParserStrategy {
     position = this.skipWhitespace(tokens, position);
 
     // 解析析出文献页码（如果有）
-    let pages = '';
-    const colonIndex2 = tokens.findIndex((t, i) => i >= position && (t.value === ':' || t.value === '：'));
-    if (colonIndex2 >= position) {
-      position = colonIndex2 + 1;
-      const pageTokens = tokens.slice(position).filter(t =>
-        t.type === 'NUMBER' || t.type === 'DASH' || t.type === 'TEXT'
-      );
-      if (pageTokens.length > 0) {
-        pages = pageTokens.map(t => t.value).join('').replace(/\.$/, '');
-      }
-    }
+    const { pages } = this.parsePages(tokens, position);
 
-    // 解析 URL（如果有）
-    let url: string | undefined;
-    const urlToken = tokens.find(t => t.type === 'URL');
-    if (urlToken) {
-      url = urlToken.value.replace(/\.$/, '');
-    }
+    // 解析 URL
+    const url = this.parseURL(tokens);
 
     // 解析 DOI/PID
-    const pidToken = tokens.find(t => t.type === 'PID');
-    const pid = pidToken?.value;
+    const pid = this.parsePID(tokens);
 
     return {
       type: componentType as never, // 析出文献继承原始文献类型
@@ -180,31 +174,4 @@ export class ComponentPartParser implements ParserStrategy {
       pid: pid || undefined,
     };
   }
-
-  private skipWhitespace(tokens: Token[], position: number): number {
-    while (position < tokens.length && tokens[position]?.type === 'TEXT' && tokens[position]?.value.trim() === '') {
-      position++;
-    }
-    return position;
-  }
-
-  private readTextUntil(tokens: Token[], start: number, end: number): string {
-    let result = '';
-    for (let i = start; i < end; i++) {
-      const token = tokens[i]!;
-      if (token.type === 'TEXT') {
-        result += token.value;
-      } else if (token.type === 'DOT') {
-        result += '.';
-      } else if (token.type === 'COLON') {
-        result += ':';
-      } else if (token.type === 'DOUBLE_SLASH') {
-        result += '//';
-      } else if (token.type === 'NUMBER') {
-        result += token.value;
-      }
-    }
-    return result;
-  }
-
 }

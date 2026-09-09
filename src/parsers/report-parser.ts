@@ -1,13 +1,24 @@
 import type { Token } from '../types/index.js';
 import type { Report, ParseOptions } from '../types/index.js';
-import type { ParserStrategy } from './base.js';
-import { parseTypeIndicator, parseAuthors, readUntilDot, findNextDot, findNextTypeIndicator } from '../utils/index.js';
+import { BaseParser } from './base.js';
 
 /**
  * 报告解析器
- * 解析格式：[1] 作者. 题名: 报告编号[R]. 发布日期: 页码.
+ *
+ * 解析格式：`[序号] 作者. 题名: 报告编号[R]. 发布日期: 页码.`
+ *
+ * @example
+ * ```typescript
+ * const input = '[1] 王五. 2023年人工智能发展报告: TR-2023-001[R]. 2023-12-01.';
+ * const { reference } = parse(input);
+ * // reference.type === 'R'
+ * // reference.authors === [{ name: '王五' }]
+ * // reference.title === '2023年人工智能发展报告'
+ * // reference.reportNumber === 'TR-2023-001'
+ * // reference.releaseDate === '2023-12-01'
+ * ```
  */
-export class ReportParser implements ParserStrategy {
+export class ReportParser extends BaseParser {
   /**
    * 检查是否匹配报告格式
    */
@@ -26,21 +37,14 @@ export class ReportParser implements ParserStrategy {
     let position = 0;
 
     // 跳过序号 [1]
-    if (tokens[position]?.type === 'BRACKET_OPEN') {
-      position++;
-      while (position < tokens.length && tokens[position]?.type !== 'BRACKET_CLOSE') {
-        position++;
-      }
-      position++; // 跳过 ]
-    }
+    position = this.skipReferenceNumber(tokens, position);
 
     // 跳过空白
     position = this.skipWhitespace(tokens, position);
 
     // 解析作者
-    const authorsText = readUntilDot(tokens, position);
-    position = findNextDot(tokens, position) + 1;
-    const authors = parseAuthors(authorsText);
+    const { authors, position: afterAuthors } = this.parseRequiredAuthors(tokens, position);
+    position = afterAuthors;
 
     // 跳过空白
     position = this.skipWhitespace(tokens, position);
@@ -48,11 +52,11 @@ export class ReportParser implements ParserStrategy {
     // 解析题名和报告编号（到文献类型标识 [R]）
     let title = '';
     let reportNumber = '';
-    const titleEnd = findNextTypeIndicator(tokens, position);
-    
+    const titleEnd = this.findNextTypeIndicator(tokens, position);
+
     // 查找冒号来分离题名和报告编号
     const colonIndex = tokens.findIndex((t, i) => i >= position && i < titleEnd && (t.value === ':' || t.value === '：'));
-    
+
     if (colonIndex >= position && colonIndex < titleEnd) {
       title = this.readTextUntil(tokens, position, colonIndex).trim().replace(/\.$/, '');
       position = colonIndex + 1;
@@ -64,22 +68,8 @@ export class ReportParser implements ParserStrategy {
     }
 
     // 跳过文献类型标识 [R]
-    const typeIndicator = tokens.find(t => t.type === 'TYPE_INDICATOR');
-    let mediaType: import('../types/index.js').MediaType | undefined;
-    if (typeIndicator) {
-      const parsed = parseTypeIndicator(typeIndicator.value);
-      mediaType = parsed.mediaType;
-      position = tokens.indexOf(typeIndicator) + 1;
-    }
-
-    // 跳过 . 
-    position = this.skipWhitespace(tokens, position);
-    if (tokens[position]?.type === 'DOT') {
-      position++;
-    }
-
-    // 跳过空白
-    position = this.skipWhitespace(tokens, position);
+    const { mediaType, position: afterType } = this.skipTypeIndicator(tokens, position);
+    position = afterType;
 
     // 解析发布日期
     let releaseDate = '';
@@ -90,21 +80,10 @@ export class ReportParser implements ParserStrategy {
     }
 
     // 解析页码（如果有）
-    let pages = '';
-    const colonIndex2 = tokens.findIndex((t, i) => i >= position && (t.value === ':' || t.value === '：'));
-    if (colonIndex2 >= position) {
-      position = colonIndex2 + 1;
-      const pageTokens = tokens.slice(position).filter(t =>
-        t.type === 'NUMBER' || t.type === 'DASH' || t.type === 'TEXT'
-      );
-      if (pageTokens.length > 0) {
-        pages = pageTokens.map(t => t.value).join('').replace(/\.$/, '');
-      }
-    }
+    const { pages } = this.parsePages(tokens, position);
 
     // 解析 DOI/PID
-    const pidToken = tokens.find(t => t.type === 'PID');
-    const pid = pidToken?.value;
+    const pid = this.parsePID(tokens);
 
     return {
       type: 'R' as never,
@@ -117,34 +96,4 @@ export class ReportParser implements ParserStrategy {
       mediaType,
     };
   }
-
-  private skipWhitespace(tokens: Token[], position: number): number {
-    while (position < tokens.length && tokens[position]?.type === 'TEXT' && tokens[position]?.value.trim() === '') {
-      position++;
-    }
-    return position;
-  }
-
-  private readTextUntil(tokens: Token[], start: number, end: number): string {
-    let result = '';
-    let lastEndPosition = -1;
-    for (let i = start; i < end; i++) {
-      const token = tokens[i]!;
-      if (token.type === 'TEXT') {
-        if (result && lastEndPosition >= 0 && token.position > lastEndPosition) {
-          result += ' ';
-        }
-        result += token.value;
-        lastEndPosition = token.position + token.value.length;
-      } else if (token.type === 'DOT') {
-        result += '.';
-        lastEndPosition = token.position + 1;
-      } else if (token.type === 'COLON') {
-        result += ':';
-        lastEndPosition = token.position + 1;
-      }
-    }
-    return result;
-  }
-
 }

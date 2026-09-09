@@ -1,13 +1,33 @@
 import type { Token, Author } from '../types/index.js';
 import type { Reference, ParseOptions } from '../types/index.js';
-import type { ParserStrategy } from './base.js';
-import { parseTypeIndicator, parseAuthors, readUntilTypeIndicator, findNextTypeIndicator } from '../utils/index.js';
+import { BaseParser } from './base.js';
+import { parseTypeIndicator, parseAuthors } from '../utils/index.js';
 
 /**
  * 著者-出版年制解析器
- * 解析格式：(作者, 年). 题名[J]. 刊名, 卷(期): 页码.
+ *
+ * 解析格式：`(作者, 年). 题名[J]. 刊名, 卷(期): 页码.`
+ *
+ * @example
+ * ```typescript
+ * const input = '(张三, 2023). 人工智能在教育中的应用[J]. 现代教育技术, 2023, 35(2): 15-22.';
+ * const { reference } = parse(input);
+ * // reference.type === 'J'
+ * // reference.authors === [{ name: '张三' }]
+ * // reference.year === '2023'
+ * // reference.title === '人工智能在教育中的应用'
+ * // reference.pages === '15-22'
+ * ```
+ *
+ * @example
+ * ```typescript
+ * // 多作者
+ * const input = '(张三, 李四, 王五, 2023). 深度学习综述[J]. 计算机学报, 2023, 46(3): 512-525.';
+ * const { reference } = parse(input);
+ * // reference.authors === [{ name: '张三' }, { name: '李四' }, { name: '王五' }]
+ * ```
  */
-export class AuthorDateParser implements ParserStrategy {
+export class AuthorDateParser extends BaseParser {
   /**
    * 检查是否匹配著者-出版年制格式
    * 特征：以 ( 开头，包含作者和年份
@@ -71,13 +91,7 @@ export class AuthorDateParser implements ParserStrategy {
     let position = 0;
 
     // 跳过序号 [1]（如果有的话）
-    if (tokens[position]?.type === 'BRACKET_OPEN') {
-      position++;
-      while (position < tokens.length && tokens[position]?.type !== 'BRACKET_CLOSE') {
-        position++;
-      }
-      position++; // 跳过 ]
-    }
+    position = this.skipReferenceNumber(tokens, position);
 
     // 跳过空白
     position = this.skipWhitespace(tokens, position);
@@ -95,7 +109,7 @@ export class AuthorDateParser implements ParserStrategy {
       while (position < tokens.length && depth > 0) {
         const token = tokens[position];
         if (!token) break;
-        
+
         if (token.type === 'PAREN_OPEN') depth++;
         if (token.type === 'PAREN_CLOSE') depth--;
         if (depth === 0) break;
@@ -137,9 +151,8 @@ export class AuthorDateParser implements ParserStrategy {
     position = this.skipWhitespace(tokens, position);
 
     // 解析题名
-    const titleText = readUntilTypeIndicator(tokens, position);
-    position = findNextTypeIndicator(tokens, position);
-    const title = titleText.trim().replace(/\.$/, '');
+    const { title, position: afterTitle } = this.parseTitle(tokens, position);
+    position = afterTitle;
 
     // 跳过文献类型标识
     const typeIndicator = tokens.find(t => t.type === 'TYPE_INDICATOR');
@@ -198,12 +211,10 @@ export class AuthorDateParser implements ParserStrategy {
     }
 
     // 解析 URL
-    const urlToken = tokens.find(t => t.type === 'URL');
-    const url = urlToken?.value;
+    const url = this.parseURL(tokens);
 
     // 解析 DOI/PID
-    const pidToken = tokens.find(t => t.type === 'PID');
-    const pid = pidToken?.value;
+    const pid = this.parsePID(tokens);
 
     return {
       type: referenceType as never,
@@ -217,20 +228,10 @@ export class AuthorDateParser implements ParserStrategy {
     };
   }
 
-  private skipWhitespace(tokens: Token[], position: number): number {
-    while (position < tokens.length && tokens[position]?.type === 'TEXT' && tokens[position]?.value.trim() === '') {
-      position++;
-    }
-    return position;
-  }
-
-
-
   private findNextComma(tokens: Token[], start: number): number {
     for (let i = start; i < tokens.length; i++) {
       if (tokens[i]?.type === 'COMMA') return i;
     }
     return tokens.length;
   }
-
 }

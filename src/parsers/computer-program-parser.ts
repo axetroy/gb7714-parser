@@ -1,13 +1,27 @@
 import type { Token } from '../types/index.js';
 import type { ComputerProgram, ParseOptions } from '../types/index.js';
-import type { ParserStrategy } from './base.js';
-import { parseTypeIndicator, parseAuthors, readUntilDot, readUntilTypeIndicator, findNextDot, findNextTypeIndicator } from '../utils/index.js';
+import { BaseParser } from './base.js';
 
 /**
  * 计算机程序解析器
- * 解析格式：[1] 作者. 程序名[CP]. 版本. 运行环境. 出版地: 出版者, 出版年.
+ *
+ * 解析格式：`[序号] 作者. 程序名[CP]. 版本. 运行环境. 出版地: 出版者, 出版年.`
+ *
+ * @example
+ * ```typescript
+ * const input = '[1] 科技公司. 图像处理软件[CP]. V2.0. Windows 10. 北京: 科技出版社, 2023.';
+ * const { reference } = parse(input);
+ * // reference.type === 'CP'
+ * // reference.authors === [{ name: '科技公司' }]
+ * // reference.title === '图像处理软件'
+ * // reference.programVersion === 'V2.0'
+ * // reference.runtimeEnvironment === 'Windows 10'
+ * // reference.publisherPlace === '北京'
+ * // reference.publisher === '科技出版社'
+ * // reference.year === '2023'
+ * ```
  */
-export class ComputerProgramParser implements ParserStrategy {
+export class ComputerProgramParser extends BaseParser {
   /**
    * 检查是否匹配计算机程序格式
    */
@@ -26,51 +40,29 @@ export class ComputerProgramParser implements ParserStrategy {
     let position = 0;
 
     // 跳过序号 [1]
-    if (tokens[position]?.type === 'BRACKET_OPEN') {
-      position++;
-      while (position < tokens.length && tokens[position]?.type !== 'BRACKET_CLOSE') {
-        position++;
-      }
-      position++; // 跳过 ]
-    }
+    position = this.skipReferenceNumber(tokens, position);
 
     // 跳过空白
     position = this.skipWhitespace(tokens, position);
 
     // 解析作者
-    const authorsText = readUntilDot(tokens, position);
-    position = findNextDot(tokens, position) + 1;
-    const authors = parseAuthors(authorsText);
+    const { authors, position: afterAuthors } = this.parseRequiredAuthors(tokens, position);
+    position = afterAuthors;
 
     // 跳过空白
     position = this.skipWhitespace(tokens, position);
 
     // 解析题名
-    const titleText = readUntilTypeIndicator(tokens, position);
-    position = findNextTypeIndicator(tokens, position);
-    const title = titleText.trim().replace(/\.$/, '');
+    const { title, position: afterTitle } = this.parseTitle(tokens, position);
+    position = afterTitle;
 
     // 跳过文献类型标识 [CP]
-    const typeIndicator = tokens.find(t => t.type === 'TYPE_INDICATOR');
-    let mediaType: import('../types/index.js').MediaType | undefined;
-    if (typeIndicator) {
-      const parsed = parseTypeIndicator(typeIndicator.value);
-      mediaType = parsed.mediaType;
-      position = tokens.indexOf(typeIndicator) + 1;
-    }
-
-    // 跳过 . 
-    position = this.skipWhitespace(tokens, position);
-    if (tokens[position]?.type === 'DOT') {
-      position++;
-    }
-
-    // 跳过空白
-    position = this.skipWhitespace(tokens, position);
+    const { mediaType, position: afterType } = this.skipTypeIndicator(tokens, position);
+    position = afterType;
 
     // 解析版本（如果有）
     let programVersion: string | undefined;
-    const versionEnd = findNextDot(tokens, position);
+    const versionEnd = this.findNextDot(tokens, position);
     if (versionEnd > position) {
       const versionText = this.readTextUntil(tokens, position, versionEnd).trim();
       if (versionText && !versionText.includes('(') && !versionText.includes('（')) {
@@ -84,7 +76,7 @@ export class ComputerProgramParser implements ParserStrategy {
 
     // 解析运行环境（如果有）
     let runtimeEnvironment: string | undefined;
-    const envEnd = findNextDot(tokens, position);
+    const envEnd = this.findNextDot(tokens, position);
     if (envEnd > position) {
       const envText = this.readTextUntil(tokens, position, envEnd).trim();
       if (envText && !envText.includes('(') && !envText.includes('（')) {
@@ -96,41 +88,14 @@ export class ComputerProgramParser implements ParserStrategy {
     // 跳过空白
     position = this.skipWhitespace(tokens, position);
 
-    // 解析出版地、出版者、出版年
-    let publisherPlace = '';
-    let publisher = '';
-    let year = '';
+    // 解析出版信息（出版地: 出版者, 出版年）
+    const { publisherPlace, publisher, year } = this.parsePublisherInfo(tokens, position);
 
-    // 查找冒号（出版地: 出版者）
-    const colonIndex = tokens.findIndex((t, i) => i >= position && (t.value === ':' || t.value === '：'));
-    if (colonIndex >= position) {
-      publisherPlace = this.readTextUntil(tokens, position, colonIndex).trim();
-      position = colonIndex + 1;
-
-      // 查找逗号（出版者, 出版年）
-      const commaIndex = tokens.findIndex((t, i) => i >= position && t.type === 'COMMA');
-      if (commaIndex >= position) {
-        publisher = this.readTextUntil(tokens, position, commaIndex).trim();
-        position = commaIndex + 1;
-
-        // 解析出版年
-        const yearToken = tokens.slice(position).find(t => t.type === 'YEAR');
-        if (yearToken) {
-          year = yearToken.value;
-          position = tokens.indexOf(yearToken) + 1;
-        }
-      } else {
-        publisher = this.readTextUntil(tokens, position, tokens.length).trim();
-      }
-    }
-
-    // 解析 URL（如果有）
-    const urlToken = tokens.find(t => t.type === 'URL');
-    const url = urlToken?.value;
+    // 解析 URL
+    const url = this.parseURL(tokens);
 
     // 解析 DOI/PID
-    const pidToken = tokens.find(t => t.type === 'PID');
-    const pid = pidToken?.value;
+    const pid = this.parsePID(tokens);
 
     return {
       type: 'CP' as never,
@@ -146,37 +111,4 @@ export class ComputerProgramParser implements ParserStrategy {
       mediaType,
     };
   }
-
-  private skipWhitespace(tokens: Token[], position: number): number {
-    while (position < tokens.length && tokens[position]?.type === 'TEXT' && tokens[position]?.value.trim() === '') {
-      position++;
-    }
-    return position;
-  }
-
-
-
-
-  private readTextUntil(tokens: Token[], start: number, end: number): string {
-    let result = '';
-    for (let i = start; i < end; i++) {
-      const token = tokens[i]!;
-      if (token.type === 'TEXT') {
-        result += token.value;
-      } else if (token.type === 'DOT') {
-        result += '.';
-      } else if (token.type === 'NUMBER') {
-        result += token.value;
-      } else if (token.type === 'DASH') {
-        result += token.value;
-      } else if (token.type === 'SLASH') {
-        result += '/';
-      } else if (token.type === 'COLON') {
-        result += ':';
-      }
-    }
-    return result;
-  }
-
-
 }

@@ -1,13 +1,26 @@
-import type { Token, Author } from '../types/index.js';
+import type { Token } from '../types/index.js';
 import type { Archive, ParseOptions } from '../types/index.js';
-import type { ParserStrategy } from './base.js';
-import { parseTypeIndicator, parseAuthors, findNextDot, findNextTypeIndicator } from '../utils/index.js';
+import { BaseParser } from './base.js';
 
 /**
  * 档案解析器
- * 解析格式：[1] 作者. 题名: 档号[A]. 收藏者所在地: 收藏者, 形成日期.
+ *
+ * 解析格式：`[序号] 作者. 题名: 档号[A]. 收藏者所在地: 收藏者, 形成日期.`
+ *
+ * @example
+ * ```typescript
+ * const input = '[1] 历史研究所. 民国时期教育档案: A001-001[A]. 北京: 中国第一历史档案馆, 1935-1945.';
+ * const { reference } = parse(input);
+ * // reference.type === 'A'
+ * // reference.authors === [{ name: '历史研究所' }]
+ * // reference.title === '民国时期教育档案'
+ * // reference.archiveNumber === 'A001-001'
+ * // reference.collectionPlace === '北京'
+ * // reference.collector === '中国第一历史档案馆'
+ * // reference.formedDate === '1935-1945'
+ * ```
  */
-export class ArchiveParser implements ParserStrategy {
+export class ArchiveParser extends BaseParser {
   /**
    * 检查是否匹配档案格式
    */
@@ -26,27 +39,14 @@ export class ArchiveParser implements ParserStrategy {
     let position = 0;
 
     // 跳过序号 [1]
-    if (tokens[position]?.type === 'BRACKET_OPEN') {
-      position++;
-      while (position < tokens.length && tokens[position]?.type !== 'BRACKET_CLOSE') {
-        position++;
-      }
-      position++; // 跳过 ]
-    }
+    position = this.skipReferenceNumber(tokens, position);
 
     // 跳过空白
     position = this.skipWhitespace(tokens, position);
 
     // 解析作者（如果有）
-    let authors: Author[] = [];
-    const dotIndex = findNextDot(tokens, position);
-    if (dotIndex > position) {
-      const beforeDot = this.readTextUntil(tokens, position, dotIndex);
-      if (beforeDot.includes(',') || beforeDot.includes('，') || /^[\u4e00-\u9fa5]+$/.test(beforeDot.trim())) {
-        authors = parseAuthors(beforeDot);
-        position = dotIndex + 1;
-      }
-    }
+    const { authors, position: afterAuthors } = this.parseOptionalAuthors(tokens, position);
+    position = afterAuthors;
 
     // 跳过空白
     position = this.skipWhitespace(tokens, position);
@@ -54,11 +54,11 @@ export class ArchiveParser implements ParserStrategy {
     // 解析题名和档号（到文献类型标识 [A]）
     let title = '';
     let archiveNumber = '';
-    const titleEnd = findNextTypeIndicator(tokens, position);
-    
+    const titleEnd = this.findNextTypeIndicator(tokens, position);
+
     // 查找冒号来分离题名和档号
     const colonIndex = tokens.findIndex((t, i) => i >= position && i < titleEnd && (t.value === ':' || t.value === '：'));
-    
+
     if (colonIndex >= position && colonIndex < titleEnd) {
       title = this.readTextUntil(tokens, position, colonIndex).trim().replace(/\.$/, '');
       position = colonIndex + 1;
@@ -70,22 +70,8 @@ export class ArchiveParser implements ParserStrategy {
     }
 
     // 跳过文献类型标识 [A]
-    const typeIndicator = tokens.find(t => t.type === 'TYPE_INDICATOR');
-    let mediaType: import('../types/index.js').MediaType | undefined;
-    if (typeIndicator) {
-      const parsed = parseTypeIndicator(typeIndicator.value);
-      mediaType = parsed.mediaType;
-      position = tokens.indexOf(typeIndicator) + 1;
-    }
-
-    // 跳过 . 
-    position = this.skipWhitespace(tokens, position);
-    if (tokens[position]?.type === 'DOT') {
-      position++;
-    }
-
-    // 跳过空白
-    position = this.skipWhitespace(tokens, position);
+    const { mediaType, position: afterType } = this.skipTypeIndicator(tokens, position);
+    position = afterType;
 
     // 解析收藏者信息（收藏者所在地: 收藏者, 形成日期）
     let collectionPlace = '';
@@ -115,16 +101,11 @@ export class ArchiveParser implements ParserStrategy {
       }
     }
 
-    // 解析 URL（如果有）
-    let url: string | undefined;
-    const urlToken = tokens.find(t => t.type === 'URL');
-    if (urlToken) {
-      url = urlToken.value.replace(/\.$/, '');
-    }
+    // 解析 URL
+    const url = this.parseURL(tokens);
 
     // 解析 DOI/PID
-    const pidToken = tokens.find(t => t.type === 'PID');
-    const pid = pidToken?.value;
+    const pid = this.parsePID(tokens);
 
     return {
       type: 'A' as never,
@@ -139,40 +120,4 @@ export class ArchiveParser implements ParserStrategy {
       mediaType,
     };
   }
-
-  private skipWhitespace(tokens: Token[], position: number): number {
-    while (position < tokens.length && tokens[position]?.type === 'TEXT' && tokens[position]?.value.trim() === '') {
-      position++;
-    }
-    return position;
-  }
-
-  private readTextUntil(tokens: Token[], start: number, end: number): string {
-    let result = '';
-    let lastEndPosition = -1;
-    for (let i = start; i < end; i++) {
-      const token = tokens[i]!;
-      if (token.type === 'TEXT') {
-        if (result && lastEndPosition >= 0 && token.position > lastEndPosition) {
-          result += ' ';
-        }
-        result += token.value;
-        lastEndPosition = token.position + token.value.length;
-      } else if (token.type === 'DOT') {
-        result += '.';
-        lastEndPosition = token.position + 1;
-      } else if (token.type === 'COLON') {
-        result += ':';
-        lastEndPosition = token.position + 1;
-      } else if (token.type === 'COMMA') {
-        result += ',';
-        lastEndPosition = token.position + 1;
-      } else if (token.type === 'DATE') {
-        result += token.value;
-        lastEndPosition = token.position + token.value.length;
-      }
-    }
-    return result;
-  }
-
 }

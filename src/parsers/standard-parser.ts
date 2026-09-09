@@ -1,14 +1,31 @@
 import type { Token } from '../types/index.js';
 import type { Standard, ParseOptions } from '../types/index.js';
-import type { ParserStrategy } from './base.js';
-import { parseTypeIndicator, findNextTypeIndicator } from '../utils/index.js';
+import { BaseParser } from './base.js';
 
 /**
  * 标准解析器
- * 解析格式：[1] 标准编号 标准名称[S].
- * 示例：GB/T 3792—2021 信息与文献馆藏操作 注册[S].
+ *
+ * 解析格式：`[序号] 标准编号 标准名称[S].`
+ *
+ * @example
+ * ```typescript
+ * const input = '[1] GB/T 3792—2021 信息与文献馆藏操作 注册[S].';
+ * const { reference } = parse(input);
+ * // reference.type === 'S'
+ * // reference.standardNumber === 'GB/T 3792—2021'
+ * // reference.standardName === '信息与文献馆藏操作 注册'
+ * ```
+ *
+ * @example
+ * ```typescript
+ * // 在线标准
+ * const input = '[2] ISO 1234:2023 质量管理体系[S/OL]. https://example.com/iso1234.';
+ * const { reference } = parse(input);
+ * // reference.mediaType === 'OL'
+ * // reference.url === 'https://example.com/iso1234'
+ * ```
  */
-export class StandardParser implements ParserStrategy {
+export class StandardParser extends BaseParser {
   /**
    * 检查是否匹配标准格式
    */
@@ -27,13 +44,7 @@ export class StandardParser implements ParserStrategy {
     let position = 0;
 
     // 跳过序号 [1]
-    if (tokens[position]?.type === 'BRACKET_OPEN') {
-      position++;
-      while (position < tokens.length && tokens[position]?.type !== 'BRACKET_CLOSE') {
-        position++;
-      }
-      position++; // 跳过 ]
-    }
+    position = this.skipReferenceNumber(tokens, position);
 
     // 跳过空白
     position = this.skipWhitespace(tokens, position);
@@ -41,11 +52,11 @@ export class StandardParser implements ParserStrategy {
     // 解析标准编号和标准名称（到文献类型标识 [S]）
     let standardNumber = '';
     let standardName = '';
-    const titleEnd = findNextTypeIndicator(tokens, position);
-    
+    const titleEnd = this.findNextTypeIndicator(tokens, position);
+
     // 查找标准编号（通常以 GB/T、GB 等开头）
     const fullText = this.readTextUntil(tokens, position, titleEnd);
-    
+
     // 匹配标准编号格式（在全文中搜索）
     const standardNumberMatch = fullText.match(/((?:GB|ISO|IEC|行业标准代码)[\/\s]*[A-Z]*(?:\s*[:\uff1a]\s*)?[\d\u2014\-\.]+(?:\s*[:\uff1a]\s*\d+)?(?:[\—\-]*\d+)*)/i);
     if (standardNumberMatch) {
@@ -65,33 +76,14 @@ export class StandardParser implements ParserStrategy {
     position = titleEnd;
 
     // 跳过文献类型标识 [S]
-    const typeIndicator = tokens.find(t => t.type === 'TYPE_INDICATOR');
-    let mediaType: import('../types/index.js').MediaType | undefined;
-    if (typeIndicator) {
-      const parsed = parseTypeIndicator(typeIndicator.value);
-      mediaType = parsed.mediaType;
-      position = tokens.indexOf(typeIndicator) + 1;
-    }
+    const { mediaType, position: afterType } = this.skipTypeIndicator(tokens, position);
+    position = afterType;
 
-    // 跳过 . 
-    position = this.skipWhitespace(tokens, position);
-    if (tokens[position]?.type === 'DOT') {
-      position++;
-    }
-
-    // 跳过空白
-    position = this.skipWhitespace(tokens, position);
-
-    // 解析 URL（如果有）
-    let url: string | undefined;
-    const urlToken = tokens.find(t => t.type === 'URL');
-    if (urlToken) {
-      url = urlToken.value.replace(/\.$/, '');
-    }
+    // 解析 URL
+    const url = this.parseURL(tokens);
 
     // 解析 DOI/PID
-    const pidToken = tokens.find(t => t.type === 'PID');
-    const pid = pidToken?.value;
+    const pid = this.parsePID(tokens);
 
     return {
       type: 'S' as never,
@@ -103,43 +95,5 @@ export class StandardParser implements ParserStrategy {
       pid: pid || undefined,
       mediaType,
     };
-  }
-
-  private skipWhitespace(tokens: Token[], position: number): number {
-    while (position < tokens.length && tokens[position]?.type === 'TEXT' && tokens[position]?.value.trim() === '') {
-      position++;
-    }
-    return position;
-  }
-
-  private readTextUntil(tokens: Token[], start: number, end: number): string {
-    let result = '';
-    let lastEndPosition = -1;
-    for (let i = start; i < end; i++) {
-      const token = tokens[i]!;
-      if (token.type === 'TEXT') {
-        if (result && lastEndPosition >= 0 && token.position > lastEndPosition) {
-          result += ' ';
-        }
-        result += token.value;
-        lastEndPosition = token.position + token.value.length;
-      } else if (token.type === 'DOT') {
-        result += '.';
-        lastEndPosition = token.position + 1;
-      } else if (token.type === 'NUMBER') {
-        result += token.value;
-        lastEndPosition = token.position + token.value.length;
-      } else if (token.type === 'DASH') {
-        result += token.value;
-        lastEndPosition = token.position + token.value.length;
-      } else if (token.type === 'SLASH') {
-        result += '/';
-        lastEndPosition = token.position + 1;
-      } else if (token.type === 'COLON') {
-        result += ':';
-        lastEndPosition = token.position + 1;
-      }
-    }
-    return result;
   }
 }

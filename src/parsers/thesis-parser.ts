@@ -1,13 +1,25 @@
 import type { Token } from '../types/index.js';
 import type { Thesis, ParseOptions } from '../types/index.js';
-import type { ParserStrategy } from './base.js';
-import { parseTypeIndicator, parseAuthors, readUntilDot, readUntilTypeIndicator, findNextDot, findNextTypeIndicator } from '../utils/index.js';
+import { BaseParser } from './base.js';
 
 /**
  * 学位论文解析器
- * 解析格式：[1] 作者. 题名[D]. 出版地: 学位授予单位, 年份: 页码.
+ *
+ * 解析格式：`[序号] 作者. 题名[D]. 出版地: 学位授予单位, 年份: 页码.`
+ *
+ * @example
+ * ```typescript
+ * const input = '[1] 张三. 深度学习在计算机视觉中的应用[D]. 北京: 清华大学, 2023.';
+ * const { reference } = parse(input);
+ * // reference.type === 'D'
+ * // reference.authors === [{ name: '张三' }]
+ * // reference.title === '深度学习在计算机视觉中的应用'
+ * // reference.awardPlace === '北京'
+ * // reference.awardInstitution === '清华大学'
+ * // reference.awardYear === '2023'
+ * ```
  */
-export class ThesisParser implements ParserStrategy {
+export class ThesisParser extends BaseParser {
   /**
    * 检查是否匹配学位论文格式
    */
@@ -26,47 +38,25 @@ export class ThesisParser implements ParserStrategy {
     let position = 0;
 
     // 跳过序号 [1]
-    if (tokens[position]?.type === 'BRACKET_OPEN') {
-      position++;
-      while (position < tokens.length && tokens[position]?.type !== 'BRACKET_CLOSE') {
-        position++;
-      }
-      position++; // 跳过 ]
-    }
+    position = this.skipReferenceNumber(tokens, position);
 
     // 跳过空白
     position = this.skipWhitespace(tokens, position);
 
     // 解析作者
-    const authorsText = readUntilDot(tokens, position);
-    position = findNextDot(tokens, position) + 1;
-    const authors = parseAuthors(authorsText);
+    const { authors, position: afterAuthors } = this.parseRequiredAuthors(tokens, position);
+    position = afterAuthors;
 
     // 跳过空白
     position = this.skipWhitespace(tokens, position);
 
     // 解析题名
-    const titleText = readUntilTypeIndicator(tokens, position);
-    position = findNextTypeIndicator(tokens, position);
-    const title = titleText.trim().replace(/\.$/, '');
+    const { title, position: afterTitle } = this.parseTitle(tokens, position);
+    position = afterTitle;
 
     // 跳过文献类型标识 [D]
-    const typeIndicator = tokens.find(t => t.type === 'TYPE_INDICATOR');
-    let mediaType: import('../types/index.js').MediaType | undefined;
-    if (typeIndicator) {
-      const parsed = parseTypeIndicator(typeIndicator.value);
-      mediaType = parsed.mediaType;
-      position = tokens.indexOf(typeIndicator) + 1;
-    }
-
-    // 跳过 .
-    position = this.skipWhitespace(tokens, position);
-    if (tokens[position]?.type === 'DOT') {
-      position++;
-    }
-
-    // 跳过空白
-    position = this.skipWhitespace(tokens, position);
+    const { mediaType, position: afterType } = this.skipTypeIndicator(tokens, position);
+    position = afterType;
 
     // 解析学位授予信息（出版地: 学位授予单位, 年份: 页码）
     const awardInfo = this.readAwardInfo(tokens, position);
@@ -90,17 +80,11 @@ export class ThesisParser implements ParserStrategy {
       }
     }
 
-    // 解析 URL（如果有）
-    let url: string | undefined;
-    const urlToken = tokens.find(t => t.type === 'URL');
-    if (urlToken) {
-      // 去掉 URL 末尾的点号
-      url = urlToken.value.replace(/\.$/, '');
-    }
+    // 解析 URL
+    const url = this.parseURL(tokens);
 
     // 解析 DOI/PID
-    const pidToken = tokens.find(t => t.type === 'PID');
-    const pid = pidToken?.value;
+    const pid = this.parsePID(tokens);
 
     return {
       type: 'D' as never,
@@ -115,17 +99,6 @@ export class ThesisParser implements ParserStrategy {
       mediaType,
     };
   }
-
-  private skipWhitespace(tokens: Token[], position: number): number {
-    while (position < tokens.length && tokens[position]?.type === 'TEXT' && tokens[position]?.value.trim() === '') {
-      position++;
-    }
-    return position;
-  }
-
-
-
-
 
   private readAwardInfo(tokens: Token[], start: number): {
     place: string;
@@ -179,5 +152,4 @@ export class ThesisParser implements ParserStrategy {
 
     return { place: place.trim(), institution: institution.trim(), year };
   }
-
 }

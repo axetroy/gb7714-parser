@@ -1,13 +1,42 @@
 import type { Token } from '../types/index.js';
 import type { Book, ParseOptions } from '../types/index.js';
-import type { ParserStrategy } from './base.js';
-import { parseTypeIndicator, parseAuthors, readUntilDot, readUntilTypeIndicator, findNextDot, findNextTypeIndicator } from '../utils/index.js';
+import { BaseParser } from './base.js';
 
 /**
  * 图书解析器
- * 解析格式：[1] 作者. 书名[M]. 出版地: 出版社, 年份: 页码.
+ *
+ * 解析格式：`[序号] 作者. 书名[M]. 出版地: 出版社, 年份: 页码.`
+ *
+ * @example
+ * ```typescript
+ * const input = '[1] 周志华. 机器学习[M]. 北京: 清华大学出版社, 2016: 420.';
+ * const { reference } = parse(input);
+ * // reference.type === 'M'
+ * // reference.authors === [{ name: '周志华' }]
+ * // reference.title === '机器学习'
+ * // reference.publisherPlace === '北京'
+ * // reference.publisher === '清华大学出版社'
+ * // reference.year === '2016'
+ * // reference.pages === '420'
+ * ```
+ *
+ * @example
+ * ```typescript
+ * // 英文图书
+ * const input = '[2] Goodfellow I, Bengio Y, Courville A. Deep learning[M]. MIT press, 2016.';
+ * const { reference } = parse(input);
+ * // reference.authors.length === 3
+ * ```
+ *
+ * @example
+ * ```typescript
+ * // 带版本的图书
+ * const input = '[3] authors. Programming language[M]. 3rd ed. Publisher, 2020.';
+ * const { reference } = parse(input);
+ * // reference.version === '3rd ed'
+ * ```
  */
-export class BookParser implements ParserStrategy {
+export class BookParser extends BaseParser {
   /**
    * 检查是否匹配图书格式
    */
@@ -26,47 +55,25 @@ export class BookParser implements ParserStrategy {
     let position = 0;
 
     // 跳过序号 [1]
-    if (tokens[position]?.type === 'BRACKET_OPEN') {
-      position++;
-      while (position < tokens.length && tokens[position]?.type !== 'BRACKET_CLOSE') {
-        position++;
-      }
-      position++; // 跳过 ]
-    }
+    position = this.skipReferenceNumber(tokens, position);
 
     // 跳过空白
     position = this.skipWhitespace(tokens, position);
 
-      // 解析作者
-    const authorsText = readUntilDot(tokens, position);
-    position = findNextDot(tokens, position) + 1;
-    const authors = parseAuthors(authorsText);
+    // 解析作者
+    const { authors, position: afterAuthors } = this.parseRequiredAuthors(tokens, position);
+    position = afterAuthors;
 
     // 跳过空白
     position = this.skipWhitespace(tokens, position);
 
     // 解析题名
-    const titleText = readUntilTypeIndicator(tokens, position);
-    position = findNextTypeIndicator(tokens, position);
-    const title = titleText.trim().replace(/\.$/, '');
+    const { title, position: afterTitle } = this.parseTitle(tokens, position);
+    position = afterTitle;
 
-    // 跳过文献类型标识 [M]
-    const typeIndicator = tokens.find(t => t.type === 'TYPE_INDICATOR');
-    let mediaType: import('../types/index.js').MediaType | undefined;
-    if (typeIndicator) {
-      const parsed = parseTypeIndicator(typeIndicator.value);
-      mediaType = parsed.mediaType;
-      position = tokens.indexOf(typeIndicator) + 1;
-    }
-
-    // 跳过 .
-    position = this.skipWhitespace(tokens, position);
-    if (tokens[position]?.type === 'DOT') {
-      position++;
-    }
-
-    // 跳过空白
-    position = this.skipWhitespace(tokens, position);
+    // 跳过文献类型标识 [M] 和随后的 .
+    const { mediaType, position: afterType } = this.skipTypeIndicator(tokens, position);
+    position = afterType;
 
     // 解析版本（如果有）
     // 标准 §7.4: 版本宜用阿拉伯数字、序数缩写形式或其他标识表示
@@ -110,8 +117,7 @@ export class BookParser implements ParserStrategy {
     }
 
     // 解析 DOI/PID
-    const pidToken = tokens.find(t => t.type === 'PID');
-    const pid = pidToken?.value;
+    const pid = this.parsePID(tokens);
 
     return {
       type: 'M' as never,
@@ -125,13 +131,6 @@ export class BookParser implements ParserStrategy {
       pid: pid || undefined,
       mediaType,
     };
-  }
-
-  private skipWhitespace(tokens: Token[], position: number): number {
-    while (position < tokens.length && tokens[position]?.type === 'TEXT' && tokens[position]?.value.trim() === '') {
-      position++;
-    }
-    return position;
   }
 
   private readPublisherInfo(tokens: Token[], start: number): {
@@ -186,5 +185,4 @@ export class BookParser implements ParserStrategy {
 
     return { place: place.trim(), publisher: publisher.trim(), year };
   }
-
 }

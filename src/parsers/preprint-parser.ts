@@ -1,13 +1,27 @@
-import type { Token, Author } from '../types/index.js';
+import type { Token } from '../types/index.js';
 import type { Preprint, ParseOptions } from '../types/index.js';
-import type { ParserStrategy } from './base.js';
-import { parseTypeIndicator, parseAuthors, readUntilTypeIndicator, findNextDot } from '../utils/index.js';
+import { BaseParser } from './base.js';
 
 /**
  * 预印本解析器
- * 解析格式：[1] 作者. 题名[PP/OL]. 版本. 出版平台 (创建日期)[引用日期]. URL.
+ *
+ * 解析格式：`[序号] 作者. 题名[PP/OL]. 版本. 出版平台 (创建日期)[引用日期]. URL.`
+ *
+ * @example
+ * ```typescript
+ * const input = '[1] 李明. 基于大语言模型的代码生成研究[PP/OL]. V1. arXiv (2023-10-01)[2023-12-01]. https://arxiv.org/abs/2310.00001.';
+ * const { reference } = parse(input);
+ * // reference.type === 'PP'
+ * // reference.authors === [{ name: '李明' }]
+ * // reference.title === '基于大语言模型的代码生成研究'
+ * // reference.version === 'V1'
+ * // reference.platform === 'arXiv'
+ * // reference.createDate === '2023-10-01'
+ * // reference.accessDate === '2023-12-01'
+ * // reference.url === 'https://arxiv.org/abs/2310.00001'
+ * ```
  */
-export class PreprintParser implements ParserStrategy {
+export class PreprintParser extends BaseParser {
   /**
    * 检查是否匹配预印本格式
    */
@@ -26,56 +40,29 @@ export class PreprintParser implements ParserStrategy {
     let position = 0;
 
     // 跳过序号 [1]
-    if (tokens[position]?.type === 'BRACKET_OPEN') {
-      position++;
-      while (position < tokens.length && tokens[position]?.type !== 'BRACKET_CLOSE') {
-        position++;
-      }
-      position++; // 跳过 ]
-    }
+    position = this.skipReferenceNumber(tokens, position);
 
     // 跳过空白
     position = this.skipWhitespace(tokens, position);
 
     // 解析作者（如果有）
-    let authors: Author[] = [];
-    const dotIndex = findNextDot(tokens, position);
-    if (dotIndex > position) {
-      const beforeDot = this.readTextUntil(tokens, position, dotIndex);
-      if (beforeDot.includes(',') || beforeDot.includes('，') || /^[\u4e00-\u9fa5]+$/.test(beforeDot.trim())) {
-        authors = parseAuthors(beforeDot);
-        position = dotIndex + 1;
-      }
-    }
+    const { authors, position: afterAuthors } = this.parseOptionalAuthors(tokens, position);
+    position = afterAuthors;
 
     // 跳过空白
     position = this.skipWhitespace(tokens, position);
 
     // 解析题名（到文献类型标识 [PP]）
-    const titleText = readUntilTypeIndicator(tokens, position);
-    const title = titleText.trim().replace(/\.$/, '');
+    const { title, position: afterTitle } = this.parseTitle(tokens, position);
+    position = afterTitle;
 
     // 跳过文献类型标识 [PP]
-    const typeIndicator = tokens.find(t => t.type === 'TYPE_INDICATOR');
-    let mediaType: import('../types/index.js').MediaType | undefined;
-    if (typeIndicator) {
-      const parsed = parseTypeIndicator(typeIndicator.value);
-      mediaType = parsed.mediaType;
-      position = tokens.indexOf(typeIndicator) + 1;
-    }
-
-    // 跳过 . 
-    position = this.skipWhitespace(tokens, position);
-    if (tokens[position]?.type === 'DOT') {
-      position++;
-    }
-
-    // 跳过空白
-    position = this.skipWhitespace(tokens, position);
+    const { mediaType, position: afterType } = this.skipTypeIndicator(tokens, position);
+    position = afterType;
 
     // 解析版本（如果有）
     let version: string | undefined;
-    const versionEnd = findNextDot(tokens, position);
+    const versionEnd = this.findNextDot(tokens, position);
     if (versionEnd > position) {
       const versionText = this.readTextUntil(tokens, position, versionEnd).trim();
       if (versionText && !versionText.includes('(') && !versionText.includes('（')) {
@@ -119,7 +106,7 @@ export class PreprintParser implements ParserStrategy {
       }
     }
 
-    // 跳过 . 
+    // 跳过 .
     position = this.skipWhitespace(tokens, position);
     if (tokens[position]?.type === 'DOT') {
       position++;
@@ -129,15 +116,10 @@ export class PreprintParser implements ParserStrategy {
     position = this.skipWhitespace(tokens, position);
 
     // 解析 URL
-    let url = '';
-    const urlToken = tokens.find(t => t.type === 'URL');
-    if (urlToken) {
-      url = urlToken.value.replace(/\.$/, '');
-    }
+    const url = this.parseURL(tokens);
 
     // 解析 DOI/PID
-    const pidToken = tokens.find(t => t.type === 'PID');
-    const pid = pidToken?.value;
+    const pid = this.parsePID(tokens);
 
     return {
       type: 'PP' as never,
@@ -153,35 +135,10 @@ export class PreprintParser implements ParserStrategy {
     };
   }
 
-  private skipWhitespace(tokens: Token[], position: number): number {
-    while (position < tokens.length && tokens[position]?.type === 'TEXT' && tokens[position]?.value.trim() === '') {
-      position++;
-    }
-    return position;
-  }
-
-
   private findNextParenOrBracket(tokens: Token[], start: number): number {
     for (let i = start; i < tokens.length; i++) {
       if (tokens[i]?.type === 'PAREN_OPEN' || tokens[i]?.type === 'BRACKET_OPEN') return i;
     }
     return tokens.length;
   }
-
-
-  private readTextUntil(tokens: Token[], start: number, end: number): string {
-    let result = '';
-    for (let i = start; i < end; i++) {
-      const token = tokens[i]!;
-      if (token.type === 'TEXT') {
-        result += token.value;
-      } else if (token.type === 'DOT') {
-        result += '.';
-      } else if (token.type === 'DATE') {
-        result += token.value;
-      }
-    }
-    return result;
-  }
-
 }

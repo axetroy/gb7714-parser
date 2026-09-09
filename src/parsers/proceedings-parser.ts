@@ -1,13 +1,25 @@
 import type { Token } from '../types/index.js';
 import type { Proceedings, ParseOptions } from '../types/index.js';
-import type { ParserStrategy } from './base.js';
-import { parseTypeIndicator, parseAuthors, readUntilDot, readUntilTypeIndicator, findNextDot } from '../utils/index.js';
+import { BaseParser } from './base.js';
 
 /**
  * 会议录解析器
- * 解析格式：[1] 作者. 题名[C]//会议名称, 会议年份: 页码.
+ *
+ * 解析格式：`[序号] 作者. 题名[C]//会议名称, 会议年份: 页码.`
+ *
+ * @example
+ * ```typescript
+ * const input = '[1] 李华. 人工智能的发展与挑战[C]//全国计算机学术会议, 2023: 45-50.';
+ * const { reference } = parse(input);
+ * // reference.type === 'C'
+ * // reference.authors === [{ name: '李华' }]
+ * // reference.title === '人工智能的发展与挑战'
+ * // reference.conferenceName === '全国计算机学术会议'
+ * // reference.conferenceYear === '2023'
+ * // reference.pages === '45-50'
+ * ```
  */
-export class ProceedingsParser implements ParserStrategy {
+export class ProceedingsParser extends BaseParser {
   /**
    * 检查是否匹配会议录格式
    */
@@ -26,40 +38,25 @@ export class ProceedingsParser implements ParserStrategy {
     let position = 0;
 
     // 跳过序号 [1]
-    if (tokens[position]?.type === 'BRACKET_OPEN') {
-      position++;
-      while (position < tokens.length && tokens[position]?.type !== 'BRACKET_CLOSE') {
-        position++;
-      }
-      position++; // 跳过 ]
-    }
+    position = this.skipReferenceNumber(tokens, position);
 
     // 跳过空白
     position = this.skipWhitespace(tokens, position);
 
     // 解析作者
-    const authorsText = readUntilDot(tokens, position);
-    position = findNextDot(tokens, position) + 1;
-    const authors = parseAuthors(authorsText);
+    const { authors, position: afterAuthors } = this.parseRequiredAuthors(tokens, position);
+    position = afterAuthors;
 
     // 跳过空白
     position = this.skipWhitespace(tokens, position);
 
     // 解析题名（到文献类型标识 [C]）
-    const titleText = readUntilTypeIndicator(tokens, position);
-    const title = titleText.trim().replace(/\.$/, '');
+    const { title, position: afterTitle } = this.parseTitle(tokens, position);
+    position = afterTitle;
 
     // 跳过文献类型标识 [C]
-    const typeIndicator = tokens.find(t => t.type === 'TYPE_INDICATOR');
-    let mediaType: import('../types/index.js').MediaType | undefined;
-    if (typeIndicator) {
-      const parsed = parseTypeIndicator(typeIndicator.value);
-      mediaType = parsed.mediaType;
-      position = tokens.indexOf(typeIndicator) + 1;
-    }
-
-    // 跳过空白
-    position = this.skipWhitespace(tokens, position);
+    const { mediaType, position: afterType } = this.skipTypeIndicator(tokens, position);
+    position = afterType;
 
     // 跳过 //（如果有）
     if (tokens[position]?.type === 'DOUBLE_SLASH') {
@@ -70,10 +67,8 @@ export class ProceedingsParser implements ParserStrategy {
     position = this.skipWhitespace(tokens, position);
 
     // 解析会议名称（到 , 或年份）
-    let conferenceName = '';
-    const conferenceNameEnd = this.findNextCommaOrYear(tokens, position);
-    conferenceName = this.readTextUntil(tokens, position, conferenceNameEnd);
-    position = conferenceNameEnd;
+    const conferenceName = this.readUntilCommaOrYear(tokens, position);
+    position = this.findNextCommaOrYear(tokens, position);
 
     // 解析会议年份
     let conferenceYear = '';
@@ -84,21 +79,10 @@ export class ProceedingsParser implements ParserStrategy {
     }
 
     // 解析页码（如果有）
-    let pages = '';
-    const colonIndex = tokens.findIndex((t, i) => i >= position && (t.value === ':' || t.value === '：'));
-    if (colonIndex >= position) {
-      position = colonIndex + 1;
-      const pageTokens = tokens.slice(position).filter(t =>
-        t.type === 'NUMBER' || t.type === 'DASH' || t.type === 'TEXT'
-      );
-      if (pageTokens.length > 0) {
-        pages = pageTokens.map(t => t.value).join('').replace(/\.$/, '');
-      }
-    }
+    const { pages } = this.parsePages(tokens, position);
 
     // 解析 DOI/PID
-    const pidToken = tokens.find(t => t.type === 'PID');
-    const pid = pidToken?.value;
+    const pid = this.parsePID(tokens);
 
     return {
       type: 'C' as never,
@@ -111,37 +95,4 @@ export class ProceedingsParser implements ParserStrategy {
       mediaType,
     };
   }
-
-  private skipWhitespace(tokens: Token[], position: number): number {
-    while (position < tokens.length && tokens[position]?.type === 'TEXT' && tokens[position]?.value.trim() === '') {
-      position++;
-    }
-    return position;
-  }
-
-
-
-
-  private findNextCommaOrYear(tokens: Token[], start: number): number {
-    for (let i = start; i < tokens.length; i++) {
-      if (tokens[i]?.type === 'COMMA' || tokens[i]?.type === 'YEAR') return i;
-    }
-    return tokens.length;
-  }
-
-  private readTextUntil(tokens: Token[], start: number, end: number): string {
-    let result = '';
-    for (let i = start; i < end; i++) {
-      const token = tokens[i]!;
-      if (token.type === 'TEXT') {
-        result += token.value;
-      } else if (token.type === 'DOUBLE_SLASH') {
-        result += '//';
-      } else if (token.type === 'DOT') {
-        result += '.';
-      }
-    }
-    return result;
-  }
-
 }

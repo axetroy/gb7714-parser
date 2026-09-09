@@ -1,13 +1,27 @@
 import type { Token, Author } from '../types/index.js';
 import type { Database, ParseOptions } from '../types/index.js';
-import type { ParserStrategy } from './base.js';
-import { parseTypeIndicator, parseAuthors, readUntilTypeIndicator, findNextDot, findNextTypeIndicator } from '../utils/index.js';
+import { BaseParser } from './base.js';
+import { parseAuthors } from '../utils/index.js';
 
 /**
  * 数据库解析器
- * 解析格式：[1] 作者. 数据库名[DB]. 出版地: 出版者, 出版年.
+ *
+ * 解析格式：`[序号] 作者. 数据库名[DB]. 出版地: 出版者, 出版年.`
+ *
+ * @example
+ * ```typescript
+ * const input = '[1] 中国知网. 中国学术期刊全文数据库[DB]. 北京: 中国知网, 2023.';
+ * const { reference } = parse(input);
+ * // reference.type === 'DB'
+ * // reference.authors === [{ name: '中国知网' }]
+ * // reference.title === '中国学术期刊全文数据库'
+ * // reference.databaseName === '中国学术期刊全文数据库'
+ * // reference.publisherPlace === '北京'
+ * // reference.publisher === '中国知网'
+ * // reference.year === '2023'
+ * ```
  */
-export class DatabaseParser implements ParserStrategy {
+export class DatabaseParser extends BaseParser {
   /**
    * 检查是否匹配数据库格式
    */
@@ -26,21 +40,15 @@ export class DatabaseParser implements ParserStrategy {
     let position = 0;
 
     // 跳过序号 [1]
-    if (tokens[position]?.type === 'BRACKET_OPEN') {
-      position++;
-      while (position < tokens.length && tokens[position]?.type !== 'BRACKET_CLOSE') {
-        position++;
-      }
-      position++; // 跳过 ]
-    }
+    position = this.skipReferenceNumber(tokens, position);
 
     // 跳过空白
     position = this.skipWhitespace(tokens, position);
 
     // 解析作者（如果有）
     let authors: Author[] = [];
-    const firstDotIndex = findNextDot(tokens, position);
-    const typeIndicatorIndex = findNextTypeIndicator(tokens, position);
+    const firstDotIndex = this.findNextDot(tokens, position);
+    const typeIndicatorIndex = this.findNextTypeIndicator(tokens, position);
     if (firstDotIndex < typeIndicatorIndex) {
       // DOT 出现在 TYPE_INDICATOR 之前，说明有作者
       const beforeDot = this.readTextUntil(tokens, position, firstDotIndex);
@@ -52,63 +60,21 @@ export class DatabaseParser implements ParserStrategy {
     position = this.skipWhitespace(tokens, position);
 
     // 解析题名（到文献类型标识 [DB]）
-    const titleText = readUntilTypeIndicator(tokens, position);
-    position = findNextTypeIndicator(tokens, position);
-    const title = titleText.trim().replace(/\.$/, '');
+    const { title, position: afterTitle } = this.parseTitle(tokens, position);
+    position = afterTitle;
 
     // 跳过文献类型标识 [DB]
-    const typeIndicator = tokens.find(t => t.type === 'TYPE_INDICATOR');
-    let mediaType: import('../types/index.js').MediaType | undefined;
-    if (typeIndicator) {
-      const parsed = parseTypeIndicator(typeIndicator.value);
-      mediaType = parsed.mediaType;
-      position = tokens.indexOf(typeIndicator) + 1;
-    }
+    const { mediaType, position: afterType } = this.skipTypeIndicator(tokens, position);
+    position = afterType;
 
-    // 跳过 . 
-    position = this.skipWhitespace(tokens, position);
-    if (tokens[position]?.type === 'DOT') {
-      position++;
-    }
+    // 解析出版信息（出版地: 出版者, 出版年）
+    const { publisherPlace, publisher, year } = this.parsePublisherInfo(tokens, position);
 
-    // 跳过空白
-    position = this.skipWhitespace(tokens, position);
-
-    // 解析出版地、出版者、出版年
-    let publisherPlace = '';
-    let publisher = '';
-    let year = '';
-
-    // 查找冒号（出版地: 出版者）
-    const colonIndex = tokens.findIndex((t, i) => i >= position && (t.value === ':' || t.value === '：'));
-    if (colonIndex >= position) {
-      publisherPlace = this.readTextUntil(tokens, position, colonIndex).trim();
-      position = colonIndex + 1;
-
-      // 查找逗号（出版者, 出版年）
-      const commaIndex = tokens.findIndex((t, i) => i >= position && t.type === 'COMMA');
-      if (commaIndex >= position) {
-        publisher = this.readTextUntil(tokens, position, commaIndex).trim();
-        position = commaIndex + 1;
-
-        // 解析出版年
-        const yearToken = tokens.slice(position).find(t => t.type === 'YEAR');
-        if (yearToken) {
-          year = yearToken.value;
-          position = tokens.indexOf(yearToken) + 1;
-        }
-      } else {
-        publisher = this.readTextUntil(tokens, position, tokens.length).trim();
-      }
-    }
-
-    // 解析 URL（如果有）
-    const urlToken = tokens.find(t => t.type === 'URL');
-    const url = urlToken?.value;
+    // 解析 URL
+    const url = this.parseURL(tokens);
 
     // 解析 DOI/PID
-    const pidToken = tokens.find(t => t.type === 'PID');
-    const pid = pidToken?.value;
+    const pid = this.parsePID(tokens);
 
     return {
       type: 'DB' as never,
@@ -123,36 +89,4 @@ export class DatabaseParser implements ParserStrategy {
       mediaType,
     };
   }
-
-  private skipWhitespace(tokens: Token[], position: number): number {
-    while (position < tokens.length && tokens[position]?.type === 'TEXT' && tokens[position]?.value.trim() === '') {
-      position++;
-    }
-    return position;
-  }
-
-
-
-
-  private readTextUntil(tokens: Token[], start: number, end: number): string {
-    let result = '';
-    for (let i = start; i < end; i++) {
-      const token = tokens[i]!;
-      if (token.type === 'TEXT') {
-        result += token.value;
-      } else if (token.type === 'DOT') {
-        result += '.';
-      } else if (token.type === 'NUMBER') {
-        result += token.value;
-      } else if (token.type === 'DASH') {
-        result += token.value;
-      } else if (token.type === 'SLASH') {
-        result += '/';
-      } else if (token.type === 'COLON') {
-        result += ':';
-      }
-    }
-    return result;
-  }
-
 }
