@@ -143,13 +143,24 @@ export abstract class BaseParser implements ParserStrategy {
     // 解析题名和可选副题名（到文献类型标识为止）
     const titleEnd = findNextTypeIndicator(tokens, position);
     const fullText = this.readTextUntil(tokens, position, titleEnd).trim().replace(/\.$/, '');
-    const colonIndex = findNextColon(tokens, position);
 
     let title: string;
     let subtitle: string | undefined;
+
+    // 仅当冒号为 ASCII ":" 时才拆分副题名
+    // 中文全角冒号 "：" 视为题名的一部分（如"昌平山水记：京东考古录"）
+    // 标准 §7.2.3：其他题名信息（副题名）用英文冒号分隔
+    const colonIndex = findNextColon(tokens, position);
     if (colonIndex >= position && colonIndex < titleEnd) {
-      title = this.readTextUntil(tokens, position, colonIndex).trim();
-      subtitle = this.readTextUntil(tokens, colonIndex + 1, titleEnd).trim();
+      const colonToken = tokens[colonIndex]!;
+      if (colonToken.value === ':') {
+        // 英文冒号：拆分为题名 + 副题名
+        title = this.readTextUntil(tokens, position, colonIndex).trim();
+        subtitle = this.readTextUntil(tokens, colonIndex + 1, titleEnd).trim();
+      } else {
+        // 中文冒号 "："：保留完整题名
+        title = fullText;
+      }
     } else {
       title = fullText;
     }
@@ -446,7 +457,7 @@ export abstract class BaseParser implements ParserStrategy {
         result += '.';
         lastEndPosition = token.position + 1;
       } else if (token.type === 'COLON') {
-        result += ':';
+        result += token.value;
         lastEndPosition = token.position + 1;
       } else if (token.type === 'COMMA') {
         result += ',';

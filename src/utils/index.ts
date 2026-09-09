@@ -113,7 +113,7 @@ export function readUntilTypeIndicator(tokens: Token[], start: number): string {
       result += '.';
       lastEndPosition = token.position + 1;
     } else if (token.type === 'COLON') {
-      result += ':';
+      result += token.value;
       lastEndPosition = token.position + 1;
     }
     i++;

@@ -44,7 +44,7 @@ export class ProceedingsParser extends BaseParser {
     position = this.skipWhitespace(tokens, position);
 
     // 解析作者和题名（含可选副题名）
-    const { authors, title, position: afterTitle } = this.parseTitleWithOptionalSubtitle(tokens, position);
+    const { authors, title, subtitle, position: afterTitle } = this.parseTitleWithOptionalSubtitle(tokens, position);
     position = afterTitle;
 
     // 跳过文献类型标识 [C]
@@ -81,6 +81,7 @@ export class ProceedingsParser extends BaseParser {
       type: 'C' as never,
       authors,
       title,
+      subtitle,
       conferenceName: conferenceName.trim().replace(/\.$/, '') || undefined,
       conferenceYear: conferenceYear || undefined,
       pages: pages || undefined,

@@ -61,7 +61,7 @@ export class BookParser extends BaseParser {
     position = this.skipWhitespace(tokens, position);
 
     // 解析作者和题名（含可选副题名）
-    const { authors, title, position: afterTitle } = this.parseTitleWithOptionalSubtitle(tokens, position);
+    const { authors, title, subtitle, position: afterTitle } = this.parseTitleWithOptionalSubtitle(tokens, position);
     position = afterTitle;
 
     // 跳过文献类型标识 [M] 和随后的 .
@@ -116,6 +116,7 @@ export class BookParser extends BaseParser {
       type: 'M' as never,
       authors,
       title,
+      subtitle,
       publisherPlace: publisherPlace || undefined,
       publisher: publisher || undefined,
       year: year || undefined,
