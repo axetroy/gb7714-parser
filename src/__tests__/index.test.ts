@@ -34,6 +34,19 @@ describe('API', () => {
 
       expect(result.warnings.length).toBeGreaterThan(0);
     });
+
+    it('应该对不支持的格式返回结构化错误', () => {
+      const input = '完全无法解析的内容';
+      const result = parse(input);
+
+      expect(result.errors.length).toBeGreaterThan(0);
+      expect(result.errors[0].code).toBe('GENERIC_FALLBACK');
+    });
+
+    it('成功解析时 errors 为空数组', () => {
+      const result = parse('[1] 张三. 论文[J]. 期刊, 2025.');
+      expect(result.errors).toEqual([]);
+    });
   });
 
   describe('parseAll', () => {
@@ -176,10 +189,24 @@ describe('API', () => {
       expect(result.suffix).toBe('p. 10');
     });
 
-    it('应该处理无法识别的格式', () => {
+    it('应该对无法识别的格式返回 unknown 类型并保留原始输入', () => {
       const result = parseCitation('unknown format');
-      expect(result.type).toBe('numeric');
-      expect(result.ids).toEqual(['unknown format']);
+      expect(result.type).toBe('unknown');
+      expect(result.input).toBe('unknown format');
+      expect(result.ids).toBeUndefined();
+      expect(result.author).toBeUndefined();
+    });
+
+    it('author-date 缺少年份时应返回 unknown 类型', () => {
+      const result = parseCitation('(张三)');
+      expect(result.type).toBe('unknown');
+      expect(result.input).toBe('(张三)');
+    });
+
+    it('空字符串应返回 unknown 类型', () => {
+      const result = parseCitation('');
+      expect(result.type).toBe('unknown');
+      expect(result.input).toBe('');
     });
   });
 });

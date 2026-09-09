@@ -4,7 +4,7 @@ import type {
   ValidationError,
   StandardVersion,
 } from '../types/index.js';
-import { ReferenceType } from '../types/index.js';
+import { ReferenceType, ValidationErrorCode } from '../types/index.js';
 
 /**
  * 校验器选项
@@ -60,6 +60,7 @@ export class Validator {
   private validateRequiredFields(reference: ReferenceUnion, errors: ValidationError[]): void {
     if (!reference.title) {
       errors.push({
+        code: ValidationErrorCode.MISSING_REQUIRED,
         field: 'title',
         message: '题名为必填字段',
         level: 'error',
@@ -81,6 +82,7 @@ export class Validator {
     ];
     if (needsAuthor.includes(reference.type as ReferenceType) && reference.authors.length === 0) {
       errors.push({
+        code: ValidationErrorCode.MISSING_REQUIRED,
         field: 'authors',
         message: `${this.getTypeName(reference.type)}需要至少一位作者`,
         level: 'error',
@@ -94,6 +96,7 @@ export class Validator {
   private validateDateFormat(reference: ReferenceUnion, errors: ValidationError[]): void {
     if (reference.year && !/^\d{4}$/.test(reference.year)) {
       errors.push({
+        code: ValidationErrorCode.INVALID_YEAR,
         field: 'year',
         message: '出版年格式应为 YYYY',
         level: 'error',
@@ -103,6 +106,7 @@ export class Validator {
     // 校验引用日期格式
     if (reference.accessDate && !/^\d{4}-\d{2}-\d{2}$/.test(reference.accessDate)) {
       errors.push({
+        code: ValidationErrorCode.INVALID_DATE,
         field: 'accessDate',
         message: '引用日期格式应为 YYYY-MM-DD',
         level: 'error',
@@ -116,6 +120,7 @@ export class Validator {
   private validateAuthorFormat(reference: ReferenceUnion, errors: ValidationError[]): void {
     if (reference.authors.length > 3 && !this.options.strict) {
       errors.push({
+        code: ValidationErrorCode.INVALID_AUTHOR,
         field: 'authors',
         message: '作者超过3人时，建议只著录前3人并加"等"',
         level: 'warning',

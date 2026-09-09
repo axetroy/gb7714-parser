@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { Validator, validate } from '../validator/index.js';
 import type { ReferenceUnion } from '../types/index.js';
-import { ReferenceType } from '../types/index.js';
+import { ReferenceType, ValidationErrorCode } from '../types/index.js';
 
 describe('Validator', () => {
   describe('validate', () => {
@@ -458,4 +458,46 @@ describe('Validator', () => {
       expect(report.errors.some(e => e.field === 'patentNumber')).toBe(false);
     });
   });
+
+    it('应该包含错误码', () => {
+      const reference: ReferenceUnion = {
+        type: ReferenceType.J,
+        authors: [],
+        title: '',
+        journalTitle: '现代教育技术',
+        year: '2025',
+      };
+      const report = validate(reference);
+      expect(report.valid).toBe(false);
+      const titleError = report.errors.find(e => e.field === 'title');
+      expect(titleError?.code).toBe(ValidationErrorCode.MISSING_REQUIRED);
+      const authorError = report.errors.find(e => e.field === 'authors');
+      expect(authorError?.code).toBe(ValidationErrorCode.MISSING_REQUIRED);
+    });
+
+    it('年份格式错误应带有 INVALID_YEAR 错误码', () => {
+      const reference: ReferenceUnion = {
+        type: ReferenceType.J,
+        authors: [{ name: '张三' }],
+        title: '论文标题',
+        journalTitle: '现代教育技术',
+        year: '25',
+      };
+      const report = validate(reference);
+      const yearError = report.errors.find(e => e.field === 'year');
+      expect(yearError?.code).toBe(ValidationErrorCode.INVALID_YEAR);
+    });
+
+    it('引用日期格式错误应带有 INVALID_DATE 错误码', () => {
+      const reference: ReferenceUnion = {
+        type: ReferenceType.EB,
+        authors: [{ name: '张三' }],
+        title: '网页标题',
+        url: 'https://example.com',
+        accessDate: '2025/09/07',
+      };
+      const report = validate(reference);
+      const dateError = report.errors.find(e => e.field === 'accessDate');
+      expect(dateError?.code).toBe(ValidationErrorCode.INVALID_DATE);
+    });
 });

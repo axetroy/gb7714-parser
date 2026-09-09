@@ -49,15 +49,17 @@ export type {
   ParseOptions,
   FormatOptions,
   ParseResult,
+  ParseError,
   ValidationReport,
   ValidationError,
+  ParseCitationResult,
   CitationStyle,
   StandardVersion,
   Token,
   TokenType,
 } from './types/index.js';
 
-export { ReferenceType, MediaType } from './types/index.js';
+export { ReferenceType, MediaType, ParseErrorCode, ValidationErrorCode } from './types/index.js';
 
 // 导出核心功能
 import { tokenize } from './tokenizer/index.js';
@@ -82,7 +84,7 @@ import { ComputerProgramParser } from './parsers/index.js';
 import { DatabaseParser } from './parsers/index.js';
 import { validate as validateFn } from './validator/index.js';
 import { format as formatFn, formatCitation as formatCitationFn } from './formatter/index.js';
-import type { ReferenceUnion, ParseOptions, FormatOptions, ValidationReport, StandardVersion } from './types/index.js';
+import type { ReferenceUnion, ParseOptions, FormatOptions, ValidationReport, StandardVersion, ParseCitationResult, ParseResult } from './types/index.js';
 
 // 创建默认解析器实例并注册策略
 const defaultParser = new Parser();
@@ -123,9 +125,9 @@ defaultParser.register(new DatabaseParser());
  * console.log(reference.journalTitle); // '现代教育技术' - 无需类型断言
  * ```
  */
-export function parse<T extends ReferenceUnion = ReferenceUnion>(input: string, options?: ParseOptions): { reference: T; warnings: string[] } {
+export function parse<T extends ReferenceUnion = ReferenceUnion>(input: string, options?: ParseOptions): ParseResult & { reference: T } {
   const tokens = tokenize(input);
-  return defaultParser.parse(tokens, options) as { reference: T; warnings: string[] };
+  return defaultParser.parse(tokens, options) as unknown as ParseResult & { reference: T };
 }
 
 /**
@@ -135,7 +137,7 @@ export function parse<T extends ReferenceUnion = ReferenceUnion>(input: string, 
  * @param options - 解析选项
  * @returns 解析结果数组
  */
-export function parseAll<T extends ReferenceUnion = ReferenceUnion>(inputs: string[], options?: ParseOptions): { reference: T; warnings: string[] }[] {
+export function parseAll<T extends ReferenceUnion = ReferenceUnion>(inputs: string[], options?: ParseOptions): (ParseResult & { reference: T })[] {
   return inputs.map(input => parse<T>(input, options));
 }
 
@@ -239,13 +241,7 @@ export function formatCitation(reference: ReferenceUnion, options?: FormatOption
  * console.log(result4.year); // '2025'
  * ```
  */
-export function parseCitation(citation: string): {
-  type: 'numeric' | 'author-date';
-  ids?: string[];
-  author?: string;
-  year?: string;
-  suffix?: string;
-} {
+export function parseCitation(citation: string): ParseCitationResult {
   const trimmed = citation.trim();
 
   // 顺序编码制：[1] 或 [1,2,3] 或 [1-5]
@@ -284,8 +280,8 @@ export function parseCitation(citation: string): {
     };
   }
 
-  // 无法识别的格式，返回原始内容
-  return { type: 'numeric', ids: [trimmed] };
+  // 无法识别的格式，返回 unknown 类型并保留原始输入
+  return { type: 'unknown', input: citation };
 }
 
 // 导出类以便高级用法

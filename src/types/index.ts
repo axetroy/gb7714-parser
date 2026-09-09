@@ -444,25 +444,74 @@ export interface FormatOptions {
 }
 
 /**
+ * 解析阶段错误码
+ */
+export const ParseErrorCode = {
+  /** 未找到匹配的解析器 */
+  NO_MATCH: 'NO_MATCH' as const,
+  /** 解析过程中发生异常 */
+  PARSE_ERROR: 'PARSE_ERROR' as const,
+  /** 通用解析结果不完整（fallback） */
+  GENERIC_FALLBACK: 'GENERIC_FALLBACK' as const,
+} as const;
+
+export type ParseErrorCode = (typeof ParseErrorCode)[keyof typeof ParseErrorCode];
+
+/**
+ * 解析阶段结构化错误
+ */
+export interface ParseError {
+  code: ParseErrorCode;
+  message: string;
+  /** token 序列中的位置，-1 表示未知 */
+  position?: number;
+}
+
+/**
  * 解析结果
  */
 export interface ParseResult {
   /** 解析成功的文献 */
   reference: ReferenceUnion;
-  /** 警告信息 */
+  /** 警告信息（保留字符串版本供向后兼容） */
   warnings: string[];
+  /** 结构化错误列表（新增） */
+  errors: ParseError[];
 }
+
+/**
+ * 校验错误码
+ */
+export const ValidationErrorCode = {
+  /** 必填字段缺失 */
+  MISSING_REQUIRED: 'MISSING_REQUIRED' as const,
+  /** 日期格式无效 */
+  INVALID_DATE: 'INVALID_DATE' as const,
+  /** 年份格式无效 */
+  INVALID_YEAR: 'INVALID_YEAR' as const,
+  /** 作者格式无效 */
+  INVALID_AUTHOR: 'INVALID_AUTHOR' as const,
+  /** 文献类型特有字段缺失 */
+  MISSING_TYPE_FIELD: 'MISSING_TYPE_FIELD' as const,
+} as const;
+
+export type ValidationErrorCode =
+  (typeof ValidationErrorCode)[keyof typeof ValidationErrorCode];
 
 /**
  * 校验错误
  */
 export interface ValidationError {
+  /** 错误码 */
+  code?: ValidationErrorCode;
   /** 错误字段 */
   field: string;
   /** 错误信息 */
   message: string;
   /** 错误级别 */
   level: 'error' | 'warning';
+  /** 来源字符串位置（可选） */
+  position?: number;
 }
 
 /**
@@ -473,6 +522,24 @@ export interface ValidationReport {
   valid: boolean;
   /** 错误列表 */
   errors: ValidationError[];
+}
+
+/**
+ * 正文引用标注解析结果
+ */
+export interface ParseCitationResult {
+  /** 引用类型 */
+  type: 'numeric' | 'author-date' | 'unknown';
+  /** 序号列表（仅 numeric） */
+  ids?: string[];
+  /** 作者姓名（仅 author-date） */
+  author?: string;
+  /** 年份（仅 author-date） */
+  year?: string;
+  /** 后缀如页码（仅 author-date） */
+  suffix?: string;
+  /** 无法识别时返回原始输入 */
+  input?: string;
 }
 
 /**

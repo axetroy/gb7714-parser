@@ -1,4 +1,5 @@
-import type { Token, Author, MediaType } from '../types/index.js';
+import type { Token, Author, MediaType, ParseError } from '../types/index.js';
+import { ParseErrorCode } from '../types/index.js';
 import type { ReferenceUnion, ParseOptions } from '../types/index.js';
 import { parseAuthors, parseTypeIndicator, readUntilDot, readUntilTypeIndicator, findNextDot, findNextTypeIndicator } from '../utils/index.js';
 
@@ -22,6 +23,7 @@ export interface ParserStrategy {
  * 解析结果
  */
 export interface ParserResult {
+  errors: ParseError[];
   reference: ReferenceUnion;
   warnings: string[];
 }
@@ -377,15 +379,18 @@ export class Parser {
    */
   parse(tokens: Token[], options?: ParseOptions): ParserResult {
     const warnings: string[] = [];
+    const errors: ParseError[] = [];
 
     // 尝试每个解析器策略
     for (const strategy of this.strategies) {
       if (strategy.match(tokens)) {
         try {
           const reference = strategy.parse(tokens, options);
-          return { reference, warnings };
+          return { reference, warnings, errors };
         } catch (error) {
-          warnings.push(`解析失败: ${error instanceof Error ? error.message : String(error)}`);
+          const message = error instanceof Error ? error.message : String(error);
+          warnings.push(`解析失败: ${message}`);
+          errors.push({ code: ParseErrorCode.PARSE_ERROR, message });
         }
       }
     }
@@ -399,6 +404,7 @@ export class Parser {
    */
   private parseGeneric(tokens: Token[], options?: ParseOptions): ParserResult {
     const warnings: string[] = ['使用通用解析器，结果可能不完整'];
+    const errors: ParseError[] = [{ code: ParseErrorCode.GENERIC_FALLBACK, message: '未匹配任何专用解析器，使用通用解析' }];
 
     // 提取基本信息
     const textTokens = tokens.filter(t => t.type === 'TEXT');
@@ -436,6 +442,7 @@ export class Parser {
           : undefined,
       },
       warnings,
+      errors,
     };
   }
 }
