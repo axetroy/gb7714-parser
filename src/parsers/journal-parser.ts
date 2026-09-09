@@ -83,9 +83,12 @@ export class JournalParser extends BaseParser {
     // 解析卷号
     let volume = '';
     const volumeToken = tokens.slice(position).find(t => t.type === 'NUMBER' && !t.value.includes('-'));
-    if (volumeToken && tokens[tokens.indexOf(volumeToken) - 1]?.value === ',') {
-      volume = volumeToken.value;
-      position = tokens.indexOf(volumeToken) + 1;
+    if (volumeToken) {
+      const prevToken = tokens[tokens.indexOf(volumeToken) - 1];
+      if (prevToken && (prevToken.value === ',' || prevToken.value === '，')) {
+        volume = volumeToken.value;
+        position = tokens.indexOf(volumeToken) + 1;
+      }
     }
 
     // 解析期号

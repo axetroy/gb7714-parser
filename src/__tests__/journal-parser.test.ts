@@ -112,13 +112,40 @@ describe('JournalParser', () => {
       expect(result.pid).toBe('DOI:10.1234/test');
     });
 
-    it('应该解析 DOI 在末尾的期刊', () => {
+    it('应该解析带有 DOI 在末尾的期刊', () => {
       const input = '[11] 张三. 人工智能[J]. 现代教育技术，2025，35(2)：15-22. DOI:10.1234/test.';
       const tokens = tokenize(input);
       const result = parser.parse(tokens);
 
       expect(result.type).toBe('J');
       expect(result.pid).toContain('DOI:10.1234/test');
+    });
+
+    it('应该解析使用中文逗号分隔的卷号', () => {
+      const input = '[1] 张三，李四. 人工智能在教育中的应用[J]. 现代教育技术，2025，35(2)：15-22.';
+      const tokens = tokenize(input);
+      const result = parser.parse(tokens);
+
+      expect(result.type).toBe('J');
+      expect(result.authors).toHaveLength(2);
+      expect(result.journalTitle).toBe('现代教育技术');
+      expect(result.year).toBe('2025');
+      expect(result.volume).toBe('35');
+      expect(result.issue).toBe('2');
+      expect(result.pages).toBe('15-22');
+    });
+
+    it('应该解析英文逗号分隔的卷号', () => {
+      const input = '[1] Schank R C. What is AI, anyway?[J]. AI magazine, 1987, 8(4): 59-59.';
+      const tokens = tokenize(input);
+      const result = parser.parse(tokens);
+
+      expect(result.type).toBe('J');
+      expect(result.journalTitle).toBe('AI magazine');
+      expect(result.year).toBe('1987');
+      expect(result.volume).toBe('8');
+      expect(result.issue).toBe('4');
+      expect(result.pages).toBe('59-59');
     });
   });
 });
