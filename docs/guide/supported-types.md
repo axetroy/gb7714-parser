@@ -40,47 +40,53 @@ GB/T 7714 Parser 支持以下 17 种文献类型：
 ### 期刊 [J]
 
 ```typescript
+// 来自 GB/T 7714-2025 标准 B.4 示例
 const result = parse(
-  '[1] 于潇,刘义,柴跃廷,等. 互联网药品可信交易环境中主体资质审核备案模式[J]. 清华大学学报(自然科学版), 2012, 52(11): 1518-1523.'
+  '[1] 于潇，刘义，柴跃廷，等. 互联网药品可信交易环境中主体资质审核备案模式[J]. 清华大学学报（自然科学版），2012，52(11): 1518-1523.'
 );
 ```
 
 ### 图书 [M]
 
 ```typescript
+// 来自 GB/T 7714-2025 标准 B.1 示例
 const result = parse(
-  '[1] 张伯伟. 全唐五代诗格汇考[M]. 南京: 江苏古籍出版社, 2002: 288.'
+  '[1] 博伯尔. 银行业的未来与人工智能[M]. 徐超，译. 北京: 清华大学出版社, 2023: 35.'
 );
 ```
 
 ### 学位论文 [D]
 
 ```typescript
+// 来自 GB/T 7714-2025 标准 B.6 示例
 const result = parse(
-  '[1] 王琦. 融合星载GNSS-R和SAR数据的高时空分辨率土壤湿度反演方法研究[D]. 武汉: 武汉大学, 2022: 87.'
+  '[1] 王琦. 融合星载 GNSS-R 和 SAR 数据的高时空分辨率土壤湿度反演方法研究[D]. 武汉: 武汉大学, 2022: 87.'
 );
 ```
 
 ### 在线文献 [J/OL]
 
 ```typescript
+// 来自 GB/T 7714-2025 标准 B.4 示例
 const result = parse(
-  '[1] Myburg A A, Grattapaglia D, Tuskan G A, et al. The genome of Eucalyptus grandis[J/OL]. Nature, 2014, 510: 356-362. https://www.nature.com/articles/nature13308.pdf.'
+  '[1] Myburg A A, Grattapaglia D, Tuskan G A, et al. The genome of Eucalyptus grandis[J/OL]. Nature, 2014, 510: 356-362.'
 );
 ```
 
 ### 标准 [S]
 
 ```typescript
+// 来自 GB/T 7714-2025 标准 B.8 示例
 const result = parse(
-  '[1] GB/T 7714-2025 信息与文献 参考文献著录规则[S]. 北京: 中国标准出版社, 2025.'
+  '[1] GB/T 3792—2021 信息与文献 资源描述[S].'
 );
 ```
 
-### 专利 [P]
+### 会议录 [C]
 
 ```typescript
+// 来自 GB/T 7714-2025 标准 B.5 示例
 const result = parse(
-  '[1] 张三. 一种数据处理方法及装置[P]. 中国专利: CN123456789, 2025-01-01.'
+  '[1] 牛志明，Swingland I R，雷光春. 综合湿地管理：综合湿地管理国际研讨会论文集[C]. 北京: 海洋出版社, 2012.'
 );
 ```

@@ -28,21 +28,20 @@ npm install gb7714-parser
 ```typescript
 import { parse, format, validate } from "gb7714-parser";
 
-// 解析参考文献
+// 解析参考文献（来自 GB/T 7714-2025 标准 B.4 示例）
 const result = parse(
-  "[1] 张三，李四. 人工智能在教育中的应用[J]. 现代教育技术，2025，35(2)：15-22. DOI:10.1234/test",
+  "[1] 于潇，刘义，柴跃廷，等. 互联网药品可信交易环境中主体资质审核备案模式[J]. 清华大学学报（自然科学版），2012，52(11): 1518-1523.",
 );
 console.log(result.reference);
 // {
 //   type: 'J',
-//   authors: [{ surname: '张三' }, { surname: '李四' }],
-//   title: '人工智能在教育中的应用',
-//   journalTitle: '现代教育技术',
-//   year: '2025',
-//   volume: '35',
-//   issue: '2',
-//   pages: '15-22',
-//   pid: 'DOI:10.1234/test'
+//   authors: [{ name: '于潇' }, { name: '刘义' }, { name: '柴跃廷' }],
+//   title: '互联网药品可信交易环境中主体资质审核备案模式',
+//   journalTitle: '清华大学学报（自然科学版）',
+//   year: '2012',
+//   volume: '52',
+//   issue: '11',
+//   pages: '1518-1523'
 // }
 
 // 校验格式
@@ -52,7 +51,7 @@ console.log(report.valid); // true
 // 格式化输出
 const str = format(result.reference);
 console.log(str);
-// 张三, 李四 人工智能在教育中的应用[J]. 现代教育技术, 2025, 35(2): 15-22. PID:10.1234/test
+// 于潇, 刘义, 柴跃廷, 等 互联网药品可信交易环境中主体资质审核备案模式[J]. 清华大学学报（自然科学版）, 2012, 52(11): 1518-1523.
 ```
 
 ## API
@@ -205,40 +204,45 @@ console.log(result4.year); // '2025'
 ### 期刊 [J]
 
 ```typescript
+// 来自 GB/T 7714-2025 标准 B.4 示例
 const result = parse(
-  "[1] 于潇,刘义,柴跃廷,等. 互联网药品可信交易环境中主体资质审核备案模式[J]. 清华大学学报(自然科学版), 2012, 52(11): 1518-1523.",
+  "[1] 于潇，刘义，柴跃廷，等. 互联网药品可信交易环境中主体资质审核备案模式[J]. 清华大学学报（自然科学版），2012，52(11): 1518-1523.",
 );
 ```
 
 ### 图书 [M]
 
 ```typescript
+// 来自 GB/T 7714-2025 标准 B.1 示例
 const result = parse(
-  "[1] 张伯伟. 全唐五代诗格汇考[M]. 南京: 江苏古籍出版社, 2002: 288.",
+  "[1] 博伯尔. 银行业的未来与人工智能[M]. 徐超，译. 北京: 清华大学出版社, 2023: 35.",
 );
 ```
 
 ### 学位论文 [D]
 
 ```typescript
+// 来自 GB/T 7714-2025 标准 B.6 示例
 const result = parse(
-  "[1] 王琦. 融合星载GNSS-R和SAR数据的高时空分辨率土壤湿度反演方法研究[D]. 武汉: 武汉大学, 2022: 87.",
+  "[1] 王琦. 融合星载 GNSS-R 和 SAR 数据的高时空分辨率土壤湿度反演方法研究[D]. 武汉: 武汉大学, 2022: 87.",
 );
 ```
 
 ### 在线文献 [J/OL]
 
 ```typescript
+// 来自 GB/T 7714-2025 标准 B.4 示例
 const result = parse(
-  "[1] Myburg A A, Grattapaglia D, Tuskan G A, et al. The genome of Eucalyptus grandis[J/OL]. Nature, 2014, 510: 356-362. https://www.nature.com/articles/nature13308.pdf.",
+  "[1] Myburg A A, Grattapaglia D, Tuskan G A, et al. The genome of Eucalyptus grandis[J/OL]. Nature, 2014, 510: 356-362.",
 );
 ```
 
 ### 带 DOI 的文献
 
 ```typescript
+// 使用标准期刊示例 + DOI
 const result = parse(
-  "[1] 张三. 人工智能[J]. 现代教育技术, 2025, 35(2): 15-22. DOI:10.1234/test",
+  "[1] 于潇，刘义，柴跃廷，等. 互联网药品可信交易环境中主体资质审核备案模式[J]. 清华大学学报（自然科学版），2012，52(11): 1518-1523. DOI:10.1234/test",
 );
 console.log(result.reference.pid); // 'DOI:10.1234/test'
 ```
@@ -255,7 +259,7 @@ parser.register(new JournalParser());
 parser.register(new BookParser());
 
 const tokens = tokenize(
-  "[1] 张三. 人工智能[J]. 现代教育技术，2025，35(2)：15-22.",
+  "[1] 于潇，刘义，柴跃廷，等. 互联网药品可信交易环境中主体资质审核备案模式[J]. 清华大学学报（自然科学版），2012，52(11): 1518-1523.",
 );
 const result = parser.parse(tokens);
 ```
@@ -267,9 +271,9 @@ import { parse, Journal } from "gb7714-parser";
 
 // 使用泛型获取精确类型
 const { reference } = parse<Journal>(
-  "[1] 张三. 人工智能[J]. 现代教育技术，2025，35(2)：15-22.",
+  "[1] 于潇，刘义，柴跃廷，等. 互联网药品可信交易环境中主体资质审核备案模式[J]. 清华大学学报（自然科学版），2012，52(11): 1518-1523.",
 );
-console.log(reference.journalTitle); // '现代教育技术' - 无需类型断言
+console.log(reference.journalTitle); // '清华大学学报（自然科学版）' - 无需类型断言
 ```
 
 ## 开发

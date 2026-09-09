@@ -7,15 +7,16 @@ import fixtures from './__fixtures__/standard-examples.json' with { type: 'json'
  * GB/T 7714-2025 标准一致性测试（Golden Test Harness）
  *
  * 数据来源：GB-T 7714-2025/《信息与文献 参考文献著录规则》GB-T 7714-2025.md
- * 由 scripts/extract-standard-examples.mjs 自动提取，再生成此测试文件。
+ * 由 scripts/extract-standard-examples.mjs 自动提取，scripts/generate-expected.mjs 生成 expected 字段。
  *
  * 测试维度：
  *   1. parse(input) 不抛出异常
  *   2. 解析结果 reference.type 是有效类型标识
  *   3. format(reference) 不抛出异常且输出非空
  *   4. validate(reference) 返回结构化报告
+ *   5. 解析字段与 expected 一致（如有）
  *
- * 已知问题标记为 skip，保留在 fixtures.skipReason 中便于追踪。
+ * 已知问题标记为 skip，保留在 example.skipReason 中便于追踪。
  */
 
 // Section path → 简洁中文标题映射（用于 describe 块名）
@@ -38,14 +39,14 @@ const SECTION_LABELS: Record<string, string> = {
 
 /** 将长 section 路径裁剪为可展示的短标签 */
 function shortLabel(section: string): string {
-  // 优先使用附录 B 的章节名（最简单）
   const bMatch = section.match(/B\.\d+\s+.+/);
   if (bMatch) return SECTION_LABELS[bMatch[0]] ?? bMatch[0];
-  // 回退到 main section（8.x 或 9.x）
   const mainMatch = section.match(/^(8\.\d+|9\.\d+|5\s+\S+)/);
   if (mainMatch) return mainMatch[0];
   return section;
 }
+
+type ExampleExpected = Record<string, unknown>;
 
 describe('GB/T 7714-2025 标准一致性测试', () => {
   for (const group of fixtures.groups) {
@@ -54,22 +55,42 @@ describe('GB/T 7714-2025 标准一致性测试', () => {
       for (const ex of group.examples) {
         it(`示例 [${ex.id}]`, () => {
           const input = `[1] ${ex.content}`;
-          // 1. parse 不应抛出
           const result = parse(input);
           const ref = result.reference as ReferenceUnion;
 
           expect(ref).toBeDefined();
           expect(typeof ref.type).toBe('string');
           expect(ref.type.length).toBeGreaterThan(0);
-          // 2. format 不应抛出且输出非空
+
           const formatted = format(ref);
           expect(typeof formatted).toBe('string');
           expect(formatted.length).toBeGreaterThan(0);
-          // 3. validate 应返回有效报告
+
           const report = validate(ref);
           expect(report).toBeDefined();
           expect(typeof report.valid).toBe('boolean');
           expect(Array.isArray(report.errors)).toBe(true);
+
+          // 有 expected 时，断言字段一致性
+          const expected = (ex as Record<string, unknown>).expected as ExampleExpected | undefined;
+          if (expected) {
+            const r = ref as unknown as Record<string, unknown>;
+            if (expected.type) expect(ref.type).toBe(expected.type);
+            if (expected.year !== undefined) expect(r.year).toBe(expected.year);
+            if (expected.volume !== undefined) expect(r.volume).toBe(expected.volume);
+            if (expected.issue !== undefined) expect(r.issue).toBe(expected.issue);
+            if (expected.pages !== undefined) expect(r.pages).toBe(expected.pages);
+            if (expected.journalTitle !== undefined) expect(r.journalTitle).toBe(expected.journalTitle);
+            if (expected.publisherPlace !== undefined) expect(r.publisherPlace).toBe(expected.publisherPlace);
+            if (expected.publisher !== undefined) expect(r.publisher).toBe(expected.publisher);
+            if (expected.awardPlace !== undefined) expect(r.awardPlace).toBe(expected.awardPlace);
+            if (expected.awardInstitution !== undefined) expect(r.awardInstitution).toBe(expected.awardInstitution);
+            if (expected.title !== undefined) expect(r.title).toBe(expected.title);
+            if (expected.authors !== undefined) {
+              const actualNames = (r.authors as { name: string }[]).map(a => a.name);
+              expect(actualNames).toEqual(expected.authors as string[]);
+            }
+          }
         });
       }
     });
