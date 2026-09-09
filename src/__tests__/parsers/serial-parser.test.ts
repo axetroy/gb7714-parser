@@ -95,8 +95,8 @@ describe('SerialParser', () => {
 
       expect(result.type).toBe('J');
       expect(result.authors.length).toBe(2);
-      expect(result.authors[0].surname).toBe('张三');
-      expect(result.authors[1].surname).toBe('李四');
+      expect(result.authors[0].name).toBe('张三');
+      expect(result.authors[1].name).toBe('李四');
     });
   });
 });

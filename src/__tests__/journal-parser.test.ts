@@ -35,8 +35,8 @@ describe('JournalParser', () => {
 
       expect(result.type).toBe('J');
       expect(result.authors).toHaveLength(2);
-      expect(result.authors[0].surname).toBe('张三');
-      expect(result.authors[1].surname).toBe('李四');
+      expect(result.authors[0].name).toBe('张三');
+      expect(result.authors[1].name).toBe('李四');
       expect(result.title).toBe('人工智能在教育中的应用');
       expect(result.journalTitle).toBe('现代教育技术');
       expect(result.year).toBe('2025');
@@ -51,7 +51,7 @@ describe('JournalParser', () => {
 
       expect(result.type).toBe('J');
       expect(result.authors).toHaveLength(1);
-      expect(result.authors[0].surname).toBe('王五');
+      expect(result.authors[0].name).toBe('王五');
       expect(result.journalTitle).toBe('计算机学报');
       expect(result.year).toBe('2024');
     });

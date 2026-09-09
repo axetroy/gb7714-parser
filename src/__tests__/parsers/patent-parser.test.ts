@@ -35,7 +35,7 @@ describe('PatentParser', () => {
 
       expect(result.type).toBe('P');
       expect(result.authors).toHaveLength(1);
-      expect(result.authors[0].surname).toBe('张三');
+      expect(result.authors[0].name).toBe('张三');
       expect(result.title).toBe('人工智能方法');
       expect(result.patentNumber).toBe('CN2025001');
     });

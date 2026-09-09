@@ -35,7 +35,7 @@ describe('ProceedingsParser', () => {
 
       expect(result.type).toBe('C');
       expect(result.authors).toHaveLength(1);
-      expect(result.authors[0].surname).toBe('张三');
+      expect(result.authors[0].name).toBe('张三');
       expect(result.title).toBe('人工智能应用');
     });
 
@@ -54,8 +54,8 @@ describe('ProceedingsParser', () => {
       const result = parser.parse(tokens);
 
       expect(result.authors).toHaveLength(2);
-      expect(result.authors[0].surname).toBe('王五');
-      expect(result.authors[1].surname).toBe('赵六');
+      expect(result.authors[0].name).toBe('王五');
+      expect(result.authors[1].name).toBe('赵六');
     });
   });
 });

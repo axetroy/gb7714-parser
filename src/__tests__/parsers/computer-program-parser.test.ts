@@ -35,7 +35,7 @@ describe('ComputerProgramParser', () => {
       expect(result.type).toBe('CP');
       expect(result.title).toBe('数据分析软件');
       expect(result.authors).toHaveLength(1);
-      expect(result.authors[0].surname).toBe('张三');
+      expect(result.authors[0].name).toBe('张三');
     });
 
     it('应该解析带有版本的程序', () => {

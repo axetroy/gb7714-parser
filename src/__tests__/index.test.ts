@@ -116,7 +116,7 @@ describe('API', () => {
       const reference = {
         id: '1',
         type: ReferenceType.J,
-        authors: [{ surname: '张三' }],
+        authors: [{ name: '张三' }],
         title: '论文标题',
         journalTitle: '期刊名',
         year: '2025',
@@ -130,7 +130,7 @@ describe('API', () => {
       const reference = {
         id: '1',
         type: ReferenceType.J,
-        authors: [{ surname: '张三' }],
+        authors: [{ name: '张三' }],
         title: '论文标题',
         journalTitle: '期刊名',
         year: '2025',

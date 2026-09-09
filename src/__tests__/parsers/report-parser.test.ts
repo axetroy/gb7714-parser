@@ -35,7 +35,7 @@ describe('ReportParser', () => {
 
       expect(result.type).toBe('R');
       expect(result.authors).toHaveLength(1);
-      expect(result.authors[0].surname).toBe('张三');
+      expect(result.authors[0].name).toBe('张三');
       expect(result.title).toBe('研究报告');
       expect(result.reportNumber).toContain('No123');
     });

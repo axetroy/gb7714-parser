@@ -1,5 +1,6 @@
-import type { Token } from '../types/index.js';
+import type { Token, Author } from '../types/index.js';
 import type { ReferenceUnion, ParseOptions } from '../types/index.js';
+import { parseAuthors } from '../utils/index.js';
 
 /**
  * 解析器策略接口
@@ -81,13 +82,13 @@ export class Parser {
     }
 
     // 尝试提取作者和题名
-    let authors: { surname: string; givenName?: string }[] = [];
+    let authors: Author[] = [];
     let title = '';
 
     if (textTokens.length >= 2) {
       // 假设第一个文本是作者，第二个是题名
       const authorText = textTokens[0]!.value;
-      authors = this.parseAuthors(authorText);
+      authors = parseAuthors(authorText);
       title = textTokens[1]!.value;
     } else if (textTokens.length === 1) {
       title = textTokens[0]!.value;
@@ -109,12 +110,4 @@ export class Parser {
   /**
    * 解析作者字符串
    */
-  private parseAuthors(text: string): { surname: string; givenName?: string }[] {
-    // 使用中文逗号或英文逗号分隔
-    const parts = text.split(/[,，]/);
-    return parts.map(part => {
-      const name = part.trim();
-      return { surname: name };
-    });
-  }
 }

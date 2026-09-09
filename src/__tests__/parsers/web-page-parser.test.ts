@@ -52,7 +52,7 @@ describe('WebPageParser', () => {
       const result = parser.parse(tokens);
 
       expect(result.authors).toHaveLength(1);
-      expect(result.authors[0].surname).toBe('赵六');
+      expect(result.authors[0].name).toBe('赵六');
     });
 
     it('应该解析带有创建日期的网页', () => {

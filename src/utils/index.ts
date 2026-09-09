@@ -2,8 +2,22 @@ import type { Author, MediaType } from '../types/index.js';
 import { MediaType as MediaTypeEnum } from '../types/index.js';
 
 /**
+ * 过滤 "et al" 和 "等" 的正则表达式
+ */
+const ET_AL_PATTERN = /^(etal|et\s+al\.?|等)$/i;
+
+/**
  * 解析作者字符串
- * 支持中文作者（逗号分隔）和西文作者（空格分隔姓和名）
+ * 支持中文作者（逗号分隔）和西文作者
+ *
+ * @param text - 作者字符串，多个作者用逗号分隔
+ * @returns 解析后的作者数组（已过滤 "et al"/"等"）
+ *
+ * @example
+ * ```typescript
+ * parseAuthors('张三');  // [{ name: '张三' }]
+ * parseAuthors('John Smith, et al.');  // [{ name: 'John Smith' }]
+ * ```
  */
 export function parseAuthors(text: string): Author[] {
   if (!text.trim()) return [];
@@ -17,44 +31,19 @@ export function parseAuthors(text: string): Author[] {
     const name = part.trim();
     if (!name) continue;
 
+    // 过滤 "et al" 和 "等"
+    if (ET_AL_PATTERN.test(name)) continue;
+
     // 检查是否是机构作者
     if (name.includes('学会') || name.includes('协会') || name.includes('研究院') ||
         name.includes('研究所') || name.includes('出版社') || name.includes('公司') ||
         name.includes('University') || name.includes('Institute') || name.includes('Society')) {
-      authors.push({ surname: name, isOrganization: true });
+      authors.push({ name, isOrganization: true });
       continue;
     }
 
-    // 处理中文作者
-    if (/^[\u4e00-\u9fa5·]+$/.test(name)) {
-      authors.push({ surname: name });
-      continue;
-    }
-
-    // 处理西文作者
-    // 格式：Surname, G. 或 Surname G. 或 Surname, GivenName
-    const commaParts = name.split(',');
-    if (commaParts.length >= 2) {
-      // Surname, GivenName 格式
-      authors.push({
-        surname: commaParts[0]!.trim(),
-        givenName: commaParts.slice(1).join(',').trim(),
-      });
-      continue;
-    }
-
-    // 空格分隔：GivenName Surname 或 Surname GivenName
-    const spaceParts = name.split(/\s+/);
-    if (spaceParts.length >= 2) {
-      // 假设最后一个是姓
-      authors.push({
-        surname: spaceParts[spaceParts.length - 1]!,
-        givenName: spaceParts.slice(0, -1).join(' '),
-      });
-      continue;
-    }
-
-    authors.push({ surname: name });
+    // 保留原始字符串，不拆分姓名
+    authors.push({ name });
   }
 
   return authors;
@@ -66,15 +55,7 @@ export function parseAuthors(text: string): Author[] {
 export function formatAuthors(authors: Author[]): string {
   if (authors.length === 0) return '';
 
-  const formatted = authors.map(a => {
-    if (a.isOrganization) {
-      return a.surname;
-    }
-    if (a.givenName) {
-      return `${a.surname} ${a.givenName}`;
-    }
-    return a.surname;
-  });
+  const formatted = authors.map(a => a.name);
 
   if (formatted.length > 3) {
     return formatted.slice(0, 3).join(', ') + ', et al.';

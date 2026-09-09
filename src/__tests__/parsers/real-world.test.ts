@@ -8,7 +8,7 @@ describe('真实案例测试', () => {
       const { reference } = parse<Journal>('[1] 何龄修. 读南明史[J]. 中国史研究, 1998, 6(3): 167-173.');
 
       expect(reference.type).toBe('J');
-      expect(reference.authors[0].surname).toBe('何龄修');
+      expect(reference.authors[0].name).toBe('何龄修');
       expect(reference.title).toBe('读南明史');
       expect(reference.journalTitle).toBe('中国史研究');
       expect(reference.year).toBe('1998');
@@ -27,7 +27,7 @@ describe('真实案例测试', () => {
       const { reference } = parse<Journal>('[3] KANAMORI H. Shaking without quaking[J]. Science, 1998, 279(5359): 2063.');
 
       expect(reference.type).toBe('J');
-      expect(reference.authors[0].surname).toBe('KANAMORIH');
+      expect(reference.authors[0].name).toBe('KANAMORI H');
       expect(reference.journalTitle).toBe('Science');
     });
 
@@ -61,7 +61,7 @@ describe('真实案例测试', () => {
       const { reference } = parse<Book>('[1] 梁福军. 科技论文规范写作与编辑[M]. 北京: 清华大学出版社, 2014.');
 
       expect(reference.type).toBe('M');
-      expect(reference.authors[0].surname).toBe('梁福军');
+      expect(reference.authors[0].name).toBe('梁福军');
       expect(reference.title).toBe('科技论文规范写作与编辑');
       expect(reference.publisherPlace).toBe('北京');
       expect(reference.publisher).toBe('清华大学出版社');
@@ -97,7 +97,7 @@ describe('真实案例测试', () => {
       const { reference } = parse('[1] 马欢. 人类活动影响下海河流域典型区水循环变化分析[D]. 北京: 北京大学, 2011.');
 
       expect(reference.type).toBe('D');
-      expect(reference.authors[0].surname).toBe('马欢');
+      expect(reference.authors[0].name).toBe('马欢');
       expect(reference.title).toContain('海河流域');
     });
 
@@ -119,7 +119,7 @@ describe('真实案例测试', () => {
       const { reference } = parse('[1] 辛希孟. 信息技术与信息服务国际研讨会会议文集：A集[C]. 北京：中国社会科学出版社，1994.');
 
       expect(reference.type).toBe('C');
-      expect(reference.authors[0].surname).toBe('辛希孟');
+      expect(reference.authors[0].name).toBe('辛希孟');
     });
 
     it('应该解析无出版者的会议论文集', () => {
@@ -140,7 +140,7 @@ describe('真实案例测试', () => {
       const { reference } = parse('[1] 宋健. 制造业与现代化[R]. 北京：人民大会堂，2002.');
 
       expect(reference.type).toBe('R');
-      expect(reference.authors[0].surname).toBe('宋健');
+      expect(reference.authors[0].name).toBe('宋健');
       expect(reference.title).toBe('制造业与现代化');
     });
 
@@ -184,7 +184,7 @@ describe('真实案例测试', () => {
       const { reference } = parse('[1] 姜锡洲. 一种温热外敷药制备方案: 88105607.3[P]. 1989-07-26.');
 
       expect(reference.type).toBe('P');
-      expect(reference.authors[0].surname).toBe('姜锡洲');
+      expect(reference.authors[0].name).toBe('姜锡洲');
     });
 
     it('应该解析英文专利', () => {
@@ -251,7 +251,7 @@ describe('真实案例测试', () => {
       const { reference } = parse('[1] 李鸿章.奏请上海道库洋务外销要款无款可筹仍拨药厘接济事:04-01-35-0399-039[A].北京:中国第一历史档案馆，1887(光绪十三年三月十三日).');
 
       expect(reference.type).toBe('A');
-      expect(reference.authors[0].surname).toBe('李鸿章');
+      expect(reference.authors[0].name).toBe('李鸿章');
     });
   });
 
@@ -329,9 +329,9 @@ describe('真实案例测试', () => {
 
   describe('边界情况测试', () => {
     it('应该处理带空格的作者名', () => {
-      const { reference } = parse('[1] 张 三. 读南明史[J]. 中国史研究, 1998, 6(3): 167-173.');
+      const { reference } = parse('[1] 张 三. 读南明史[J]. 中国史研究, 1998, 6(3)…');
 
-      expect(reference.authors[0].surname).toBe('张三');
+      expect(reference.authors[0].name).toBe('张 三');
     });
 
     it('应该处理特殊字符的标题', () => {
@@ -759,6 +759,18 @@ describe('真实案例测试', () => {
 
       expect(formatted).toContain('刘明');
       expect(formatted).toContain('在线学习');
+    });
+
+    it('应该保留标题中的空格', () => {
+      const input = '[4] Myburg A A, Grattapaglia D, et al. The genome of Eucalyptus grandis[J/OL]. Nature, 2014, 510: 356-362.';
+      const { reference } = parse(input);
+      const formatted = format(reference);
+
+      expect(reference.authors).toHaveLength(2);
+      expect(reference.authors[0].name).toBe('Myburg A A');
+      expect(reference.authors[1].name).toBe('Grattapaglia D');
+      expect(reference.title).toBe('The genome of Eucalyptus grandis');
+      expect(formatted).toBe('Myburg A A, Grattapaglia D The genome of Eucalyptus grandis[J/OL]. Nature, 2014, 510: 356-362.');
     });
   });
 });

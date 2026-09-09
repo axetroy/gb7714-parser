@@ -1,7 +1,7 @@
-import type { Token } from '../types/index.js';
+import type { Token, Author } from '../types/index.js';
 import type { Reference, ParseOptions } from '../types/index.js';
 import type { ParserStrategy } from './base.js';
-import { parseTypeIndicator } from '../utils/index.js';
+import { parseTypeIndicator, parseAuthors } from '../utils/index.js';
 
 /**
  * 著者-出版年制解析器
@@ -83,7 +83,7 @@ export class AuthorDateParser implements ParserStrategy {
     position = this.skipWhitespace(tokens, position);
 
     // 解析作者和年份 (作者, 年)
-    let authors: { surname: string; givenName?: string }[] = [];
+    let authors: Author[] = [];
     let year = '';
 
     if (tokens[position]?.type === 'PAREN_OPEN') {
@@ -122,7 +122,7 @@ export class AuthorDateParser implements ParserStrategy {
 
       // 解析作者
       const authorText = parenContent.join('');
-      authors = this.parseAuthors(authorText);
+      authors = parseAuthors(authorText);
 
       position++; // 跳过 )
     }
@@ -252,21 +252,4 @@ export class AuthorDateParser implements ParserStrategy {
     return tokens.length;
   }
 
-  private parseAuthors(text: string): { surname: string; givenName?: string }[] {
-    const parts = text.split(/[,，]/);
-    return parts.map(part => {
-      const name = part.trim();
-      if (/^[\u4e00-\u9fa5]+$/.test(name)) {
-        return { surname: name };
-      }
-      const spaceParts = name.split(/\s+/);
-      if (spaceParts.length >= 2) {
-        return {
-          surname: spaceParts[spaceParts.length - 1]!,
-          givenName: spaceParts.slice(0, -1).join(' '),
-        };
-      }
-      return { surname: name };
-    });
-  }
 }

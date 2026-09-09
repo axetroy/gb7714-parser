@@ -1,7 +1,7 @@
 import type { Token } from '../types/index.js';
 import type { Proceedings, ParseOptions } from '../types/index.js';
 import type { ParserStrategy } from './base.js';
-import { parseTypeIndicator } from '../utils/index.js';
+import { parseTypeIndicator, parseAuthors } from '../utils/index.js';
 
 /**
  * 会议录解析器
@@ -40,7 +40,7 @@ export class ProceedingsParser implements ParserStrategy {
     // 解析作者
     const authorsText = this.readUntilDot(tokens, position);
     position = this.findNextDot(tokens, position) + 1;
-    const authors = this.parseAuthors(authorsText);
+    const authors = parseAuthors(authorsText);
 
     // 跳过空白
     position = this.skipWhitespace(tokens, position);
@@ -179,21 +179,4 @@ export class ProceedingsParser implements ParserStrategy {
     return result;
   }
 
-  private parseAuthors(text: string): { surname: string; givenName?: string }[] {
-    const parts = text.split(/[,，]/);
-    return parts.map(part => {
-      const name = part.trim();
-      if (/^[\u4e00-\u9fa5]+$/.test(name)) {
-        return { surname: name };
-      }
-      const spaceParts = name.split(/\s+/);
-      if (spaceParts.length >= 2) {
-        return {
-          surname: spaceParts[spaceParts.length - 1]!,
-          givenName: spaceParts.slice(0, -1).join(' '),
-        };
-      }
-      return { surname: name };
-    });
-  }
 }

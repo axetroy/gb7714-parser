@@ -1,7 +1,7 @@
 import type { Token } from '../types/index.js';
 import type { Journal, ParseOptions } from '../types/index.js';
 import type { ParserStrategy } from './base.js';
-import { parseTypeIndicator } from '../utils/index.js';
+import { parseTypeIndicator, parseAuthors } from '../utils/index.js';
 
 /**
  * 期刊解析器
@@ -41,7 +41,7 @@ export class JournalParser implements ParserStrategy {
     // 解析作者
     const authorsText = this.readUntilDot(tokens, position);
     position = this.findNextDot(tokens, position) + 1;
-    const authors = this.parseAuthors(authorsText);
+    const authors = parseAuthors(authorsText);
 
     // 跳过空白
     position = this.skipWhitespace(tokens, position);
@@ -141,15 +141,25 @@ export class JournalParser implements ParserStrategy {
 
   private readUntilDot(tokens: Token[], start: number): string {
     let result = '';
+    let lastEndPosition = -1;
     let i = start;
     while (i < tokens.length && tokens[i]?.type !== 'DOT') {
       const token = tokens[i]!;
       if (token.type === 'TEXT') {
+        if (result && lastEndPosition >= 0 && token.position > lastEndPosition) {
+          result += ' ';
+        }
         result += token.value;
+        lastEndPosition = token.position + token.value.length;
       } else if (token.type === 'COMMA') {
         result += ',';
+        lastEndPosition = token.position + 1;
       } else if (token.type === 'NUMBER') {
+        if (result && lastEndPosition >= 0 && token.position > lastEndPosition) {
+          result += ' ';
+        }
         result += token.value;
+        lastEndPosition = token.position + token.value.length;
       }
       i++;
     }
@@ -165,12 +175,19 @@ export class JournalParser implements ParserStrategy {
 
   private readUntilTypeIndicator(tokens: Token[], start: number): string {
     let result = '';
+    let lastEndPosition = -1;
     let i = start;
     while (i < tokens.length && tokens[i]?.type !== 'TYPE_INDICATOR') {
-      if (tokens[i]?.type === 'TEXT') {
-        result += tokens[i]!.value;
-      } else if (tokens[i]?.type === 'DOT') {
+      const token = tokens[i]!;
+      if (token.type === 'TEXT') {
+        if (result && lastEndPosition >= 0 && token.position > lastEndPosition) {
+          result += ' ';
+        }
+        result += token.value;
+        lastEndPosition = token.position + token.value.length;
+      } else if (token.type === 'DOT') {
         result += '.';
+        lastEndPosition = token.position + 1;
       }
       i++;
     }
@@ -186,15 +203,21 @@ export class JournalParser implements ParserStrategy {
 
   private readUntilCommaOrYear(tokens: Token[], start: number): string {
     let result = '';
+    let lastEndPosition = -1;
     let i = start;
     while (i < tokens.length) {
       const token = tokens[i]!;
       if (token.type === 'COMMA') break;
       if (token.type === 'YEAR') break;
       if (token.type === 'TEXT') {
+        if (result && lastEndPosition >= 0 && token.position > lastEndPosition) {
+          result += ' ';
+        }
         result += token.value;
+        lastEndPosition = token.position + token.value.length;
       } else if (token.type === 'DOT') {
         result += '.';
+        lastEndPosition = token.position + 1;
       }
       i++;
     }
@@ -206,25 +229,5 @@ export class JournalParser implements ParserStrategy {
       if (tokens[i]?.type === 'COMMA' || tokens[i]?.type === 'YEAR') return i;
     }
     return tokens.length;
-  }
-
-  private parseAuthors(text: string): { surname: string; givenName?: string }[] {
-    const parts = text.split(/[,，]/);
-    return parts.map(part => {
-      const name = part.trim();
-      // 处理中文作者
-      if (/^[\u4e00-\u9fa5]+$/.test(name)) {
-        return { surname: name };
-      }
-      // 处理西文作者（名 姓 或 姓, 名）
-      const spaceParts = name.split(/\s+/);
-      if (spaceParts.length >= 2) {
-        return {
-          surname: spaceParts[spaceParts.length - 1]!,
-          givenName: spaceParts.slice(0, -1).join(' '),
-        };
-      }
-      return { surname: name };
-    });
   }
 }

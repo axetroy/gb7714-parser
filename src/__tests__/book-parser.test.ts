@@ -30,7 +30,7 @@ describe('BookParser', () => {
 
       expect(result.type).toBe('M');
       expect(result.authors).toHaveLength(1);
-      expect(result.authors[0].surname).toBe('李四');
+      expect(result.authors[0].name).toBe('李四');
       expect(result.title).toBe('机器学习导论');
       expect(result.publisherPlace).toBe('北京');
       expect(result.publisher).toBe('清华大学出版社');
@@ -44,7 +44,7 @@ describe('BookParser', () => {
       const result = parser.parse(tokens);
 
       expect(result.authors).toHaveLength(1);
-      expect(result.authors[0].surname).toBe('张三');
+      expect(result.authors[0].name).toBe('张三');
     });
 
     it('应该解析没有页码的图书', () => {
@@ -98,7 +98,7 @@ describe('BookParser', () => {
 
       expect(result.type).toBe('M');
       expect(result.authors).toHaveLength(1);
-      expect(result.authors[0].surname).toBe('张三李四王五');
+      expect(result.authors[0].name).toBe('张三李四王五');
     });
 
     it('应该解析带有 DOI 的图书', () => {

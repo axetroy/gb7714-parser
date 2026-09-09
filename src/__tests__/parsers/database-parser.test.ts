@@ -44,7 +44,7 @@ describe('DatabaseParser', () => {
       expect(result.type).toBe('DB');
       expect(result.title).toBe('学术论文数据库');
       expect(result.authors).toHaveLength(1);
-      expect(result.authors[0].surname).toBe('张三');
+      expect(result.authors[0].name).toBe('张三');
     });
 
     it('应该解析带有出版者信息的数据库', () => {

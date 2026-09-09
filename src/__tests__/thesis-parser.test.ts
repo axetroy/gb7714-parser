@@ -30,7 +30,7 @@ describe('ThesisParser', () => {
 
       expect(result.type).toBe('D');
       expect(result.authors).toHaveLength(1);
-      expect(result.authors[0].surname).toBe('王五');
+      expect(result.authors[0].name).toBe('王五');
       expect(result.title).toBe('深度学习在自然语言处理中的应用');
       expect(result.awardPlace).toBe('北京');
       expect(result.awardInstitution).toBe('北京大学');

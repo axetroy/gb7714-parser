@@ -8,7 +8,7 @@ describe('Formatter', () => {
     it('应该格式化期刊引用', () => {
       const reference: ReferenceUnion = {
         type: ReferenceType.J,
-        authors: [{ surname: '张三' }, { surname: '李四' }],
+        authors: [{ name: '张三' }, { name: '李四' }],
         title: '人工智能在教育中的应用',
         journalTitle: '现代教育技术',
         year: '2025',
@@ -23,7 +23,7 @@ describe('Formatter', () => {
     it('应该格式化图书引用', () => {
       const reference: ReferenceUnion = {
         type: ReferenceType.M,
-        authors: [{ surname: '李四' }],
+        authors: [{ name: '李四' }],
         title: '机器学习导论',
         publisherPlace: '北京',
         publisher: '清华大学出版社',
@@ -37,7 +37,7 @@ describe('Formatter', () => {
     it('应该格式化学位论文引用', () => {
       const reference: ReferenceUnion = {
         type: ReferenceType.D,
-        authors: [{ surname: '王五' }],
+        authors: [{ name: '王五' }],
         title: '深度学习研究',
         awardPlace: '北京',
         awardInstitution: '北京大学',
@@ -51,7 +51,7 @@ describe('Formatter', () => {
     it('应该格式化网页引用', () => {
       const reference: ReferenceUnion = {
         type: ReferenceType.EB,
-        authors: [{ surname: '张三' }],
+        authors: [{ name: '张三' }],
         title: '网站标题',
         createDate: '2025-01-01',
         accessDate: '2025-09-07',
@@ -66,7 +66,7 @@ describe('Formatter', () => {
       const reference: ReferenceUnion = {
         type: ReferenceType.J,
         id: '1',
-        authors: [{ surname: '张三' }],
+        authors: [{ name: '张三' }],
         title: '论文标题',
         journalTitle: '期刊名',
         year: '2025',
@@ -75,10 +75,10 @@ describe('Formatter', () => {
       expect(result).toBe('[1] 张三 论文标题[J]. 期刊名, 2025.');
     });
 
-    it('应该格式化带有 givenName 的作者', () => {
+    it('应该格式化带有完整姓名的作者', () => {
       const reference: ReferenceUnion = {
         type: ReferenceType.J,
-        authors: [{ surname: 'Smith', givenName: 'John' }],
+        authors: [{ name: 'Smith John' }],
         title: 'Paper Title',
         journalTitle: 'Journal Name',
         year: '2025',
@@ -91,10 +91,10 @@ describe('Formatter', () => {
       const reference: ReferenceUnion = {
         type: ReferenceType.J,
         authors: [
-          { surname: '张三' },
-          { surname: '李四' },
-          { surname: '王五' },
-          { surname: '赵六' },
+          { name: '张三' },
+          { name: '李四' },
+          { name: '王五' },
+          { name: '赵六' },
         ],
         title: '论文标题',
         journalTitle: '期刊名',
@@ -107,7 +107,7 @@ describe('Formatter', () => {
     it('应该格式化机构作为作者', () => {
       const reference: ReferenceUnion = {
         type: ReferenceType.J,
-        authors: [{ surname: '中国科学院', isOrganization: true }],
+        authors: [{ name: '中国科学院', isOrganization: true }],
         title: '研究报告',
         journalTitle: '科学通报',
         year: '2025',
@@ -119,7 +119,7 @@ describe('Formatter', () => {
     it('应该格式化没有卷号/期号的期刊', () => {
       const reference: ReferenceUnion = {
         type: ReferenceType.J,
-        authors: [{ surname: '张三' }],
+        authors: [{ name: '张三' }],
         title: '论文标题',
         journalTitle: '期刊名',
         year: '2025',
@@ -131,7 +131,7 @@ describe('Formatter', () => {
     it('应该格式化没有页码的图书', () => {
       const reference: ReferenceUnion = {
         type: ReferenceType.M,
-        authors: [{ surname: '李四' }],
+        authors: [{ name: '李四' }],
         title: '书名',
         publisherPlace: '北京',
         publisher: '出版社',
@@ -144,7 +144,7 @@ describe('Formatter', () => {
     it('应该格式化带有版本的图书', () => {
       const reference: ReferenceUnion = {
         type: ReferenceType.M,
-        authors: [{ surname: '李四' }],
+        authors: [{ name: '李四' }],
         title: '书名',
         version: '第3版',
         publisherPlace: '北京',
@@ -158,7 +158,7 @@ describe('Formatter', () => {
     it('应该格式化连续出版物', () => {
       const reference: ReferenceUnion = {
         type: 'J' as never,
-        authors: [{ surname: '中华医学会湖北分会' }],
+        authors: [{ name: '中华医学会湖北分会' }],
         title: '临床内科杂志',
         serialTitle: '临床内科杂志',
         startYear: '1984',
@@ -176,7 +176,7 @@ describe('Formatter', () => {
     it('应该格式化带有年份范围的连续出版物', () => {
       const reference: ReferenceUnion = {
         type: 'J' as never,
-        authors: [{ surname: '中国图书馆学会' }],
+        authors: [{ name: '中国图书馆学会' }],
         title: '图书馆学通讯',
         serialTitle: '图书馆学通讯',
         startYear: '1957',
@@ -197,7 +197,7 @@ describe('Formatter', () => {
     it('应该在 2015 版本中使用 DOI', () => {
       const reference: ReferenceUnion = {
         type: ReferenceType.J,
-        authors: [{ surname: '张三' }],
+        authors: [{ name: '张三' }],
         title: '论文标题',
         journalTitle: '期刊名',
         year: '2025',
@@ -211,7 +211,7 @@ describe('Formatter', () => {
     it('应该在 2025 版本中使用 PID', () => {
       const reference: ReferenceUnion = {
         type: ReferenceType.J,
-        authors: [{ surname: '张三' }],
+        authors: [{ name: '张三' }],
         title: '论文标题',
         journalTitle: '期刊名',
         year: '2025',
@@ -227,7 +227,7 @@ describe('Formatter', () => {
     it('应该格式化带有会议信息的会议录', () => {
       const reference: ReferenceUnion = {
         type: ReferenceType.C,
-        authors: [{ surname: '张三' }],
+        authors: [{ name: '张三' }],
         title: '会议论文集',
         conferenceName: '国际人工智能大会',
         conferenceYear: '2025',
@@ -240,7 +240,7 @@ describe('Formatter', () => {
     it('应该格式化没有 conferenceYear 的会议录', () => {
       const reference: ReferenceUnion = {
         type: ReferenceType.C,
-        authors: [{ surname: '张三' }],
+        authors: [{ name: '张三' }],
         title: '会议论文集',
         conferenceName: '国际人工智能大会',
       };
@@ -263,7 +263,7 @@ describe('Formatter', () => {
     it('应该格式化带有专利号的专利', () => {
       const reference: ReferenceUnion = {
         type: ReferenceType.P,
-        authors: [{ surname: '张三' }],
+        authors: [{ name: '张三' }],
         title: '发明名称',
         patentNumber: 'CN2025001',
         announceDate: '2025-09-07',
@@ -275,7 +275,7 @@ describe('Formatter', () => {
     it('应该格式化报告', () => {
       const reference: ReferenceUnion = {
         type: ReferenceType.R,
-        authors: [{ surname: '张三' }],
+        authors: [{ name: '张三' }],
         title: '技术报告',
         reportNumber: 'TR-2025-001',
         releaseDate: '2025-09-07',
@@ -287,7 +287,7 @@ describe('Formatter', () => {
     it('应该格式化档案', () => {
       const reference: ReferenceUnion = {
         type: ReferenceType.A,
-        authors: [{ surname: '张三' }],
+        authors: [{ name: '张三' }],
         title: '档案标题',
         archiveNumber: 'ABC123',
         collectionPlace: '北京',
@@ -301,7 +301,7 @@ describe('Formatter', () => {
     it('应该格式化没有收藏地的档案', () => {
       const reference: ReferenceUnion = {
         type: ReferenceType.A,
-        authors: [{ surname: '张三' }],
+        authors: [{ name: '张三' }],
         title: '档案标题',
         archiveNumber: 'ABC123',
       };
@@ -312,7 +312,7 @@ describe('Formatter', () => {
     it('应该格式化地图', () => {
       const reference: ReferenceUnion = {
         type: ReferenceType.CM,
-        authors: [{ surname: '张三' }],
+        authors: [{ name: '张三' }],
         title: '地图标题',
         scale: '1:25000',
         dimensions: '128 cm × 84 cm',
@@ -324,7 +324,7 @@ describe('Formatter', () => {
     it('应该格式化带有平台的数据集', () => {
       const reference: ReferenceUnion = {
         type: ReferenceType.DS,
-        authors: [{ surname: '张三' }],
+        authors: [{ name: '张三' }],
         title: '数据集标题',
         platform: '国家数据中心',
         releaseDate: '2025-09-07',
@@ -338,7 +338,7 @@ describe('Formatter', () => {
     it('应该格式化没有平台的数据集', () => {
       const reference: ReferenceUnion = {
         type: ReferenceType.DS,
-        authors: [{ surname: '张三' }],
+        authors: [{ name: '张三' }],
         title: '数据集标题',
         accessDate: '2025-10-01',
         mediaType: MediaType.OL,
@@ -350,7 +350,7 @@ describe('Formatter', () => {
     it('应该格式化带有平台的预印本', () => {
       const reference: ReferenceUnion = {
         type: ReferenceType.PP,
-        authors: [{ surname: '张三' }],
+        authors: [{ name: '张三' }],
         title: '预印本标题',
         platform: 'arXiv',
         createDate: '2025-09-07',
@@ -364,7 +364,7 @@ describe('Formatter', () => {
     it('应该格式化没有平台的预印本', () => {
       const reference: ReferenceUnion = {
         type: ReferenceType.PP,
-        authors: [{ surname: '张三' }],
+        authors: [{ name: '张三' }],
         title: '预印本标题',
         accessDate: '2025-10-01',
         mediaType: MediaType.OL,
@@ -376,7 +376,7 @@ describe('Formatter', () => {
     it('应该格式化没有创建日期的网页', () => {
       const reference: ReferenceUnion = {
         type: ReferenceType.EB,
-        authors: [{ surname: '张三' }],
+        authors: [{ name: '张三' }],
         title: '网页标题',
         accessDate: '2025-09-07',
         url: 'https://example.com',
@@ -402,7 +402,7 @@ describe('Formatter', () => {
     it('应该格式化没有发布日期的报告', () => {
       const reference: ReferenceUnion = {
         type: ReferenceType.R,
-        authors: [{ surname: '张三' }],
+        authors: [{ name: '张三' }],
         title: '技术报告',
         reportNumber: 'TR-2025-001',
       };
@@ -413,7 +413,7 @@ describe('Formatter', () => {
     it('应该格式化没有公告日期的专利', () => {
       const reference: ReferenceUnion = {
         type: ReferenceType.P,
-        authors: [{ surname: '张三' }],
+        authors: [{ name: '张三' }],
         title: '发明名称',
         patentNumber: 'CN2025001',
       };
@@ -424,7 +424,7 @@ describe('Formatter', () => {
     it('应该格式化没有授予地的学位论文', () => {
       const reference: ReferenceUnion = {
         type: ReferenceType.D,
-        authors: [{ surname: '王五' }],
+        authors: [{ name: '王五' }],
         title: '深度学习研究',
         awardInstitution: '北京大学',
         awardYear: '2025',
@@ -436,7 +436,7 @@ describe('Formatter', () => {
     it('应该格式化没有授予机构的学位论文', () => {
       const reference: ReferenceUnion = {
         type: ReferenceType.D,
-        authors: [{ surname: '王五' }],
+        authors: [{ name: '王五' }],
         title: '深度学习研究',
         awardPlace: '北京',
         awardYear: '2025',
@@ -448,10 +448,10 @@ describe('Formatter', () => {
     it('应该格式化析出文献', () => {
       const reference: ReferenceUnion = {
         type: ReferenceType.M,
-        authors: [{ surname: '张三' }],
+        authors: [{ name: '张三' }],
         title: '析出文献标题',
         host: {
-          authors: [{ surname: '李四' }],
+          authors: [{ name: '李四' }],
           title: '图书标题',
           publisherPlace: '北京',
           publisher: '出版社',
@@ -466,7 +466,7 @@ describe('Formatter', () => {
     it('应该格式化带有 URL 的图书', () => {
       const reference: ReferenceUnion = {
         type: ReferenceType.M,
-        authors: [{ surname: '李四' }],
+        authors: [{ name: '李四' }],
         title: '书名',
         publisherPlace: '北京',
         publisher: '出版社',
@@ -480,7 +480,7 @@ describe('Formatter', () => {
     it('应该格式化带有出版者信息的地图', () => {
       const reference: ReferenceUnion = {
         type: ReferenceType.CM,
-        authors: [{ surname: '张三' }],
+        authors: [{ name: '张三' }],
         title: '地图标题',
         scale: '1:25000',
         publisherPlace: '北京',
@@ -494,7 +494,7 @@ describe('Formatter', () => {
     it('应该格式化带有版本的地图', () => {
       const reference: ReferenceUnion = {
         type: ReferenceType.CM,
-        authors: [{ surname: '张三' }],
+        authors: [{ name: '张三' }],
         title: '地图标题',
         version: '第2版',
       };
@@ -505,7 +505,7 @@ describe('Formatter', () => {
     it('应该格式化带有版本的数据集', () => {
       const reference: ReferenceUnion = {
         type: ReferenceType.DS,
-        authors: [{ surname: '张三' }],
+        authors: [{ name: '张三' }],
         title: '数据集标题',
         version: 'v2.0',
         platform: '国家数据中心',
@@ -519,7 +519,7 @@ describe('Formatter', () => {
     it('应该格式化带有版本的预印本', () => {
       const reference: ReferenceUnion = {
         type: ReferenceType.PP,
-        authors: [{ surname: '张三' }],
+        authors: [{ name: '张三' }],
         title: '预印本标题',
         version: 'v1.0',
         platform: 'arXiv',
@@ -533,7 +533,7 @@ describe('Formatter', () => {
     it('应该格式化带有 URL 的会议录', () => {
       const reference: ReferenceUnion = {
         type: ReferenceType.C,
-        authors: [{ surname: '张三' }],
+        authors: [{ name: '张三' }],
         title: '会议论文集',
         conferenceName: '国际人工智能大会',
         conferenceYear: '2025',
@@ -546,7 +546,7 @@ describe('Formatter', () => {
     it('应该格式化带有 URL 的专利', () => {
       const reference: ReferenceUnion = {
         type: ReferenceType.P,
-        authors: [{ surname: '张三' }],
+        authors: [{ name: '张三' }],
         title: '发明名称',
         patentNumber: 'CN2025001',
         url: 'https://example.com',
@@ -558,7 +558,7 @@ describe('Formatter', () => {
     it('应该格式化带有 URL 的报告', () => {
       const reference: ReferenceUnion = {
         type: ReferenceType.R,
-        authors: [{ surname: '张三' }],
+        authors: [{ name: '张三' }],
         title: '技术报告',
         reportNumber: 'TR-2025-001',
         url: 'https://example.com',
@@ -570,7 +570,7 @@ describe('Formatter', () => {
     it('应该格式化带有 URL 的档案', () => {
       const reference: ReferenceUnion = {
         type: ReferenceType.A,
-        authors: [{ surname: '张三' }],
+        authors: [{ name: '张三' }],
         title: '档案标题',
         url: 'https://example.com',
       };
@@ -581,7 +581,7 @@ describe('Formatter', () => {
     it('应该格式化带有 URL 的地图', () => {
       const reference: ReferenceUnion = {
         type: ReferenceType.CM,
-        authors: [{ surname: '张三' }],
+        authors: [{ name: '张三' }],
         title: '地图标题',
         url: 'https://example.com',
       };
@@ -592,7 +592,7 @@ describe('Formatter', () => {
     it('应该格式化带有 URL 的期刊', () => {
       const reference: ReferenceUnion = {
         type: ReferenceType.J,
-        authors: [{ surname: '张三' }],
+        authors: [{ name: '张三' }],
         title: '论文标题',
         journalTitle: '期刊名',
         year: '2025',
@@ -606,7 +606,7 @@ describe('Formatter', () => {
       const reference: ReferenceUnion = {
         type: ReferenceType.CM,
         id: '42',
-        authors: [{ surname: '张三' }],
+        authors: [{ name: '张三' }],
         title: '地图标题',
       };
       const result = format(reference);
@@ -617,7 +617,7 @@ describe('Formatter', () => {
       const reference: ReferenceUnion = {
         type: ReferenceType.DS,
         id: '43',
-        authors: [{ surname: '张三' }],
+        authors: [{ name: '张三' }],
         title: '数据集标题',
         accessDate: '2025-10-01',
         mediaType: MediaType.OL,
@@ -629,7 +629,7 @@ describe('Formatter', () => {
     it('应该格式化带有 URL 的数据集', () => {
       const reference: ReferenceUnion = {
         type: ReferenceType.DS,
-        authors: [{ surname: '张三' }],
+        authors: [{ name: '张三' }],
         title: '数据集标题',
         accessDate: '2025-10-01',
         url: 'https://example.com',
@@ -643,7 +643,7 @@ describe('Formatter', () => {
       const reference: ReferenceUnion = {
         type: ReferenceType.PP,
         id: '44',
-        authors: [{ surname: '张三' }],
+        authors: [{ name: '张三' }],
         title: '预印本标题',
         accessDate: '2025-10-01',
         mediaType: MediaType.OL,
@@ -655,7 +655,7 @@ describe('Formatter', () => {
     it('应该格式化带有 URL 的预印本', () => {
       const reference: ReferenceUnion = {
         type: ReferenceType.PP,
-        authors: [{ surname: '张三' }],
+        authors: [{ name: '张三' }],
         title: '预印本标题',
         accessDate: '2025-10-01',
         url: 'https://example.com',
@@ -682,7 +682,7 @@ describe('Formatter', () => {
     it('应该处理没有年份的引用', () => {
       const reference: ReferenceUnion = {
         type: ReferenceType.M,
-        authors: [{ surname: '李四' }],
+        authors: [{ name: '李四' }],
         title: '书名',
         publisherPlace: '北京',
         publisher: '出版社',
@@ -694,7 +694,7 @@ describe('Formatter', () => {
     it('应该处理没有出版地的引用', () => {
       const reference: ReferenceUnion = {
         type: ReferenceType.M,
-        authors: [{ surname: '李四' }],
+        authors: [{ name: '李四' }],
         title: '书名',
         publisher: '出版社',
         year: '2025',
@@ -706,7 +706,7 @@ describe('Formatter', () => {
     it('应该处理没有出版者的引用', () => {
       const reference: ReferenceUnion = {
         type: ReferenceType.M,
-        authors: [{ surname: '李四' }],
+        authors: [{ name: '李四' }],
         title: '书名',
         publisherPlace: '北京',
         year: '2025',
@@ -718,7 +718,7 @@ describe('Formatter', () => {
     it('应该处理通用类型', () => {
       const reference = {
         type: 'X' as ReferenceUnion['type'],
-        authors: [{ surname: '张三' }],
+        authors: [{ name: '张三' }],
         title: '通用标题',
         year: '2025',
       } as ReferenceUnion;
@@ -729,7 +729,7 @@ describe('Formatter', () => {
     it('应该处理带有出版者信息的通用类型', () => {
       const reference = {
         type: 'X' as ReferenceUnion['type'],
-        authors: [{ surname: '张三' }],
+        authors: [{ name: '张三' }],
         title: '通用标题',
         year: '2025',
         publisherPlace: '北京',
@@ -742,7 +742,7 @@ describe('Formatter', () => {
     it('应该处理带有 URL 的通用类型', () => {
       const reference = {
         type: 'X' as ReferenceUnion['type'],
-        authors: [{ surname: '张三' }],
+        authors: [{ name: '张三' }],
         title: '通用标题',
         url: 'https://example.com',
       } as ReferenceUnion;
@@ -753,7 +753,7 @@ describe('Formatter', () => {
     it('应该处理没有年份的通用类型', () => {
       const reference = {
         type: 'X' as ReferenceUnion['type'],
-        authors: [{ surname: '张三' }],
+        authors: [{ name: '张三' }],
         title: '通用标题',
       } as ReferenceUnion;
       const result = format(reference);
@@ -764,7 +764,7 @@ describe('Formatter', () => {
       const reference = {
         type: 'X' as ReferenceUnion['type'],
         id: '42',
-        authors: [{ surname: '张三' }],
+        authors: [{ name: '张三' }],
         title: '通用标题',
       } as ReferenceUnion;
       const result = format(reference);
@@ -784,7 +784,7 @@ describe('Formatter', () => {
     it('应该处理没有出版地和出版者的通用类型', () => {
       const reference = {
         type: 'X' as ReferenceUnion['type'],
-        authors: [{ surname: '张三' }],
+        authors: [{ name: '张三' }],
         title: '通用标题',
         year: '2025',
       } as ReferenceUnion;
@@ -797,7 +797,7 @@ describe('Formatter', () => {
     it('应该在 2015 版本中对图书使用 DOI', () => {
       const reference: ReferenceUnion = {
         type: ReferenceType.M,
-        authors: [{ surname: '李四' }],
+        authors: [{ name: '李四' }],
         title: '书名',
         publisherPlace: '北京',
         publisher: '出版社',
@@ -812,7 +812,7 @@ describe('Formatter', () => {
     it('应该在 2025 版本中对图书使用 PID', () => {
       const reference: ReferenceUnion = {
         type: ReferenceType.M,
-        authors: [{ surname: '李四' }],
+        authors: [{ name: '李四' }],
         title: '书名',
         publisherPlace: '北京',
         publisher: '出版社',
@@ -855,7 +855,7 @@ describe('Formatter', () => {
     it('应该格式化带有页码的专利', () => {
       const reference: ReferenceUnion = {
         type: ReferenceType.P,
-        authors: [{ surname: '张三' }],
+        authors: [{ name: '张三' }],
         title: '发明名称',
         patentNumber: 'CN2025001',
         announceDate: '2025-09-07',
@@ -868,7 +868,7 @@ describe('Formatter', () => {
     it('应该格式化带有页码的报告', () => {
       const reference: ReferenceUnion = {
         type: ReferenceType.R,
-        authors: [{ surname: '张三' }],
+        authors: [{ name: '张三' }],
         title: '技术报告',
         reportNumber: 'TR-2025-001',
         releaseDate: '2025-09-07',
@@ -881,7 +881,7 @@ describe('Formatter', () => {
     it('应该格式化没有报告号的报告', () => {
       const reference: ReferenceUnion = {
         type: ReferenceType.R,
-        authors: [{ surname: '张三' }],
+        authors: [{ name: '张三' }],
         title: '技术报告',
         releaseDate: '2025-09-07',
       };
@@ -892,7 +892,7 @@ describe('Formatter', () => {
     it('应该格式化带有尺寸的地图', () => {
       const reference: ReferenceUnion = {
         type: ReferenceType.CM,
-        authors: [{ surname: '张三' }],
+        authors: [{ name: '张三' }],
         title: '地图标题',
         scale: '1:25000',
         publisherPlace: '北京',
@@ -907,7 +907,7 @@ describe('Formatter', () => {
     it('应该格式化带有档案号的档案', () => {
       const reference: ReferenceUnion = {
         type: ReferenceType.A,
-        authors: [{ surname: '张三' }],
+        authors: [{ name: '张三' }],
         title: '档案标题',
         archiveNumber: 'ABC123',
       };
@@ -918,7 +918,7 @@ describe('Formatter', () => {
     it('应该格式化没有档案号的档案', () => {
       const reference: ReferenceUnion = {
         type: ReferenceType.A,
-        authors: [{ surname: '张三' }],
+        authors: [{ name: '张三' }],
         title: '档案标题',
       };
       const result = format(reference);
@@ -928,7 +928,7 @@ describe('Formatter', () => {
     it('应该格式化没有会议名称的会议录', () => {
       const reference: ReferenceUnion = {
         type: ReferenceType.C,
-        authors: [{ surname: '张三' }],
+        authors: [{ name: '张三' }],
         title: '会议论文集',
       };
       const result = format(reference);
@@ -938,7 +938,7 @@ describe('Formatter', () => {
     it('应该格式化没有页码的学位论文', () => {
       const reference: ReferenceUnion = {
         type: ReferenceType.D,
-        authors: [{ surname: '王五' }],
+        authors: [{ name: '王五' }],
         title: '深度学习研究',
         awardPlace: '北京',
         awardInstitution: '北京大学',
@@ -952,7 +952,7 @@ describe('Formatter', () => {
       const reference: ReferenceUnion = {
         type: ReferenceType.M,
         id: '50',
-        authors: [{ surname: '李四' }],
+        authors: [{ name: '李四' }],
         title: '书名',
       };
       const result = format(reference);
@@ -962,7 +962,7 @@ describe('Formatter', () => {
     it('应该格式化带有 pid 的期刊', () => {
       const reference: ReferenceUnion = {
         type: ReferenceType.J,
-        authors: [{ surname: '张三' }],
+        authors: [{ name: '张三' }],
         title: '论文标题',
         journalTitle: '期刊名',
         year: '2025',
@@ -975,7 +975,7 @@ describe('Formatter', () => {
     it('应该格式化带有 URL 的学位论文', () => {
       const reference: ReferenceUnion = {
         type: ReferenceType.D,
-        authors: [{ surname: '王五' }],
+        authors: [{ name: '王五' }],
         title: '深度学习研究',
         awardPlace: '北京',
         awardInstitution: '北京大学',
@@ -989,7 +989,7 @@ describe('Formatter', () => {
     it('应该格式化带有作者的网页', () => {
       const reference: ReferenceUnion = {
         type: ReferenceType.EB,
-        authors: [{ surname: '张三' }],
+        authors: [{ name: '张三' }],
         title: '网页标题',
         createDate: '2025-01-01',
         accessDate: '2025-09-07',
@@ -1003,7 +1003,7 @@ describe('Formatter', () => {
     it('应该格式化带有发布日期的数据集', () => {
       const reference: ReferenceUnion = {
         type: ReferenceType.DS,
-        authors: [{ surname: '张三' }],
+        authors: [{ name: '张三' }],
         title: '数据集标题',
         platform: '国家数据中心',
         releaseDate: '2025-09-07',
@@ -1017,7 +1017,7 @@ describe('Formatter', () => {
     it('应该格式化带有创建日期的预印本', () => {
       const reference: ReferenceUnion = {
         type: ReferenceType.PP,
-        authors: [{ surname: '张三' }],
+        authors: [{ name: '张三' }],
         title: '预印本标题',
         platform: 'arXiv',
         createDate: '2025-09-07',
@@ -1031,7 +1031,7 @@ describe('Formatter', () => {
     it('应该格式化带有收藏地的档案', () => {
       const reference: ReferenceUnion = {
         type: ReferenceType.A,
-        authors: [{ surname: '张三' }],
+        authors: [{ name: '张三' }],
         title: '档案标题',
         collectionPlace: '北京',
         collector: '档案馆',
@@ -1047,10 +1047,10 @@ describe('Formatter', () => {
       const reference: ReferenceUnion = {
         type: ReferenceType.J,
         authors: [
-          { surname: '张三' },
-          { surname: '李四' },
-          { surname: '王五' },
-          { surname: '赵六' },
+          { name: '张三' },
+          { name: '李四' },
+          { name: '王五' },
+          { name: '赵六' },
         ],
         title: '论文标题',
         journalTitle: '期刊名',
@@ -1065,10 +1065,10 @@ describe('Formatter', () => {
       const reference: ReferenceUnion = {
         type: ReferenceType.J,
         authors: [
-          { surname: 'Smith' },
-          { surname: 'Johnson' },
-          { surname: 'Williams' },
-          { surname: 'Brown' },
+          { name: 'Smith' },
+          { name: 'Johnson' },
+          { name: 'Williams' },
+          { name: 'Brown' },
         ],
         title: 'Paper Title',
         journalTitle: 'Journal Name',
@@ -1085,7 +1085,7 @@ describe('Formatter', () => {
     it('应该格式化带有副标题的图书', () => {
       const reference: ReferenceUnion = {
         type: ReferenceType.M,
-        authors: [{ surname: '李四' }],
+        authors: [{ name: '李四' }],
         title: '机器学习',
         subtitle: '理论与实践',
         publisherPlace: '北京',
@@ -1099,7 +1099,7 @@ describe('Formatter', () => {
     it('应该格式化带有副标题的期刊', () => {
       const reference: ReferenceUnion = {
         type: ReferenceType.J,
-        authors: [{ surname: '张三' }],
+        authors: [{ name: '张三' }],
         title: '人工智能研究',
         subtitle: '综述篇',
         journalTitle: '计算机学报',
@@ -1114,7 +1114,7 @@ describe('Formatter', () => {
     it('应该格式化带有副标题的学位论文', () => {
       const reference: ReferenceUnion = {
         type: ReferenceType.D,
-        authors: [{ surname: '王五' }],
+        authors: [{ name: '王五' }],
         title: '深度学习',
         subtitle: '基于Transformer的研究',
         awardPlace: '北京',
@@ -1130,9 +1130,9 @@ describe('Formatter', () => {
     it('应该格式化带有其他作者（译者）的图书', () => {
       const reference: ReferenceUnion = {
         type: ReferenceType.M,
-        authors: [{ surname: 'Smith' }],
+        authors: [{ name: 'Smith' }],
         title: 'AI Handbook',
-        otherAuthors: [{ surname: '张三' }],
+        otherAuthors: [{ name: '张三' }],
         publisherPlace: '北京',
         publisher: '出版社',
         year: '2025',
@@ -1144,11 +1144,11 @@ describe('Formatter', () => {
     it('应该格式化带有多个其他作者的图书', () => {
       const reference: ReferenceUnion = {
         type: ReferenceType.M,
-        authors: [{ surname: 'Smith' }],
+        authors: [{ name: 'Smith' }],
         title: 'AI Handbook',
         otherAuthors: [
-          { surname: '张三' },
-          { surname: '李四' },
+          { name: '张三' },
+          { name: '李四' },
         ],
         publisherPlace: '北京',
         publisher: '出版社',
@@ -1163,10 +1163,10 @@ describe('Formatter', () => {
     it('应该格式化带有主机信息和页码的析出文献', () => {
       const reference: ReferenceUnion = {
         type: 'Z' as ReferenceUnion['type'],
-        authors: [{ surname: '张三' }],
+        authors: [{ name: '张三' }],
         title: '析出文献标题',
         host: {
-          authors: [{ surname: '李四' }],
+          authors: [{ name: '李四' }],
           title: '图书标题',
           publisherPlace: '北京',
           publisher: '出版社',
@@ -1182,10 +1182,10 @@ describe('Formatter', () => {
     it('应该格式化没有页码的析出文献', () => {
       const reference: ReferenceUnion = {
         type: 'Z' as ReferenceUnion['type'],
-        authors: [{ surname: '张三' }],
+        authors: [{ name: '张三' }],
         title: '析出文献标题',
         host: {
-          authors: [{ surname: '李四' }],
+          authors: [{ name: '李四' }],
           title: '图书标题',
           publisherPlace: '北京',
           publisher: '出版社',
@@ -1200,7 +1200,7 @@ describe('Formatter', () => {
     it('应该格式化带有副标题的析出文献', () => {
       const reference: ReferenceUnion = {
         type: 'Z' as ReferenceUnion['type'],
-        authors: [{ surname: '张三' }],
+        authors: [{ name: '张三' }],
         title: '析出文献',
         subtitle: '副标题',
         host: {
@@ -1228,7 +1228,7 @@ describe('Formatter', () => {
       const formatter = new Formatter();
       const reference: ReferenceUnion = {
         type: ReferenceType.J,
-        authors: [{ surname: '张三' }],
+        authors: [{ name: '张三' }],
         title: '论文标题',
         journalTitle: '期刊名',
         year: '2025',
@@ -1243,7 +1243,7 @@ describe('Formatter', () => {
       const reference: ReferenceUnion = {
         type: ReferenceType.J,
         id: '5',
-        authors: [{ surname: '张三' }],
+        authors: [{ name: '张三' }],
         title: '论文标题',
         journalTitle: '期刊名',
         year: '2025',
@@ -1254,7 +1254,7 @@ describe('Formatter', () => {
     it('应该格式化没有 id 的数字引用', () => {
       const reference: ReferenceUnion = {
         type: ReferenceType.J,
-        authors: [{ surname: '张三' }],
+        authors: [{ name: '张三' }],
         title: '论文标题',
         journalTitle: '期刊名',
         year: '2025',
@@ -1265,7 +1265,7 @@ describe('Formatter', () => {
     it('应该格式化作者-年份引用', () => {
       const reference: ReferenceUnion = {
         type: ReferenceType.J,
-        authors: [{ surname: '张三' }],
+        authors: [{ name: '张三' }],
         title: '论文标题',
         journalTitle: '期刊名',
         year: '2025',
@@ -1278,9 +1278,9 @@ describe('Formatter', () => {
       const reference: ReferenceUnion = {
         type: ReferenceType.J,
         authors: [
-          { surname: '张三' },
-          { surname: '李四' },
-          { surname: '王五' },
+          { name: '张三' },
+          { name: '李四' },
+          { name: '王五' },
         ],
         title: '论文标题',
         journalTitle: '期刊名',
@@ -1294,8 +1294,8 @@ describe('Formatter', () => {
       const reference: ReferenceUnion = {
         type: ReferenceType.J,
         authors: [
-          { surname: 'Smith' },
-          { surname: 'Johnson' },
+          { name: 'Smith' },
+          { name: 'Johnson' },
         ],
         title: 'Paper Title',
         journalTitle: 'Journal Name',
@@ -1308,7 +1308,7 @@ describe('Formatter', () => {
     it('应该格式化单个作者的作者-年份引用', () => {
       const reference: ReferenceUnion = {
         type: ReferenceType.J,
-        authors: [{ surname: 'Smith' }],
+        authors: [{ name: 'Smith' }],
         title: 'Paper Title',
         journalTitle: 'Journal Name',
         year: '2025',
@@ -1320,7 +1320,7 @@ describe('Formatter', () => {
     it('应该格式化没有年份的作者-年份引用', () => {
       const reference: ReferenceUnion = {
         type: ReferenceType.J,
-        authors: [{ surname: '张三' }],
+        authors: [{ name: '张三' }],
         title: '论文标题',
         journalTitle: '期刊名',
         year: '',
@@ -1346,7 +1346,7 @@ describe('Formatter', () => {
     it('应该在作者-年份样式中将年份放在作者之后格式化期刊', () => {
       const reference: ReferenceUnion = {
         type: ReferenceType.J,
-        authors: [{ surname: '张三' }],
+        authors: [{ name: '张三' }],
         title: '论文标题',
         journalTitle: '期刊名',
         year: '2025',
@@ -1363,10 +1363,10 @@ describe('Formatter', () => {
       const reference: ReferenceUnion = {
         type: ReferenceType.J,
         authors: [
-          { surname: '张三' },
-          { surname: '李四' },
-          { surname: '王五' },
-          { surname: '赵六' },
+          { name: '张三' },
+          { name: '李四' },
+          { name: '王五' },
+          { name: '赵六' },
         ],
         title: '论文标题',
         journalTitle: '期刊名',
@@ -1383,7 +1383,7 @@ describe('Formatter', () => {
     it('应该在作者-年份样式中格式化没有卷号/期号的期刊', () => {
       const reference: ReferenceUnion = {
         type: ReferenceType.J,
-        authors: [{ surname: '张三' }],
+        authors: [{ name: '张三' }],
         title: '论文标题',
         journalTitle: '期刊名',
         year: '2025',
@@ -1399,7 +1399,7 @@ describe('Formatter', () => {
       const reference: ReferenceUnion = {
         id: '1',
         type: ReferenceType.J,
-        authors: [{ surname: '张三' }],
+        authors: [{ name: '张三' }],
         title: '论文标题',
         journalTitle: '期刊名',
         year: '2025',
@@ -1412,7 +1412,7 @@ describe('Formatter', () => {
       const reference: ReferenceUnion = {
         id: '11',
         type: ReferenceType.J,
-        authors: [{ surname: '张三' }],
+        authors: [{ name: '张三' }],
         title: '论文标题',
         journalTitle: '期刊名',
         year: '2025',
@@ -1424,7 +1424,7 @@ describe('Formatter', () => {
     it('当 id 缺失时应该返回空字符串', () => {
       const reference: ReferenceUnion = {
         type: ReferenceType.J,
-        authors: [{ surname: '张三' }],
+        authors: [{ name: '张三' }],
         title: '论文标题',
         journalTitle: '期刊名',
         year: '2025',
@@ -1439,21 +1439,21 @@ describe('Formatter', () => {
       const references: ReferenceUnion[] = [
         {
           type: ReferenceType.J,
-          authors: [{ surname: 'Smith' }],
+          authors: [{ name: 'Smith' }],
           title: 'English Paper',
           journalTitle: 'Journal',
           year: '2025',
         },
         {
           type: ReferenceType.J,
-          authors: [{ surname: '张三' }],
+          authors: [{ name: '张三' }],
           title: '中文论文',
           journalTitle: '期刊名',
           year: '2024',
         },
         {
           type: ReferenceType.J,
-          authors: [{ surname: 'Иванов' }],
+          authors: [{ name: 'Иванов' }],
           title: 'Русская статья',
           journalTitle: 'Журнал',
           year: '2023',
@@ -1462,30 +1462,30 @@ describe('Formatter', () => {
       const formatter = new Formatter();
       const sorted = formatter.sortReferences(references);
       // Order: zh, western, ru
-      expect(sorted[0]!.authors[0]!.surname).toBe('张三');
-      expect(sorted[1]!.authors[0]!.surname).toBe('Smith');
-      expect(sorted[2]!.authors[0]!.surname).toBe('Иванов');
+      expect(sorted[0]!.authors[0]!.name).toBe('张三');
+      expect(sorted[1]!.authors[0]!.name).toBe('Smith');
+      expect(sorted[2]!.authors[0]!.name).toBe('Иванов');
     });
 
     it('应该在相同语言内按作者姓名排序引用', () => {
       const references: ReferenceUnion[] = [
         {
           type: ReferenceType.J,
-          authors: [{ surname: 'Zhang' }],
+          authors: [{ name: 'Zhang' }],
           title: 'Paper C',
           journalTitle: 'Journal',
           year: '2025',
         },
         {
           type: ReferenceType.J,
-          authors: [{ surname: 'Li' }],
+          authors: [{ name: 'Li' }],
           title: 'Paper A',
           journalTitle: 'Journal',
           year: '2025',
         },
         {
           type: ReferenceType.J,
-          authors: [{ surname: 'Wang' }],
+          authors: [{ name: 'Wang' }],
           title: 'Paper B',
           journalTitle: 'Journal',
           year: '2025',
@@ -1493,30 +1493,30 @@ describe('Formatter', () => {
       ];
       const formatter = new Formatter();
       const sorted = formatter.sortReferences(references);
-      expect(sorted[0]!.authors[0]!.surname).toBe('Li');
-      expect(sorted[1]!.authors[0]!.surname).toBe('Wang');
-      expect(sorted[2]!.authors[0]!.surname).toBe('Zhang');
+      expect(sorted[0]!.authors[0]!.name).toBe('Li');
+      expect(sorted[1]!.authors[0]!.name).toBe('Wang');
+      expect(sorted[2]!.authors[0]!.name).toBe('Zhang');
     });
 
     it('应该在相同作者内按年份排序引用', () => {
       const references: ReferenceUnion[] = [
         {
           type: ReferenceType.J,
-          authors: [{ surname: '张三' }],
+          authors: [{ name: '张三' }],
           title: '论文2025',
           journalTitle: '期刊',
           year: '2025',
         },
         {
           type: ReferenceType.J,
-          authors: [{ surname: '张三' }],
+          authors: [{ name: '张三' }],
           title: '论文2023',
           journalTitle: '期刊',
           year: '2023',
         },
         {
           type: ReferenceType.J,
-          authors: [{ surname: '张三' }],
+          authors: [{ name: '张三' }],
           title: '论文2024',
           journalTitle: '期刊',
           year: '2024',
@@ -1534,7 +1534,7 @@ describe('Formatter', () => {
     it('应该使用替代年份格式化年份', () => {
       const reference: ReferenceUnion = {
         type: ReferenceType.M,
-        authors: [{ surname: '张三' }],
+        authors: [{ name: '张三' }],
         title: '图书标题',
         publisherPlace: '北京',
         publisher: '出版社',

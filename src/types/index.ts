@@ -60,10 +60,8 @@ export enum MediaType {
  * 作者模型
  */
 export interface Author {
-  /** 姓 */
-  surname: string;
-  /** 名 */
-  givenName?: string;
+  /** 作者姓名（原样保留） */
+  name: string;
   /** 是否为机构作者 */
   isOrganization?: boolean;
 }

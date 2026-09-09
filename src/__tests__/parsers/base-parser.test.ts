@@ -137,7 +137,7 @@ describe('Parser (base.ts)', () => {
       const result = parser.parse(tokens);
 
       expect(result.reference.authors).toHaveLength(1);
-      expect(result.reference.authors[0].surname).toBe('张三');
+      expect(result.reference.authors[0].name).toBe('张三');
       expect(result.reference.title).toBe('测试标题');
     });
 
@@ -157,7 +157,7 @@ describe('Parser (base.ts)', () => {
 
       // Without commas in text, it's treated as single author
       expect(result.reference.authors).toHaveLength(1);
-      expect(result.reference.authors[0].surname).toBe('张三李四');
+      expect(result.reference.authors[0].name).toBe('张三李四');
     });
 
     it('当 preserveId 选项为 true 时应该保留 id', () => {
@@ -200,7 +200,7 @@ describe('Parser (base.ts)', () => {
       const result = parser.parse(tokens);
 
       expect(result.reference.authors).toHaveLength(1);
-      expect(result.reference.authors[0].surname).toBe('张三');
+      expect(result.reference.authors[0].name).toBe('张三');
     });
   });
 });

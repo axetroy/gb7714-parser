@@ -1,7 +1,7 @@
-import type { Token } from '../types/index.js';
+import type { Token, Author } from '../types/index.js';
 import type { Dataset, ParseOptions } from '../types/index.js';
 import type { ParserStrategy } from './base.js';
-import { parseTypeIndicator } from '../utils/index.js';
+import { parseTypeIndicator, parseAuthors } from '../utils/index.js';
 
 /**
  * 数据集解析器
@@ -38,12 +38,12 @@ export class DatasetParser implements ParserStrategy {
     position = this.skipWhitespace(tokens, position);
 
     // 解析作者（如果有）
-    let authors: { surname: string; givenName?: string }[] = [];
+    let authors: Author[] = [];
     const dotIndex = this.findNextDot(tokens, position);
     if (dotIndex > position) {
       const beforeDot = this.readTextUntil(tokens, position, dotIndex);
       if (beforeDot.includes(',') || beforeDot.includes('，') || /^[\u4e00-\u9fa5]+$/.test(beforeDot.trim())) {
-        authors = this.parseAuthors(beforeDot);
+        authors = parseAuthors(beforeDot);
         position = dotIndex + 1;
       }
     }
@@ -203,22 +203,4 @@ export class DatasetParser implements ParserStrategy {
     return result;
   }
 
-  private parseAuthors(text: string): { surname: string; givenName?: string }[] {
-    const parts = text.split(/[,，]/);
-    return parts.map(part => {
-      const name = part.trim();
-      if (!name) return { surname: '' };
-      if (/^[\u4e00-\u9fa5]+$/.test(name)) {
-        return { surname: name };
-      }
-      const spaceParts = name.split(/\s+/);
-      if (spaceParts.length >= 2) {
-        return {
-          surname: spaceParts[spaceParts.length - 1]!,
-          givenName: spaceParts.slice(0, -1).join(' '),
-        };
-      }
-      return { surname: name };
-    });
-  }
 }

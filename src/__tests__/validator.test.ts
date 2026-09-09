@@ -8,7 +8,7 @@ describe('Validator', () => {
     it('应该验证正确的期刊引用', () => {
       const reference: ReferenceUnion = {
         type: ReferenceType.J,
-        authors: [{ surname: '张三' }],
+        authors: [{ name: '张三' }],
         title: '人工智能在教育中的应用',
         journalTitle: '现代教育技术',
         year: '2025',
@@ -20,7 +20,7 @@ describe('Validator', () => {
     it('应该报告缺少标题的错误', () => {
       const reference: ReferenceUnion = {
         type: ReferenceType.J,
-        authors: [{ surname: '张三' }],
+        authors: [{ name: '张三' }],
         title: '',
         journalTitle: '现代教育技术',
         year: '2025',
@@ -46,7 +46,7 @@ describe('Validator', () => {
     it('应该验证年份格式', () => {
       const reference: ReferenceUnion = {
         type: ReferenceType.J,
-        authors: [{ surname: '张三' }],
+        authors: [{ name: '张三' }],
         title: '人工智能在教育中的应用',
         journalTitle: '现代教育技术',
         year: '25',
@@ -59,7 +59,7 @@ describe('Validator', () => {
     it('应该验证访问日期格式', () => {
       const reference: ReferenceUnion = {
         type: ReferenceType.EB,
-        authors: [{ surname: '张三' }],
+        authors: [{ name: '张三' }],
         title: '网站标题',
         accessDate: '2025/09/07',
         url: 'https://example.com',
@@ -73,10 +73,10 @@ describe('Validator', () => {
       const reference: ReferenceUnion = {
         type: ReferenceType.J,
         authors: [
-          { surname: '张三' },
-          { surname: '李四' },
-          { surname: '王五' },
-          { surname: '赵六' },
+          { name: '张三' },
+          { name: '李四' },
+          { name: '王五' },
+          { name: '赵六' },
         ],
         title: '人工智能在教育中的应用',
         journalTitle: '现代教育技术',
@@ -91,10 +91,10 @@ describe('Validator', () => {
       const reference: ReferenceUnion = {
         type: ReferenceType.J,
         authors: [
-          { surname: '张三' },
-          { surname: '李四' },
-          { surname: '王五' },
-          { surname: '赵六' },
+          { name: '张三' },
+          { name: '李四' },
+          { name: '王五' },
+          { name: '赵六' },
         ],
         title: '人工智能在教育中的应用',
         journalTitle: '现代教育技术',
@@ -110,7 +110,7 @@ describe('Validator', () => {
     it('应该在 2015 版本中对不支持的类型发出警告', () => {
       const reference: ReferenceUnion = {
         type: ReferenceType.A,
-        authors: [{ surname: '张三' }],
+        authors: [{ name: '张三' }],
         title: '档案标题',
       };
       const validator = new Validator({ version: '2015' });
@@ -121,7 +121,7 @@ describe('Validator', () => {
     it('应该在 2015 版本中对 CM 类型发出警告', () => {
       const reference: ReferenceUnion = {
         type: ReferenceType.CM,
-        authors: [{ surname: '张三' }],
+        authors: [{ name: '张三' }],
         title: '地图标题',
       };
       const validator = new Validator({ version: '2015' });
@@ -132,7 +132,7 @@ describe('Validator', () => {
     it('应该在 2015 版本中对 DS 类型发出警告', () => {
       const reference: ReferenceUnion = {
         type: ReferenceType.DS,
-        authors: [{ surname: '张三' }],
+        authors: [{ name: '张三' }],
         title: '数据集标题',
         accessDate: '2025-09-07',
       };
@@ -144,7 +144,7 @@ describe('Validator', () => {
     it('应该在 2015 版本中对 PP 类型发出警告', () => {
       const reference: ReferenceUnion = {
         type: ReferenceType.PP,
-        authors: [{ surname: '张三' }],
+        authors: [{ name: '张三' }],
         title: '预印本标题',
         accessDate: '2025-09-07',
       };
@@ -156,7 +156,7 @@ describe('Validator', () => {
     it('应该在 2015 版本中建议使用 PID 而不是 DOI', () => {
       const reference: ReferenceUnion = {
         type: ReferenceType.J,
-        authors: [{ surname: '张三' }],
+        authors: [{ name: '张三' }],
         title: '论文标题',
         journalTitle: '期刊名',
         year: '2025',
@@ -170,7 +170,7 @@ describe('Validator', () => {
     it('应该在 2025 版本中对电子资源缺少 mediaType 发出警告', () => {
       const reference: ReferenceUnion = {
         type: ReferenceType.EB,
-        authors: [{ surname: '张三' }],
+        authors: [{ name: '张三' }],
         title: '网页标题',
         accessDate: '2025-09-07',
         url: 'https://example.com',
@@ -183,7 +183,7 @@ describe('Validator', () => {
     it('应该在 2025 版本中对 DS 缺少 mediaType 发出警告', () => {
       const reference: ReferenceUnion = {
         type: ReferenceType.DS,
-        authors: [{ surname: '张三' }],
+        authors: [{ name: '张三' }],
         title: '数据集标题',
         accessDate: '2025-09-07',
       };
@@ -195,7 +195,7 @@ describe('Validator', () => {
     it('应该在 2025 版本中对 PP 缺少 mediaType 发出警告', () => {
       const reference: ReferenceUnion = {
         type: ReferenceType.PP,
-        authors: [{ surname: '张三' }],
+        authors: [{ name: '张三' }],
         title: '预印本标题',
         accessDate: '2025-09-07',
       };
@@ -209,7 +209,7 @@ describe('Validator', () => {
     it('应该验证期刊需要期刊名', () => {
       const reference: ReferenceUnion = {
         type: ReferenceType.J,
-        authors: [{ surname: '张三' }],
+        authors: [{ name: '张三' }],
         title: '论文标题',
         journalTitle: '',
         year: '2025',
@@ -221,7 +221,7 @@ describe('Validator', () => {
     it('应该验证期刊在没有卷号或期号时发出警告', () => {
       const reference: ReferenceUnion = {
         type: ReferenceType.J,
-        authors: [{ surname: '张三' }],
+        authors: [{ name: '张三' }],
         title: '论文标题',
         journalTitle: '期刊名',
         year: '2025',
@@ -233,7 +233,7 @@ describe('Validator', () => {
     it('应该验证图书需要出版地', () => {
       const reference: ReferenceUnion = {
         type: ReferenceType.M,
-        authors: [{ surname: '张三' }],
+        authors: [{ name: '张三' }],
         title: '书名',
         publisherPlace: '',
         publisher: '出版社',
@@ -246,7 +246,7 @@ describe('Validator', () => {
     it('应该验证图书需要出版者', () => {
       const reference: ReferenceUnion = {
         type: ReferenceType.M,
-        authors: [{ surname: '张三' }],
+        authors: [{ name: '张三' }],
         title: '书名',
         publisherPlace: '北京',
         publisher: '',
@@ -259,7 +259,7 @@ describe('Validator', () => {
     it('应该验证学位论文需要授予机构', () => {
       const reference: ReferenceUnion = {
         type: ReferenceType.D,
-        authors: [{ surname: '张三' }],
+        authors: [{ name: '张三' }],
         title: '论文标题',
         awardInstitution: '',
       };
@@ -294,7 +294,7 @@ describe('Validator', () => {
     it('应该验证专利需要专利号', () => {
       const reference: ReferenceUnion = {
         type: ReferenceType.P,
-        authors: [{ surname: '张三' }],
+        authors: [{ name: '张三' }],
         title: '专利标题',
         patentNumber: '',
       };
@@ -305,7 +305,7 @@ describe('Validator', () => {
     it('应该验证网页需要访问日期', () => {
       const reference: ReferenceUnion = {
         type: ReferenceType.EB,
-        authors: [{ surname: '张三' }],
+        authors: [{ name: '张三' }],
         title: '网页标题',
         accessDate: '',
         url: 'https://example.com',
@@ -317,7 +317,7 @@ describe('Validator', () => {
     it('应该验证网页需要 URL', () => {
       const reference: ReferenceUnion = {
         type: ReferenceType.EB,
-        authors: [{ surname: '张三' }],
+        authors: [{ name: '张三' }],
         title: '网页标题',
         accessDate: '2025-09-07',
         url: '',
@@ -339,7 +339,7 @@ describe('Validator', () => {
     it('应该验证地图需要标题', () => {
       const reference: ReferenceUnion = {
         type: ReferenceType.CM,
-        authors: [{ surname: '张三' }],
+        authors: [{ name: '张三' }],
         title: '',
       };
       const report = validate(reference);
@@ -349,7 +349,7 @@ describe('Validator', () => {
     it('应该验证数据集需要访问日期', () => {
       const reference: ReferenceUnion = {
         type: ReferenceType.DS,
-        authors: [{ surname: '张三' }],
+        authors: [{ name: '张三' }],
         title: '数据集标题',
         accessDate: '',
       };
@@ -360,7 +360,7 @@ describe('Validator', () => {
     it('应该验证预印本需要访问日期', () => {
       const reference: ReferenceUnion = {
         type: ReferenceType.PP,
-        authors: [{ surname: '张三' }],
+        authors: [{ name: '张三' }],
         title: '预印本标题',
         accessDate: '',
       };
@@ -371,7 +371,7 @@ describe('Validator', () => {
     it('应该验证报告需要标题', () => {
       const reference: ReferenceUnion = {
         type: ReferenceType.R,
-        authors: [{ surname: '张三' }],
+        authors: [{ name: '张三' }],
         title: '',
       };
       const report = validate(reference);
@@ -381,7 +381,7 @@ describe('Validator', () => {
     it('应该验证会议录需要标题', () => {
       const reference: ReferenceUnion = {
         type: ReferenceType.C,
-        authors: [{ surname: '张三' }],
+        authors: [{ name: '张三' }],
         title: '',
       };
       const report = validate(reference);
@@ -391,7 +391,7 @@ describe('Validator', () => {
     it('应该验证报纸需要报纸名', () => {
       const reference: ReferenceUnion = {
         type: ReferenceType.N,
-        authors: [{ surname: '张三' }],
+        authors: [{ name: '张三' }],
         title: '新闻标题',
         newspaperTitle: '',
         year: '2025',
@@ -403,7 +403,7 @@ describe('Validator', () => {
     it('应该验证报纸需要年份', () => {
       const reference: ReferenceUnion = {
         type: ReferenceType.N,
-        authors: [{ surname: '张三' }],
+        authors: [{ name: '张三' }],
         title: '新闻标题',
         newspaperTitle: '人民日报',
         year: '',
@@ -439,7 +439,7 @@ describe('Validator', () => {
     it('应该验证专利号格式', () => {
       const reference: ReferenceUnion = {
         type: ReferenceType.P,
-        authors: [{ surname: '张三' }],
+        authors: [{ name: '张三' }],
         title: '专利标题',
         patentNumber: '12345',
       };
@@ -450,7 +450,7 @@ describe('Validator', () => {
     it('应该接受有效的专利号格式', () => {
       const reference: ReferenceUnion = {
         type: ReferenceType.P,
-        authors: [{ surname: '张三' }],
+        authors: [{ name: '张三' }],
         title: '专利标题',
         patentNumber: 'CN202310123456.7',
       };

@@ -949,11 +949,10 @@ export class Formatter {
     let authorStr: string;
     if (authors.length > 1) {
       const first = authors[0]!;
-      const surname = first.isOrganization ? first.surname : first.surname;
       const suffix = this.options.locale === 'en' ? 'et al.' : '等';
-      authorStr = `${surname}, ${suffix}`;
+      authorStr = `${first.name}, ${suffix}`;
     } else {
-      authorStr = authors[0]!.surname;
+      authorStr = authors[0]!.name;
     }
 
     return `(${authorStr}, ${year})`;
@@ -984,15 +983,7 @@ export class Formatter {
   private formatAuthors(authors: Author[]): string {
     if (authors.length === 0) return '';
 
-    const formatted = authors.map(a => {
-      if (a.isOrganization) {
-        return a.surname;
-      }
-      if (a.givenName) {
-        return `${a.surname} ${a.givenName}`;
-      }
-      return a.surname;
-    });
+    const formatted = authors.map(a => a.name);
 
     if (formatted.length > 3) {
       const suffix = this.options.locale === 'en' ? 'et al.' : '等';
@@ -1025,7 +1016,7 @@ export class Formatter {
 
     // 检查作者姓名
     for (const author of authors) {
-      const name = author.surname || '';
+      const name = author.name || '';
       // 中文字符范围
       if (/[\u4e00-\u9fa5]/.test(name)) return 'zh';
       // 日文字符范围（平假名、片假名）
@@ -1079,7 +1070,7 @@ export class Formatter {
     const firstAuthor = authors[0]!;
     // 对于中文作者，使用拼音排序（这里简化为使用原姓名）
     // 对于西文作者，使用姓氏排序
-    return firstAuthor.surname || '';
+    return firstAuthor.name || '';
   }
 
   /**

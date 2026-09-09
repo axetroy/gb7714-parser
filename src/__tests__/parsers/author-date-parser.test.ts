@@ -40,7 +40,7 @@ describe('AuthorDateParser', () => {
 
       expect(result.type).toBe('J');
       expect(result.authors).toHaveLength(1);
-      expect(result.authors[0].surname).toBe('张三');
+      expect(result.authors[0].name).toBe('张三');
       expect(result.year).toBe('2025');
     });
 
