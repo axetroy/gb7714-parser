@@ -145,5 +145,32 @@ describe('BookParser', () => {
       // expect(result.version).toBe('Rev. ed');
       expect(result.type).toBe('M');
     });
+
+    it('应该保留出版地中的空格', () => {
+      const input = '[15] Boden M A. AI: Its nature and future[M]. Oxford university press, 2016.';
+      const tokens = tokenize(input);
+      const result = parser.parse(tokens);
+
+      expect(result.publisherPlace).toBe('Oxford university press');
+    });
+
+    it('应该保留出版地和出版者中的多个空格', () => {
+      const input = '[16] author. Book[M]. New  York:  Publisher, 2020.';
+      const tokens = tokenize(input);
+      const result = parser.parse(tokens);
+
+      expect(result.publisherPlace).toBe('New  York');
+      expect(result.publisher).toBe('Publisher');
+    });
+
+    it('应该正确解析中文图书的出版信息', () => {
+      const input = '[17] 周志华. 机器学习[M]. 北京: 清华大学出版社, 2016.';
+      const tokens = tokenize(input);
+      const result = parser.parse(tokens);
+
+      expect(result.publisherPlace).toBe('北京');
+      expect(result.publisher).toBe('清华大学出版社');
+      expect(result.year).toBe('2016');
+    });
   });
 });
