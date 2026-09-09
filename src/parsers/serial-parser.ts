@@ -1,7 +1,7 @@
 import type { Token } from '../types/index.js';
 import type { Serial, ParseOptions } from '../types/index.js';
 import type { ParserStrategy } from './base.js';
-import { parseTypeIndicator, parseAuthors } from '../utils/index.js';
+import { parseTypeIndicator, parseAuthors, readUntilDot, readUntilTypeIndicator, findNextDot } from '../utils/index.js';
 
 /**
  * 连续出版物解析器
@@ -59,15 +59,15 @@ export class SerialParser implements ParserStrategy {
     position = this.skipWhitespace(tokens, position);
 
     // 解析作者
-    const authorsText = this.readUntilDot(tokens, position);
-    position = this.findNextDot(tokens, position) + 1;
+    const authorsText = readUntilDot(tokens, position);
+    position = findNextDot(tokens, position) + 1;
     const authors = parseAuthors(authorsText);
 
     // 跳过空白
     position = this.skipWhitespace(tokens, position);
 
     // 解析题名（到文献类型标识 [J]）
-    const titleText = this.readUntilTypeIndicator(tokens, position);
+    const titleText = readUntilTypeIndicator(tokens, position);
     const title = titleText.trim().replace(/\.$/, '');
 
     // 跳过文献类型标识 [J]
@@ -237,48 +237,8 @@ export class SerialParser implements ParserStrategy {
     return position;
   }
 
-  private readUntilDot(tokens: Token[], start: number): string {
-    let result = '';
-    let needsSpace = false;
-    let i = start;
-    while (i < tokens.length && tokens[i]?.type !== 'DOT') {
-      const token = tokens[i]!;
-      if (token.type === 'TEXT') {
-        if (needsSpace && result.length > 0) result += ' ';
-        result += token.value;
-        needsSpace = true;
-      } else if (token.type === 'COMMA') {
-        result += ',';
-        needsSpace = false;
-      } else if (token.type === 'NUMBER') {
-        result += token.value;
-        needsSpace = false;
-      }
-      i++;
-    }
-    return result;
-  }
 
-  private findNextDot(tokens: Token[], start: number): number {
-    for (let i = start; i < tokens.length; i++) {
-      if (tokens[i]?.type === 'DOT') return i;
-    }
-    return tokens.length;
-  }
 
-  private readUntilTypeIndicator(tokens: Token[], start: number): string {
-    let result = '';
-    let i = start;
-    while (i < tokens.length && tokens[i]?.type !== 'TYPE_INDICATOR') {
-      if (tokens[i]?.type === 'TEXT') {
-        result += tokens[i]!.value;
-      } else if (tokens[i]?.type === 'DOT') {
-        result += '.';
-      }
-      i++;
-    }
-    return result;
-  }
 
   private readTextUntil(tokens: Token[], start: number, end: number): string {
     let result = '';

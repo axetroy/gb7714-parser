@@ -1,7 +1,7 @@
 import type { Token, Author } from '../types/index.js';
 import type { Preprint, ParseOptions } from '../types/index.js';
 import type { ParserStrategy } from './base.js';
-import { parseTypeIndicator, parseAuthors } from '../utils/index.js';
+import { parseTypeIndicator, parseAuthors, readUntilTypeIndicator, findNextDot } from '../utils/index.js';
 
 /**
  * 预印本解析器
@@ -39,7 +39,7 @@ export class PreprintParser implements ParserStrategy {
 
     // 解析作者（如果有）
     let authors: Author[] = [];
-    const dotIndex = this.findNextDot(tokens, position);
+    const dotIndex = findNextDot(tokens, position);
     if (dotIndex > position) {
       const beforeDot = this.readTextUntil(tokens, position, dotIndex);
       if (beforeDot.includes(',') || beforeDot.includes('，') || /^[\u4e00-\u9fa5]+$/.test(beforeDot.trim())) {
@@ -52,7 +52,7 @@ export class PreprintParser implements ParserStrategy {
     position = this.skipWhitespace(tokens, position);
 
     // 解析题名（到文献类型标识 [PP]）
-    const titleText = this.readUntilTypeIndicator(tokens, position);
+    const titleText = readUntilTypeIndicator(tokens, position);
     const title = titleText.trim().replace(/\.$/, '');
 
     // 跳过文献类型标识 [PP]
@@ -75,7 +75,7 @@ export class PreprintParser implements ParserStrategy {
 
     // 解析版本（如果有）
     let version: string | undefined;
-    const versionEnd = this.findNextDot(tokens, position);
+    const versionEnd = findNextDot(tokens, position);
     if (versionEnd > position) {
       const versionText = this.readTextUntil(tokens, position, versionEnd).trim();
       if (versionText && !versionText.includes('(') && !versionText.includes('（')) {
@@ -160,12 +160,6 @@ export class PreprintParser implements ParserStrategy {
     return position;
   }
 
-  private findNextDot(tokens: Token[], start: number): number {
-    for (let i = start; i < tokens.length; i++) {
-      if (tokens[i]?.type === 'DOT') return i;
-    }
-    return tokens.length;
-  }
 
   private findNextParenOrBracket(tokens: Token[], start: number): number {
     for (let i = start; i < tokens.length; i++) {
@@ -174,19 +168,6 @@ export class PreprintParser implements ParserStrategy {
     return tokens.length;
   }
 
-  private readUntilTypeIndicator(tokens: Token[], start: number): string {
-    let result = '';
-    let i = start;
-    while (i < tokens.length && tokens[i]?.type !== 'TYPE_INDICATOR') {
-      if (tokens[i]?.type === 'TEXT') {
-        result += tokens[i]!.value;
-      } else if (tokens[i]?.type === 'DOT') {
-        result += '.';
-      }
-      i++;
-    }
-    return result;
-  }
 
   private readTextUntil(tokens: Token[], start: number, end: number): string {
     let result = '';

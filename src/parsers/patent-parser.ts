@@ -1,7 +1,7 @@
 import type { Token } from '../types/index.js';
 import type { Patent, ParseOptions } from '../types/index.js';
 import type { ParserStrategy } from './base.js';
-import { parseTypeIndicator, parseAuthors } from '../utils/index.js';
+import { parseTypeIndicator, parseAuthors, readUntilDot, findNextDot, findNextTypeIndicator } from '../utils/index.js';
 
 /**
  * 专利解析器
@@ -38,8 +38,8 @@ export class PatentParser implements ParserStrategy {
     position = this.skipWhitespace(tokens, position);
 
     // 解析发明人
-    const authorsText = this.readUntilDot(tokens, position);
-    position = this.findNextDot(tokens, position) + 1;
+    const authorsText = readUntilDot(tokens, position);
+    position = findNextDot(tokens, position) + 1;
     const authors = parseAuthors(authorsText);
 
     // 跳过空白
@@ -48,7 +48,7 @@ export class PatentParser implements ParserStrategy {
     // 解析题名和专利申请号（到文献类型标识 [P]）
     let title = '';
     let patentNumber = '';
-    const titleEnd = this.findNextTypeIndicator(tokens, position);
+    const titleEnd = findNextTypeIndicator(tokens, position);
     
     // 查找冒号来分离题名和专利申请号
     const colonIndex = tokens.findIndex((t, i) => i >= position && i < titleEnd && (t.value === ':' || t.value === '：'));
@@ -119,47 +119,23 @@ export class PatentParser implements ParserStrategy {
     return position;
   }
 
-  private readUntilDot(tokens: Token[], start: number): string {
-    let result = '';
-    let i = start;
-    while (i < tokens.length && tokens[i]?.type !== 'DOT') {
-      const token = tokens[i]!;
-      if (token.type === 'TEXT') {
-        result += token.value;
-      } else if (token.type === 'COMMA') {
-        result += ',';
-      } else if (token.type === 'NUMBER') {
-        result += token.value;
-      }
-      i++;
-    }
-    return result;
-  }
-
-  private findNextDot(tokens: Token[], start: number): number {
-    for (let i = start; i < tokens.length; i++) {
-      if (tokens[i]?.type === 'DOT') return i;
-    }
-    return tokens.length;
-  }
-
-  private findNextTypeIndicator(tokens: Token[], start: number): number {
-    for (let i = start; i < tokens.length; i++) {
-      if (tokens[i]?.type === 'TYPE_INDICATOR') return i;
-    }
-    return tokens.length;
-  }
-
   private readTextUntil(tokens: Token[], start: number, end: number): string {
     let result = '';
+    let lastEndPosition = -1;
     for (let i = start; i < end; i++) {
       const token = tokens[i]!;
       if (token.type === 'TEXT') {
+        if (result && lastEndPosition >= 0 && token.position > lastEndPosition) {
+          result += ' ';
+        }
         result += token.value;
+        lastEndPosition = token.position + token.value.length;
       } else if (token.type === 'DOT') {
         result += '.';
+        lastEndPosition = token.position + 1;
       } else if (token.type === 'COLON') {
         result += ':';
+        lastEndPosition = token.position + 1;
       }
     }
     return result;

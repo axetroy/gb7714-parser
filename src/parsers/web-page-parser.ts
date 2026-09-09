@@ -1,7 +1,7 @@
 import type { Token, Author } from '../types/index.js';
 import type { WebPage, ParseOptions } from '../types/index.js';
 import type { ParserStrategy } from './base.js';
-import { parseTypeIndicator, parseAuthors } from '../utils/index.js';
+import { parseTypeIndicator, parseAuthors, readUntilTypeIndicator, findNextDot } from '../utils/index.js';
 
 /**
  * 网站/网页解析器
@@ -39,7 +39,7 @@ export class WebPageParser implements ParserStrategy {
 
     // 解析作者（如果有）
     let authors: Author[] = [];
-    const dotIndex = this.findNextDot(tokens, position);
+    const dotIndex = findNextDot(tokens, position);
     if (dotIndex > position) {
       // 检查点号前是否可能是作者（包含逗号分隔的多个作者）
       const beforeDot = this.readTextUntil(tokens, position, dotIndex);
@@ -53,7 +53,7 @@ export class WebPageParser implements ParserStrategy {
     position = this.skipWhitespace(tokens, position);
 
     // 解析题名（到文献类型标识 [EB]）
-    const titleText = this.readUntilTypeIndicator(tokens, position);
+    const titleText = readUntilTypeIndicator(tokens, position);
     const title = titleText.trim().replace(/\.$/, '');
 
     // 跳过文献类型标识 [EB]
@@ -129,26 +129,7 @@ export class WebPageParser implements ParserStrategy {
     return position;
   }
 
-  private findNextDot(tokens: Token[], start: number): number {
-    for (let i = start; i < tokens.length; i++) {
-      if (tokens[i]?.type === 'DOT') return i;
-    }
-    return tokens.length;
-  }
 
-  private readUntilTypeIndicator(tokens: Token[], start: number): string {
-    let result = '';
-    let i = start;
-    while (i < tokens.length && tokens[i]?.type !== 'TYPE_INDICATOR') {
-      if (tokens[i]?.type === 'TEXT') {
-        result += tokens[i]!.value;
-      } else if (tokens[i]?.type === 'DOT') {
-        result += '.';
-      }
-      i++;
-    }
-    return result;
-  }
 
   private findNextBracket(tokens: Token[], start: number): number {
     for (let i = start; i < tokens.length; i++) {

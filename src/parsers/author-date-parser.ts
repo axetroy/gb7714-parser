@@ -1,7 +1,7 @@
 import type { Token, Author } from '../types/index.js';
 import type { Reference, ParseOptions } from '../types/index.js';
 import type { ParserStrategy } from './base.js';
-import { parseTypeIndicator, parseAuthors } from '../utils/index.js';
+import { parseTypeIndicator, parseAuthors, readUntilTypeIndicator, findNextTypeIndicator } from '../utils/index.js';
 
 /**
  * 著者-出版年制解析器
@@ -137,8 +137,8 @@ export class AuthorDateParser implements ParserStrategy {
     position = this.skipWhitespace(tokens, position);
 
     // 解析题名
-    const titleText = this.readUntilTypeIndicator(tokens, position);
-    position = this.findNextTypeIndicator(tokens, position);
+    const titleText = readUntilTypeIndicator(tokens, position);
+    position = findNextTypeIndicator(tokens, position);
     const title = titleText.trim().replace(/\.$/, '');
 
     // 跳过文献类型标识
@@ -224,26 +224,7 @@ export class AuthorDateParser implements ParserStrategy {
     return position;
   }
 
-  private readUntilTypeIndicator(tokens: Token[], start: number): string {
-    let result = '';
-    let i = start;
-    while (i < tokens.length && tokens[i]?.type !== 'TYPE_INDICATOR') {
-      if (tokens[i]?.type === 'TEXT') {
-        result += tokens[i]!.value;
-      } else if (tokens[i]?.type === 'DOT') {
-        result += '.';
-      }
-      i++;
-    }
-    return result;
-  }
 
-  private findNextTypeIndicator(tokens: Token[], start: number): number {
-    for (let i = start; i < tokens.length; i++) {
-      if (tokens[i]?.type === 'TYPE_INDICATOR') return i;
-    }
-    return tokens.length;
-  }
 
   private findNextComma(tokens: Token[], start: number): number {
     for (let i = start; i < tokens.length; i++) {

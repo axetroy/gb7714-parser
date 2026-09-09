@@ -1,7 +1,7 @@
 import type { Token, Author } from '../types/index.js';
 import type { Map, ParseOptions } from '../types/index.js';
 import type { ParserStrategy } from './base.js';
-import { parseTypeIndicator, parseAuthors } from '../utils/index.js';
+import { parseTypeIndicator, parseAuthors, findNextDot, findNextTypeIndicator } from '../utils/index.js';
 
 /**
  * 地图解析器
@@ -39,7 +39,7 @@ export class MapParser implements ParserStrategy {
 
     // 解析作者（如果有）
     let authors: Author[] = [];
-    const dotIndex = this.findNextDot(tokens, position);
+    const dotIndex = findNextDot(tokens, position);
     if (dotIndex > position) {
       const beforeDot = this.readTextUntil(tokens, position, dotIndex);
       if (beforeDot.includes(',') || beforeDot.includes('，') || /^[\u4e00-\u9fa5]+$/.test(beforeDot.trim())) {
@@ -54,7 +54,7 @@ export class MapParser implements ParserStrategy {
     // 解析题名、比例尺和版本（到文献类型标识 [CM]）
     let title = '';
     let scale = '';
-    const titleEnd = this.findNextTypeIndicator(tokens, position);
+    const titleEnd = findNextTypeIndicator(tokens, position);
     
     // 查找比例尺（通常包含 "1:" 或 "比例尺"）
     const fullText = this.readTextUntil(tokens, position, titleEnd);
@@ -89,7 +89,7 @@ export class MapParser implements ParserStrategy {
 
     // 解析版本（如果有）
     let version: string | undefined;
-    const versionEnd = this.findNextDot(tokens, position);
+    const versionEnd = findNextDot(tokens, position);
     if (versionEnd > position) {
       const versionText = this.readTextUntil(tokens, position, versionEnd).trim();
       if (versionText && !versionText.includes(':') && !versionText.includes('：')) {
@@ -179,32 +179,26 @@ export class MapParser implements ParserStrategy {
     return position;
   }
 
-  private findNextDot(tokens: Token[], start: number): number {
-    for (let i = start; i < tokens.length; i++) {
-      if (tokens[i]?.type === 'DOT') return i;
-    }
-    return tokens.length;
-  }
-
-  private findNextTypeIndicator(tokens: Token[], start: number): number {
-    for (let i = start; i < tokens.length; i++) {
-      if (tokens[i]?.type === 'TYPE_INDICATOR') return i;
-    }
-    return tokens.length;
-  }
-
   private readTextUntil(tokens: Token[], start: number, end: number): string {
     let result = '';
+    let lastEndPosition = -1;
     for (let i = start; i < end; i++) {
       const token = tokens[i]!;
       if (token.type === 'TEXT') {
+        if (result && lastEndPosition >= 0 && token.position > lastEndPosition) {
+          result += ' ';
+        }
         result += token.value;
+        lastEndPosition = token.position + token.value.length;
       } else if (token.type === 'DOT') {
         result += '.';
+        lastEndPosition = token.position + 1;
       } else if (token.type === 'COLON') {
         result += ':';
+        lastEndPosition = token.position + 1;
       } else if (token.type === 'NUMBER') {
         result += token.value;
+        lastEndPosition = token.position + token.value.length;
       }
     }
     return result;

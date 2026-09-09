@@ -1,7 +1,7 @@
 import type { Token, Author } from '../types/index.js';
 import type { ComponentPart, ParseOptions } from '../types/index.js';
 import type { ParserStrategy } from './base.js';
-import { parseTypeIndicator, parseAuthors } from '../utils/index.js';
+import { parseTypeIndicator, parseAuthors, readUntilDot, findNextDot } from '../utils/index.js';
 
 /**
  * 析出文献解析器
@@ -36,8 +36,8 @@ export class ComponentPartParser implements ParserStrategy {
     position = this.skipWhitespace(tokens, position);
 
     // 解析析出文献作者
-    const authorsText = this.readUntilDot(tokens, position);
-    position = this.findNextDot(tokens, position) + 1;
+    const authorsText = readUntilDot(tokens, position);
+    position = findNextDot(tokens, position) + 1;
     const authors = parseAuthors(authorsText);
 
     // 跳过空白
@@ -78,7 +78,7 @@ export class ComponentPartParser implements ParserStrategy {
 
     // 解析图书作者（如果有）
     let hostAuthors: Author[] = [];
-    const nextDotIndex = this.findNextDot(tokens, position);
+    const nextDotIndex = findNextDot(tokens, position);
     if (nextDotIndex > position) {
       const hostAuthorText = this.readTextUntil(tokens, position, nextDotIndex).trim();
       // 检查是否是作者（包含逗号或中文）
@@ -93,7 +93,7 @@ export class ComponentPartParser implements ParserStrategy {
 
     // 解析图书题名
     let hostTitle = '';
-    const hostTitleEnd = this.findNextDot(tokens, position);
+    const hostTitleEnd = findNextDot(tokens, position);
     if (hostTitleEnd > position) {
       hostTitle = this.readTextUntil(tokens, position, hostTitleEnd).trim().replace(/\.$/, '');
       position = hostTitleEnd + 1;
@@ -186,32 +186,6 @@ export class ComponentPartParser implements ParserStrategy {
       position++;
     }
     return position;
-  }
-
-  private readUntilDot(tokens: Token[], start: number): string {
-    let result = '';
-    let i = start;
-    while (i < tokens.length && tokens[i]?.type !== 'DOT') {
-      const token = tokens[i]!;
-      if (token.type === 'TEXT') {
-        result += token.value;
-      } else if (token.type === 'COMMA') {
-        result += ',';
-      } else if (token.type === 'NUMBER') {
-        result += token.value;
-      } else if (token.type === 'DOUBLE_SLASH') {
-        result += '//';
-      }
-      i++;
-    }
-    return result;
-  }
-
-  private findNextDot(tokens: Token[], start: number): number {
-    for (let i = start; i < tokens.length; i++) {
-      if (tokens[i]?.type === 'DOT') return i;
-    }
-    return tokens.length;
   }
 
   private readTextUntil(tokens: Token[], start: number, end: number): string {

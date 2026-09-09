@@ -1,7 +1,7 @@
 import type { Token } from '../types/index.js';
 import type { Standard, ParseOptions } from '../types/index.js';
 import type { ParserStrategy } from './base.js';
-import { parseTypeIndicator } from '../utils/index.js';
+import { parseTypeIndicator, findNextTypeIndicator } from '../utils/index.js';
 
 /**
  * 标准解析器
@@ -41,16 +41,16 @@ export class StandardParser implements ParserStrategy {
     // 解析标准编号和标准名称（到文献类型标识 [S]）
     let standardNumber = '';
     let standardName = '';
-    const titleEnd = this.findNextTypeIndicator(tokens, position);
+    const titleEnd = findNextTypeIndicator(tokens, position);
     
     // 查找标准编号（通常以 GB/T、GB 等开头）
     const fullText = this.readTextUntil(tokens, position, titleEnd);
     
-    // 匹配标准编号格式
-    const standardNumberMatch = fullText.match(/^((?:GB|ISO|IEC|行业标准代码)[\/\s]*[A-Z]*(?:\s*[:\uff1a]\s*)?[\d—\-]+(?:-\d+)*)/i);
+    // 匹配标准编号格式（在全文中搜索）
+    const standardNumberMatch = fullText.match(/((?:GB|ISO|IEC|行业标准代码)[\/\s]*[A-Z]*(?:\s*[:\uff1a]\s*)?[\d\u2014\-\.]+(?:\s*[:\uff1a]\s*\d+)?(?:[\—\-]*\d+)*)/i);
     if (standardNumberMatch) {
       standardNumber = standardNumberMatch[1].trim();
-      standardName = fullText.slice(standardNumberMatch[1].length).trim();
+      standardName = fullText.replace(standardNumberMatch[0], '').replace(/^\s*[:\uff1a]\s*/, '').trim();
     } else {
       // 如果没有匹配到标准编号格式，尝试用空格分割
       const spaceIndex = fullText.indexOf(' ');
@@ -112,29 +112,32 @@ export class StandardParser implements ParserStrategy {
     return position;
   }
 
-  private findNextTypeIndicator(tokens: Token[], start: number): number {
-    for (let i = start; i < tokens.length; i++) {
-      if (tokens[i]?.type === 'TYPE_INDICATOR') return i;
-    }
-    return tokens.length;
-  }
-
   private readTextUntil(tokens: Token[], start: number, end: number): string {
     let result = '';
+    let lastEndPosition = -1;
     for (let i = start; i < end; i++) {
       const token = tokens[i]!;
       if (token.type === 'TEXT') {
+        if (result && lastEndPosition >= 0 && token.position > lastEndPosition) {
+          result += ' ';
+        }
         result += token.value;
+        lastEndPosition = token.position + token.value.length;
       } else if (token.type === 'DOT') {
         result += '.';
+        lastEndPosition = token.position + 1;
       } else if (token.type === 'NUMBER') {
         result += token.value;
+        lastEndPosition = token.position + token.value.length;
       } else if (token.type === 'DASH') {
         result += token.value;
+        lastEndPosition = token.position + token.value.length;
       } else if (token.type === 'SLASH') {
         result += '/';
+        lastEndPosition = token.position + 1;
       } else if (token.type === 'COLON') {
         result += ':';
+        lastEndPosition = token.position + 1;
       }
     }
     return result;
