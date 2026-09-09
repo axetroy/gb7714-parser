@@ -63,5 +63,25 @@ describe('ThesisParser', () => {
 
       expect(result.pages).toBeUndefined();
     });
+
+    it('应该保留学位授予地中的空格', () => {
+      const input = '[5] Smith J. Deep learning[D]. New York: Columbia University, 2023.';
+      const tokens = tokenize(input);
+      const result = parser.parse(tokens);
+
+      expect(result.awardPlace).toBe('New York');
+      expect(result.awardInstitution).toBe('Columbia University');
+      expect(result.awardYear).toBe('2023');
+    });
+
+    it('应该保留学位授予单位和授予地中的多个空格', () => {
+      const input = '[6] author. Research[D]. Boston  MA:  Massachusetts  Institute  of  Technology, 2022.';
+      const tokens = tokenize(input);
+      const result = parser.parse(tokens);
+
+      expect(result.awardPlace).toBe('Boston  MA');
+      expect(result.awardInstitution).toBe('Massachusetts  Institute  of  Technology');
+      expect(result.awardYear).toBe('2022');
+    });
   });
 });

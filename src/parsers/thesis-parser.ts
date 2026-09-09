@@ -111,6 +111,7 @@ export class ThesisParser extends BaseParser {
 
     let i = start;
     let phase: 'place' | 'institution' | 'year' = 'place';
+    let lastEndPosition = -1;
 
     while (i < tokens.length) {
       const token = tokens[i]!;
@@ -119,6 +120,7 @@ export class ThesisParser extends BaseParser {
       if (token.value === ':' || token.value === '：') {
         if (phase === 'place') {
           phase = 'institution';
+          lastEndPosition = -1;
         }
         i++;
         continue;
@@ -128,6 +130,7 @@ export class ThesisParser extends BaseParser {
       if (token.type === 'COMMA' || token.value === '，') {
         if (phase === 'institution') {
           phase = 'year';
+          lastEndPosition = -1;
         }
         i++;
         continue;
@@ -140,10 +143,16 @@ export class ThesisParser extends BaseParser {
       }
 
       if (token.type === 'TEXT') {
+        // 计算与上一个 token 之间的空格数
+        const gap = lastEndPosition >= 0 ? token.position - lastEndPosition : 0;
+        const spaces = gap > 0 ? ' '.repeat(gap) : '';
+
         if (phase === 'place') {
-          place += token.value;
+          place += spaces + token.value;
+          lastEndPosition = token.position + token.value.length;
         } else if (phase === 'institution') {
-          institution += token.value;
+          institution += spaces + token.value;
+          lastEndPosition = token.position + token.value.length;
         }
       }
 
