@@ -251,8 +251,8 @@ export class Tokenizer {
     // [YYYY-MM-DD] 格式
     if (/^\[\d{4}-\d{2}-\d{2}\]/.test(remaining)) return true;
 
-    // 仅年份 YYYY
-    if (/^\d{4}[年]?/.test(remaining)) return true;
+    // 仅年份 YYYY：排除页码范围（如 "1518-1523"），避免将页码误识别为年份
+    if (/^\d{4}(?![年\d-])/.test(remaining)) return true;
 
     return false;
   }
@@ -284,12 +284,14 @@ export class Tokenizer {
       return;
     }
 
-    // 仅年份
-    const yearMatch = remaining.match(/^\d{4}/);
+    // 仅年份：必须恰好 4 位，不能是更长数字的前缀（如页码 "1518-1523" 中的 "1518"）
+    const yearMatch = remaining.match(/^\d{4}(?!\d)/);
     if (yearMatch) {
       this.addToken('YEAR', yearMatch[0]!);
       return;
     }
+    // 所有日期格式都不匹配时，作为普通数字处理（如 "730570" 文章编号）
+    this.readNumber();
   }
 
   /**

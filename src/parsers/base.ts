@@ -287,7 +287,7 @@ export abstract class BaseParser implements ParserStrategy {
     if (colonIndex >= position) {
       position = colonIndex + 1;
       const pageTokens = tokens.slice(position).filter(t =>
-        t.type === 'NUMBER' || t.type === 'DASH' || t.type === 'TEXT'
+        t.type === 'NUMBER' || t.type === 'YEAR' || t.type === 'DASH' || t.type === 'TEXT'
       );
       if (pageTokens.length > 0) {
         pages = pageTokens.map(t => t.value).join('').replace(/\.$/, '');
@@ -418,6 +418,16 @@ export abstract class BaseParser implements ParserStrategy {
       } else if (token.type === 'DOT') {
         result += '.';
         lastEndPosition = token.position + 1;
+      } else if (token.type === 'PAREN_OPEN') {
+        result += '(';
+        lastEndPosition = token.position + 1;
+      } else if (token.type === 'PAREN_CLOSE') {
+        result += ')';
+        lastEndPosition = token.position + 1;
+      } else {
+        // 非文本 token（COMMA 等）：不加入结果，但更新 lastEndPosition
+        // 确保后续 TEXT token 能正确检测位置间隙并插入空格
+        lastEndPosition = token.position + token.value.length;
       }
       i++;
     }
@@ -447,6 +457,8 @@ export abstract class BaseParser implements ParserStrategy {
   protected readTextUntil(tokens: Token[], start: number, end: number): string {
     let result = '';
     let lastEndPosition = -1;
+    // 跟踪最后一个内容 token 的结束位置（不含括号等结构符号）
+    let lastContentEnd = -1;
     for (let i = start; i < end; i++) {
       const token = tokens[i]!;
       if (token.type === 'TEXT') {
@@ -455,32 +467,57 @@ export abstract class BaseParser implements ParserStrategy {
         }
         result += token.value;
         lastEndPosition = token.position + token.value.length;
+        lastContentEnd = lastEndPosition;
       } else if (token.type === 'DOT') {
         result += '.';
         lastEndPosition = token.position + 1;
+        lastContentEnd = lastEndPosition;
       } else if (token.type === 'COLON') {
         result += token.value;
         lastEndPosition = token.position + 1;
+        lastContentEnd = lastEndPosition;
       } else if (token.type === 'COMMA') {
         result += ',';
         lastEndPosition = token.position + 1;
+        lastContentEnd = lastEndPosition;
       } else if (token.type === 'NUMBER') {
+        if (result && lastEndPosition >= 0 && token.position > lastEndPosition) {
+          result += ' ';
+        }
         result += token.value;
         lastEndPosition = token.position + token.value.length;
+        lastContentEnd = lastEndPosition;
       } else if (token.type === 'YEAR') {
         result += token.value;
         lastEndPosition = token.position + token.value.length;
+        lastContentEnd = lastEndPosition;
       } else if (token.type === 'DASH') {
         result += token.value;
         lastEndPosition = token.position + token.value.length;
+        lastContentEnd = lastEndPosition;
       } else if (token.type === 'SLASH') {
         result += '/';
         lastEndPosition = token.position + 1;
+        lastContentEnd = lastEndPosition;
       } else if (token.type === 'DOUBLE_SLASH') {
         result += '//';
         lastEndPosition = token.position + 2;
+        lastContentEnd = lastEndPosition;
       } else if (token.type === 'DATE') {
         result += token.value;
+        lastEndPosition = token.position + token.value.length;
+        lastContentEnd = lastEndPosition;
+      } else if (token.type === 'PAREN_OPEN') {
+        result += '(';
+        lastEndPosition = token.position + 1;
+        // PAREN_OPEN 不是内容，不更新 lastContentEnd
+      } else if (token.type === 'PAREN_CLOSE') {
+        result += ')';
+        lastEndPosition = token.position + 1;
+        // PAREN_CLOSE 不是内容，恢复 lastContentEnd 以保持后续空格检测正确
+        lastEndPosition = lastContentEnd >= 0 ? lastContentEnd : token.position + 1;
+      } else {
+        // 未显式处理的 token：更新 lastEndPosition 以保留空格检测
         lastEndPosition = token.position + token.value.length;
       }
     }

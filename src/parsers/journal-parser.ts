@@ -61,6 +61,21 @@ export class JournalParser extends BaseParser {
     const { mediaType, position: afterType } = this.skipTypeIndicator(tokens, position);
     position = afterType;
 
+    // 跳过析出文献其他责任者（如 "顾幼静,译."）
+    // 格式：姓名,译. 或 姓名,注. 等，出现在类型标识后的 DOT 和期刊题名之间
+    if (tokens[position]?.type === 'TEXT') {
+      const commaAfterName = tokens.findIndex((t, i) => i >= position && t.type === 'COMMA');
+      if (commaAfterName > position) {
+        const afterComma = tokens.slice(commaAfterName + 1).find(t => t.type === 'TEXT');
+        if (afterComma && /^[\u4e00-\u9fa5]+$/.test(afterComma.value) &&
+            tokens.findIndex((t, i) => i > tokens.indexOf(afterComma) && t.type === 'DOT') > tokens.indexOf(afterComma)) {
+          // 确认是 "姓名,译." 模式，跳过整个责任者段
+          position = tokens.findIndex((t, i) => i >= position && t.type === 'DOT') + 1;
+          position = this.skipWhitespace(tokens, position);
+        }
+      }
+    }
+
     // 解析刊名（到 , 或 年份）
     const journalTitle = this.readUntilCommaOrYear(tokens, position);
     position = this.findNextCommaOrYear(tokens, position);
@@ -91,7 +106,7 @@ export class JournalParser extends BaseParser {
       const issueStart = tokens.indexOf(issueToken);
       const issueEnd = tokens.findIndex((t, i) => i > issueStart && t.type === 'PAREN_CLOSE');
       if (issueEnd > issueStart) {
-        issue = tokens.slice(issueStart + 1, issueEnd).map(t => t.value).join('');
+        issue = this.readTextUntil(tokens, issueStart + 1, issueEnd).trim();
         position = issueEnd + 1;
       }
     }
@@ -99,8 +114,9 @@ export class JournalParser extends BaseParser {
     // 解析页码
     const { pages } = this.parsePages(tokens, position);
 
-    // 解析 DOI/PID
+    // 解析 DOI/PID 和 URL
     const pid = this.parsePID(tokens);
+    const url = this.parseURL(tokens);
 
     return {
       type: 'J' as never,
@@ -113,6 +129,7 @@ export class JournalParser extends BaseParser {
       issue: issue || undefined,
       pages: pages || undefined,
       pid: pid || undefined,
+      url: url || undefined,
       mediaType,
     };
   }
