@@ -135,7 +135,8 @@ describe('ProceedingsParser', () => {
       const result = parser.parse(tokenize(input));
       expect(result.type).toBe('C');
       expect(result.mediaType).toBe('OL');
-      expect(result.title).toBe('Unmixing before fusion: a generalized paradigm for multi-source-based hyperspectral image synthesis');
+      expect(result.title).toBe('Unmixing before fusion');
+      expect(result.subtitle).toBe('a generalized paradigm for multi-source-based hyperspectral image synthesis');
       expect(result.conferenceName).toBe('CVPR');
       expect(result.conferenceYear).toBe('2024');
       expect(result.pages).toBe('4');

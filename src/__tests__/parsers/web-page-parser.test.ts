@@ -205,7 +205,7 @@ describe('WebPageParser', () => {
       expect(r.authors).toHaveLength(1);
       expect(r.authors[0].name).toBe('许振超');
       expect(r.title).toBe('许振超');
-      expect(r.subtitle).toBe('"好好干，当一个好工人"');
+      expect(r.subtitle).toBe('"好好干,当一个好工人"');
       expect(r.createDate).toBe('2025-02-17');
       expect(r.url).toContain('people.com.cn');
     });

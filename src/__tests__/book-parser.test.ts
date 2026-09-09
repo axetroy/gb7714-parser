@@ -292,8 +292,7 @@ describe('BookParser', () => {
       expect(ref.authors[1].name).toBe('Conkey M W');
       expect(ref.authors[2].name).toBe('McDonald J');
       expect(ref.title).toBe('Deep-time images in the age of globalization');
-      // 注：tokenizer 对相邻 NUMBER+TEXT 不插入空格，导致 "the 21st" → "the21st"
-      expect(ref.subtitle).toBe('rock art in the21st century');
+      expect(ref.subtitle).toBe('rock art in the 21st century');
       expect(ref.year).toBe('2024');
     });
   });

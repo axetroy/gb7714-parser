@@ -158,7 +158,7 @@ describe('万方数据真实引文测试', () => {
       expect(reference.authors.length).toBe(1);
       expect(reference.authors[0].name).toBe('深圳火炎焱人工智能有限公司');
       expect(reference.title).toContain('文本内容快速分类管理方法');
-      expect(reference.patentNumber).toBe('CN202610137209');
+      expect(reference.patentNumber).toBe('CN202610137209.5');
       expect(reference.announceDate).toBe('2026-05-12');
     });
 
@@ -168,7 +168,7 @@ describe('万方数据真实引文测试', () => {
       expect(reference.authors.length).toBe(1);
       expect(reference.authors[0].name).toContain('精英中汇');
       expect(reference.title).toContain('人工智能面部识别装置');
-      expect(reference.patentNumber).toBe('CN202520252068');
+      expect(reference.patentNumber).toBe('CN202520252068.2');
       expect(reference.announceDate).toBe('2026-03-06');
     });
 
@@ -179,7 +179,7 @@ describe('万方数据真实引文测试', () => {
       expect(reference.authors[0].name).toBe('深圳市蓝婴智能科技有限公司');
       expect(reference.authors[1].name).toBe('深圳全智人工智能有限公司');
       expect(reference.title).toContain('语音交互型智能头盔');
-      expect(reference.patentNumber).toBe('CN202610602628');
+      expect(reference.patentNumber).toBe('CN202610602628.1');
       expect(reference.announceDate).toBe('2026-07-17');
     });
 
@@ -189,7 +189,7 @@ describe('万方数据真实引文测试', () => {
       expect(reference.authors.length).toBe(1);
       expect(reference.authors[0].name).toBe('上海人工智能创新中心');
       expect(reference.title).toContain('生成式人工智能合规审计');
-      expect(reference.patentNumber).toBe('CN202610542794');
+      expect(reference.patentNumber).toBe('CN202610542794.7');
       expect(reference.announceDate).toBe('2026-05-26');
     });
 
@@ -199,7 +199,7 @@ describe('万方数据真实引文测试', () => {
       expect(reference.authors.length).toBe(1);
       expect(reference.authors[0].name).toBe('陕西凯晨轩人工智能科技有限公司');
       expect(reference.title).toContain('开发工具插件同步方法');
-      expect(reference.patentNumber).toBe('CN202610116460');
+      expect(reference.patentNumber).toBe('CN202610116460.3');
       expect(reference.announceDate).toBe('2026-05-15');
     });
 
@@ -209,7 +209,7 @@ describe('万方数据真实引文测试', () => {
       expect(reference.authors.length).toBe(1);
       expect(reference.authors[0].name).toContain('墨芯人工智能');
       expect(reference.title).toContain('芯片集群的节点资源配置');
-      expect(reference.patentNumber).toBe('CN202610219094');
+      expect(reference.patentNumber).toBe('CN202610219094.4');
       expect(reference.announceDate).toBe('2026-05-26');
     });
 
@@ -219,7 +219,7 @@ describe('万方数据真实引文测试', () => {
       expect(reference.authors.length).toBe(1);
       expect(reference.authors[0].name).toBe('上海人工智能创新中心');
       expect(reference.title).toContain('大模型搜索引擎');
-      expect(reference.patentNumber).toBe('CN202610738188');
+      expect(reference.patentNumber).toBe('CN202610738188.2');
       expect(reference.announceDate).toBe('2026-06-26');
     });
 
@@ -229,7 +229,7 @@ describe('万方数据真实引文测试', () => {
       expect(reference.authors.length).toBe(1);
       expect(reference.authors[0].name).toBe('合肥瑞徽人工智能研究院有限公司');
       expect(reference.title).toContain('软件信息异常筛查方法');
-      expect(reference.patentNumber).toBe('CN202511469803');
+      expect(reference.patentNumber).toBe('CN202511469803.6');
       expect(reference.announceDate).toBe('2026-01-06');
     });
 
@@ -240,7 +240,7 @@ describe('万方数据真实引文测试', () => {
       expect(reference.authors[0].name).toBe('中国中医科学院眼科医院');
       expect(reference.authors[1].name).toBe('大连理工大学人工智能大连研究院');
       expect(reference.title).toContain('人工智能视功能扩大方法');
-      expect(reference.patentNumber).toBe('CN202511523021');
+      expect(reference.patentNumber).toBe('CN202511523021.6');
       expect(reference.announceDate).toBe('2026-02-06');
     });
 
@@ -250,7 +250,7 @@ describe('万方数据真实引文测试', () => {
       expect(reference.authors.length).toBe(1);
       expect(reference.authors[0].name).toBe('人工智能金融科技实验室有限公司');
       expect(reference.title).toContain('投资智能风险评估');
-      expect(reference.patentNumber).toBe('CN202610266682');
+      expect(reference.patentNumber).toBe('CN202610266682.3');
       expect(reference.announceDate).toBe('2026-06-12');
     });
   });

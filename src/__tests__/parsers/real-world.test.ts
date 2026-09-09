@@ -779,7 +779,8 @@ describe('真实案例测试', () => {
       const formatted = format(reference);
 
       expect(reference.authors[0].name).toBe('Boden M A');
-      expect(reference.title).toBe('AI: Its nature and future');
+      expect(reference.title).toBe('AI');
+      expect(reference.subtitle).toBe('Its nature and future');
       expect(formatted).toContain('AI: Its nature and future');
     });
   });

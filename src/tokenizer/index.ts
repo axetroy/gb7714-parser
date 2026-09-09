@@ -306,8 +306,9 @@ export class Tokenizer {
     // [YYYY-MM-DD] 格式
     if (/^\[\d{4}-\d{2}-\d{2}\]/.test(remaining)) return true;
 
-    // 仅年份 YYYY：排除页码范围（如 "1518-1523"），避免将页码误识别为年份
-    if (/^\d{4}(?![年\d-])/.test(remaining)) return true;
+    // 仅年份 YYYY：排除页码范围（如 "1518-1523"），避免将页码误识别为年份；
+    // 允许中文年份标识（如 "2025年"）
+    if (/^\d{4}(?![\d-])/.test(remaining)) return true;
 
     return false;
   }

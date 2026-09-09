@@ -97,13 +97,13 @@ export abstract class BaseParser implements ParserStrategy {
       : dotIndex;
 
     if (searchLimit > position && dotIndex <= searchLimit) {
-      // 有 DOT 在 TYPE_INDICATOR 之前：正常作者分隔
+      // 有 DOT 在 TYPE_INDICATOR 之前：DOT 前文本视为作者（无论是否为中文）
+      // DOT 明确分隔了作者与题名，因此接受任何非空文本作为作者
       const beforeDot = this.readTextUntil(tokens, position, dotIndex);
-      if (this.isLikelyAuthorText(beforeDot)) {
+      if (beforeDot.trim()) {
         authors = parseAuthors(beforeDot);
         position = dotIndex + 1;
       } else {
-        // DOT 前不是作者（可能是标题），跳过 DOT 让外层处理
         position = dotIndex + 1;
       }
     } else if (searchLimit > position && typeIndicatorIndex <= dotIndex) {
@@ -187,12 +187,17 @@ export abstract class BaseParser implements ParserStrategy {
     const hasColonSeparator = colonIndex > position;
     if (colonIndex >= position && colonIndex < titleEnd && (hasAuthorSeparator || hasColonSeparator)) {
       const colonToken = tokens[colonIndex]!;
-      if (colonToken.value === ':' || colonToken.value === '：') {
-        // 冒号（英文或全角）：拆分为题名 + 副题名
+      // position 前的 token 是否为 DOT：若是，作者已由 DOT 分隔，
+      // 此时全角冒号属于题名内部（如"昌平山水记：京东考古录"），不拆分；
+      // 若否，全角冒号是作者与题名的分隔符（如"许振超：标题"），应拆分。
+      const authorSeparatedByDot = position > 0 && tokens[position - 1]?.type === 'DOT';
+      const shouldSplit = colonToken.value === ':' || (colonToken.value === '：' && !authorSeparatedByDot);
+      if (shouldSplit) {
+        // 冒号：拆分为题名 + 副题名
         title = this.readTextUntil(tokens, position, colonIndex).trim();
         subtitle = this.readTextUntil(tokens, colonIndex + 1, titleEnd).trim();
       } else {
-        // 其他分隔符：保留完整题名
+        // 全角冒号属于题名内部：保留完整题名
         title = fullText;
       }
     } else {
@@ -223,8 +228,10 @@ export abstract class BaseParser implements ParserStrategy {
     optionalAuthors: boolean = false,
   ): { authors: Author[]; title: string; extraField: string; subtitle?: string; position: number } {
     // 解析作者
-    const authorParser = optionalAuthors ? this.parseOptionalAuthors : this.parseRequiredAuthors;
-    const { authors, position: afterAuthors } = authorParser(tokens, position);
+    const authorResult = optionalAuthors
+      ? this.parseOptionalAuthors(tokens, position)
+      : this.parseRequiredAuthors(tokens, position);
+    const { authors, position: afterAuthors } = authorResult;
     position = afterAuthors;
 
     // 解析题名和附加字段（到文献类型标识为止）
@@ -289,8 +296,10 @@ export abstract class BaseParser implements ParserStrategy {
     optionalAuthors: boolean = false,
   ): { authors: Author[]; title: string; scale: string; position: number } {
     // 解析作者
-    const authorParser = optionalAuthors ? this.parseOptionalAuthors : this.parseRequiredAuthors;
-    const { authors, position: afterAuthors } = authorParser(tokens, position);
+    const authorResult = optionalAuthors
+      ? this.parseOptionalAuthors(tokens, position)
+      : this.parseRequiredAuthors(tokens, position);
+    const { authors, position: afterAuthors } = authorResult;
     position = afterAuthors;
 
     // 解析题名（到第一个 DOT 之前）
