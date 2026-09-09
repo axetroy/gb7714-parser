@@ -30,7 +30,11 @@ export class ComponentPartParser extends BaseParser {
    */
   match(tokens: Token[]): boolean {
     // 检查是否包含 // 分隔符
-    return tokens.some(t => t.type === 'DOUBLE_SLASH');
+    if (!tokens.some(t => t.type === 'DOUBLE_SLASH')) return false;
+    // [C] 会议录由 ProceedingsParser 处理
+    const typeIndicator = tokens.find(t => t.type === 'TYPE_INDICATOR');
+    if (typeIndicator && /^\[C(\/OL)?\]$/.test(typeIndicator.value)) return false;
+    return true;
   }
 
   /**

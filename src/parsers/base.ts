@@ -424,6 +424,12 @@ export abstract class BaseParser implements ParserStrategy {
       } else if (token.type === 'PAREN_CLOSE') {
         result += ')';
         lastEndPosition = token.position + 1;
+      } else if (token.type === 'NUMBER') {
+        if (result && lastEndPosition >= 0 && token.position > lastEndPosition) {
+          result += ' ';
+        }
+        result += token.value;
+        lastEndPosition = token.position + token.value.length;
       } else {
         // 非文本 token（COMMA 等）：不加入结果，但更新 lastEndPosition
         // 确保后续 TEXT token 能正确检测位置间隙并插入空格

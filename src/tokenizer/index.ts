@@ -81,7 +81,6 @@ export class Tokenizer {
       // 双斜杠 //
       if (char === '/' && this.peek(1) === '/') {
         this.addToken('DOUBLE_SLASH', '//');
-        this.position += 2;
         continue;
       }
 

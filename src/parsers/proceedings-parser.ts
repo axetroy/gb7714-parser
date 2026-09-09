@@ -51,42 +51,87 @@ export class ProceedingsParser extends BaseParser {
     const { mediaType, position: afterType } = this.skipTypeIndicator(tokens, position);
     position = afterType;
 
-    // 跳过 //（如果有）
-    if (tokens[position]?.type === 'DOUBLE_SLASH') {
-      position++;
-    }
-
     // 跳过空白
     position = this.skipWhitespace(tokens, position);
 
-    // 解析会议名称（到 , 或年份）
-    const conferenceName = this.readUntilCommaOrYear(tokens, position);
-    position = this.findNextCommaOrYear(tokens, position);
+    // 判断是析出文献形式（有 //）还是图书形式（无 //）
+    const hasDoubleSlash = tokens[position]?.type === 'DOUBLE_SLASH';
 
-    // 解析会议年份
-    let conferenceYear = '';
-    const yearToken = tokens.slice(position).find(t => t.type === 'YEAR');
-    if (yearToken) {
-      conferenceYear = yearToken.value;
-      position = tokens.indexOf(yearToken) + 1;
+    if (hasDoubleSlash) {
+      // 析出文献形式：[C]//会议名称, 会议年份: 页码
+      position++; // 跳过 //
+      position = this.skipWhitespace(tokens, position);
+
+      // 先找最后一个 COLON（页码前的冒号），再找它之前的最后一个 YEAR
+      // 这样可以正确处理会议名称以年份开头的情况（如 "//2022 6th Asian Conference..."）
+      const lastColonIndex = tokens.reduce(
+        (last, t, i) => (t.type === 'COLON' ? i : last),
+        -1,
+      );
+      const allYears = tokens
+        .map((t, i) => ({ t, i }))
+        .filter(({ t }) => t.type === 'YEAR')
+        .filter(({ i }) => lastColonIndex < 0 || i < lastColonIndex);
+      const lastYearInfo = allYears.length > 0 ? allYears[allYears.length - 1] : null;
+
+      // 会议名称：从 // 后到会议年份 token 之前
+      // 使用 readTextUntil 确保正确保留空格和数字
+      let conferenceName = '';
+      if (lastYearInfo) {
+        conferenceName = this.readTextUntil(tokens, position, lastYearInfo.i);
+        position = lastYearInfo.i + 1;
+      } else {
+        // 没有年份，回退到 readUntilCommaOrYear
+        conferenceName = this.readUntilCommaOrYear(tokens, position);
+        position = this.findNextCommaOrYear(tokens, position);
+      }
+
+      // 会议年份
+      const conferenceYear = lastYearInfo?.t.value ?? '';
+
+      // 跳过空白
+      position = this.skipWhitespace(tokens, position);
+
+      // 解析页码
+      const { pages } = this.parsePages(tokens, position);
+
+      // 解析 URL
+      const url = this.parseURL(tokens);
+
+      return {
+        type: 'C' as never,
+        mediaType,
+        authors,
+        title,
+        subtitle,
+        conferenceName: conferenceName.trim().replace(/,$/, '') || undefined,
+        conferenceYear: conferenceYear || undefined,
+        pages: pages || undefined,
+        url: url || undefined,
+      };
+    } else {
+      // 图书形式：[C]. 出版地: 出版者, 年
+      // 调用 parsePublisherInfo 解析出版信息
+      const { publisherPlace, publisher, year, position: afterPublisher } = this.parsePublisherInfo(tokens, position);
+
+      // 解析页码
+      const { pages } = this.parsePages(tokens, afterPublisher);
+
+      // 解析 URL
+      const url = this.parseURL(tokens);
+
+      return {
+        type: 'C' as never,
+        mediaType,
+        authors,
+        title,
+        subtitle,
+        publisherPlace: publisherPlace || undefined,
+        publisher: publisher || undefined,
+        year: year || undefined,
+        pages: pages || undefined,
+        url: url || undefined,
+      };
     }
-
-    // 解析页码（如果有）
-    const { pages } = this.parsePages(tokens, position);
-
-    // 解析 DOI/PID
-    const pid = this.parsePID(tokens);
-
-    return {
-      type: 'C' as never,
-      authors,
-      title,
-      subtitle,
-      conferenceName: conferenceName.trim().replace(/\.$/, '') || undefined,
-      conferenceYear: conferenceYear || undefined,
-      pages: pages || undefined,
-      pid: pid || undefined,
-      mediaType,
-    };
   }
 }
