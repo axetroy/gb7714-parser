@@ -63,4 +63,25 @@ describe('StandardParser', () => {
       expect(result.url).toBeUndefined();
     });
   });
+
+  describe('标准 §8.9 示例', () => {
+    it('例[1] 应解析 GB/T 标准', () => {
+      const input = '[1] GB/T 3792—2021 信息与文献 资源描述[S].';
+      const r = parser.parse(tokenize(input));
+
+      expect(r.type).toBe('S');
+      expect(r.standardNumber).toBe('GB/T 3792—2021');
+      expect(r.standardName).toBe('信息与文献 资源描述');
+      expect(r.authors).toHaveLength(0);
+    });
+
+    it('例[2] 应解析 NB/T 行业标准', () => {
+      const input = '[2] NB/T 10386—2020 水电工程水温实时监测系统技术规范[S].';
+      const r = parser.parse(tokenize(input));
+
+      expect(r.type).toBe('S');
+      expect(r.standardNumber).toBe('NB/T 10386—2020');
+      expect(r.standardName).toBe('水电工程水温实时监测系统技术规范');
+    });
+  });
 });

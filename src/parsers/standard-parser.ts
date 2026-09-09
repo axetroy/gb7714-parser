@@ -50,27 +50,63 @@ export class StandardParser extends BaseParser {
     position = this.skipWhitespace(tokens, position);
 
     // 解析标准编号和标准名称（到文献类型标识 [S]）
+    // 标准编号格式：以 GB/ISO/IEC 等开头，后跟编号和年份，如 GB/T 3792—2021
     let standardNumber = '';
     let standardName = '';
     const titleEnd = this.findNextTypeIndicator(tokens, position);
 
-    // 查找标准编号（通常以 GB/T、GB 等开头）
-    const fullText = this.readTextUntil(tokens, position, titleEnd);
+    // 收集标准编号和标准名称：找到首个已知前缀（GB/ISO/IEC 等）的 token，
+    // 从其开始收集直到遇到中文 token 或类型标识为止
+    const knownPrefixes = ['GB', 'ISO', 'IEC', 'JB', 'HG', 'YD', 'DL', 'NY', 'NB', 'WB', 'CJ', 'DB', 'SB', 'SN'];
+    let scanPos = position;
+    let numberTokens: Token[] = [];
+    let foundPrefix = false;
 
-    // 匹配标准编号格式（在全文中搜索）
-    const standardNumberMatch = fullText.match(/((?:GB|ISO|IEC|行业标准代码)[\/\s]*[A-Z]*(?:\s*[:\uff1a]\s*)?[\d\u2014\-\.]+(?:\s*[:\uff1a]\s*\d+)?(?:[\—\-]*\d+)*)/i);
-    if (standardNumberMatch) {
-      standardNumber = standardNumberMatch[1].trim();
-      standardName = fullText.replace(standardNumberMatch[0], '').replace(/^\s*[:\uff1a]\s*/, '').trim();
-    } else {
-      // 如果没有匹配到标准编号格式，尝试用空格分割
-      const spaceIndex = fullText.indexOf(' ');
-      if (spaceIndex > 0) {
-        standardNumber = fullText.slice(0, spaceIndex).trim();
-        standardName = fullText.slice(spaceIndex + 1).trim();
-      } else {
-        standardNumber = fullText.trim();
+    while (scanPos < titleEnd) {
+      const t = tokens[scanPos]!;
+      if (!foundPrefix) {
+        // 寻找已知前缀 token（允许前缀出现在任何位置，包括标题之后）
+        if (t.type === 'TEXT' && knownPrefixes.some(p => t.value.toUpperCase().startsWith(p))) {
+          foundPrefix = true;
+          numberTokens.push(t);
+          scanPos++;
+          continue;
+        }
+        // 跳过中文、标点等无关 token，继续寻找前缀
+        scanPos++;
+        continue;
       }
+      // foundPrefix 后：继续收集编号部分
+      if (
+        t.type === 'TEXT' ||
+        t.type === 'SLASH' ||
+        t.type === 'YEAR' ||
+        t.type === 'NUMBER' ||
+        t.type === 'DASH' ||
+        t.type === 'COLON' ||
+        t.type === 'DOT'
+      ) {
+        // 遇到中文 token 表示编号结束
+        if (/[\u4e00-\u9fa5]/.test(t.value)) break;
+        numberTokens.push(t);
+        scanPos++;
+      } else {
+        break;
+      }
+    }
+    // 拼接时根据 token 位置补回缺失的空格
+    standardNumber = '';
+    let lastEnd = -1;
+    for (const tok of numberTokens) {
+      if (lastEnd >= 0 && tok.position > lastEnd) standardNumber += ' ';
+      standardNumber += tok.value;
+      lastEnd = tok.position + tok.value.length;
+    }
+
+    // 剩余部分为标准名称（扫描位置之后的中文 TEXT）
+    if (scanPos < titleEnd) {
+      const nameTokens = tokens.slice(scanPos, titleEnd).filter(t => t.type === 'TEXT' && /[\u4e00-\u9fa5]/.test(t.value));
+      standardName = nameTokens.map(t => t.value).join(' ').trim();
     }
 
     position = titleEnd;
