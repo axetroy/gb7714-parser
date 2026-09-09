@@ -12,6 +12,7 @@ GB/T 7714 参考文献格式解析库，用于解析、校验和格式化符合�
 - 运行测试：`npm test`
 - 类型检查：`npm run typecheck`
 - 代码规范检查：`npm run lint`
+- 运行所有命令，需要设置环境变量 NO_COLOR=1
 
 ## 代码风格
 
