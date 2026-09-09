@@ -158,5 +158,72 @@ describe('WebPageParser', () => {
 
       expect(result.type).toBe('EB');
     });
+
+  describe('标准 §8.11 示例', () => {
+    it('例[1] 应解析无作者网站（机构名即题名）', () => {
+      const input = '[1] 中国国家博物馆[EB/OL]. [2025-05-06]. https://www.chnmuseum.cn/.';
+      const r = parser.parse(tokenize(input));
+
+      expect(r.type).toBe('EB');
+      expect(r.title).toBe('中国国家博物馆');
+      expect(r.authors).toHaveLength(1);
+      expect(r.authors[0].name).toBe('中国国家博物馆');
+      expect(r.accessDate).toBe('2025-05-06');
+      expect(r.url).toBe('https://www.chnmuseum.cn/');
+    });
+
+    it('例[2] 应解析英文网站（无作者）', () => {
+      const input = '[2] Library of Congress[EB/OL]. [2020-06-12]. https://www.loc.gov.';
+      const r = parser.parse(tokenize(input));
+
+      expect(r.type).toBe('EB');
+      expect(r.title).toBe('Library of Congress');
+      expect(r.authors).toHaveLength(0);
+      expect(r.accessDate).toBe('2020-06-12');
+      expect(r.url).toBe('https://www.loc.gov');
+    });
+
+    it('例[1]（网页）应解析带作者的网页', () => {
+      const input =
+        '[1] 高等教育文献保障系统. 馆际互借与文献传递服务[EB/OL]. [2025-06-21]. http://home.calis.edu.cn/pages/list.html?id=4101e184-7f64-4798-a5e1-8e37aa6994fc.';
+      const r = parser.parse(tokenize(input));
+
+      expect(r.type).toBe('EB');
+      expect(r.authors).toHaveLength(1);
+      expect(r.authors[0].name).toBe('高等教育文献保障系统');
+      expect(r.title).toBe('馆际互借与文献传递服务');
+      expect(r.accessDate).toBe('2025-06-21');
+      expect(r.url).toContain('calis.edu.cn');
+    });
+
+    it('例[3] 应解析作者：标题格式的网页', () => {
+      const input =
+        '[3] 许振超："好好干，当一个好工人"[EB/OL]. (2025-02-17) [2025-06-22]. http://cpc.people.com.cn/n1/2025/0217/c443712-40419790.html.';
+      const r = parser.parse(tokenize(input));
+
+      expect(r.type).toBe('EB');
+      expect(r.authors).toHaveLength(1);
+      expect(r.authors[0].name).toBe('许振超');
+      expect(r.title).toBe('许振超');
+      expect(r.subtitle).toBe('"好好干，当一个好工人"');
+      expect(r.createDate).toBe('2025-02-17');
+      expect(r.url).toContain('people.com.cn');
+    });
+
+    it('例[4] 应解析多作者西文网页（含副题名）', () => {
+      const input =
+        '[4] António M, Pepper L. Histórias de Portugal: livros caídos [EB/OL]. (2019-07-13) [2025-01-02]. https://arquivo.pt/wayback/20190905210731/http://publico.pt/2019/07/13/sociedade/noticia/podcast-historias-portugal-cuidadores-1879731.';
+      const r = parser.parse(tokenize(input));
+
+      expect(r.type).toBe('EB');
+      expect(r.authors).toHaveLength(2);
+      expect(r.authors[0].name).toBe('António M');
+      expect(r.authors[1].name).toBe('Pepper L');
+      expect(r.title).toBe('Histórias de Portugal');
+      expect(r.subtitle).toBe('livros caídos');
+      expect(r.createDate).toBe('2019-07-13');
+      expect(r.url).toContain('arquivo.pt');
+    });
+  });
   });
 });

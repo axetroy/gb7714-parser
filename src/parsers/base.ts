@@ -87,12 +87,39 @@ export abstract class BaseParser implements ParserStrategy {
    */
   protected parseOptionalAuthors(tokens: Token[], position: number): { authors: Author[]; position: number } {
     let authors: Author[] = [];
+    // 找到第一个 TYPE_INDICATOR 的位置，作为搜索边界
+    const typeIndicatorIndex = findNextTypeIndicator(tokens, position);
+    // 在 TYPE_INDICATOR 之前寻找 DOT（作者分隔符）
     const dotIndex = findNextDot(tokens, position);
-    if (dotIndex > position) {
+    // 有效搜索范围：不超过 TYPE_INDICATOR
+    const searchLimit = typeIndicatorIndex < tokens.length
+      ? Math.min(dotIndex, typeIndicatorIndex)
+      : dotIndex;
+
+    if (searchLimit > position && dotIndex <= searchLimit) {
+      // 有 DOT 在 TYPE_INDICATOR 之前：正常作者分隔
       const beforeDot = this.readTextUntil(tokens, position, dotIndex);
       if (this.isLikelyAuthorText(beforeDot)) {
         authors = parseAuthors(beforeDot);
         position = dotIndex + 1;
+      } else {
+        // DOT 前不是作者（可能是标题），跳过 DOT 让外层处理
+        position = dotIndex + 1;
+      }
+    } else if (searchLimit > position && typeIndicatorIndex <= dotIndex) {
+      // 无 DOT 在 TYPE_INDICATOR 之前：检查 TYPE_INDICATOR 前的文本
+      // 进一步检查：如果文本内含 COLON（如"作者：标题"格式），只取 COLON 前的部分
+      const beforeTypeIndicator = this.readTextUntil(tokens, position, typeIndicatorIndex);
+      const colonInText = tokens.findIndex((t, i) =>
+        i >= position && i < typeIndicatorIndex && t.type === 'COLON'
+      );
+      const authorText = colonInText >= 0
+        ? this.readTextUntil(tokens, position, colonInText).trim()
+        : beforeTypeIndicator;
+      if (this.isLikelyAuthorText(authorText)) {
+        authors = parseAuthors(authorText);
+        // 不移动 position：让外层 parseTitleWithOptionalSubtitle 重新扫描 TYPE_INDICATOR
+        // position 保持原位，外层会从当前位置找到 TYPE_INDICATOR 并跳过
       }
     }
     return { authors, position };
@@ -136,8 +163,9 @@ export abstract class BaseParser implements ParserStrategy {
     optionalAuthors: boolean = false,
   ): { authors: Author[]; title: string; subtitle?: string; position: number } {
     // 解析作者
-    const authorParser = optionalAuthors ? this.parseOptionalAuthors : this.parseRequiredAuthors;
-    const { authors, position: afterAuthors } = authorParser(tokens, position);
+    const { authors, position: afterAuthors } = optionalAuthors
+      ? this.parseOptionalAuthors(tokens, position)
+      : this.parseRequiredAuthors(tokens, position);
     position = afterAuthors;
 
     // 解析题名和可选副题名（到文献类型标识为止）
@@ -153,14 +181,18 @@ export abstract class BaseParser implements ParserStrategy {
     //   - 中文古籍（例[3][4]）使用全角 "：" 作为题名内的章节/卷次标记，非副题名
     // 策略：仅对 ASCII ":" 拆分副题名，全角 "：" 保留为题名一部分
     const colonIndex = findNextColon(tokens, position);
-    if (colonIndex >= position && colonIndex < titleEnd) {
+    const hasAuthorSeparator = authors.length > 0; // 已识别到作者
+    // 对于 [EB] 格式如 "作者：标题[EB/OL]"，即使没有 DOT 分隔作者，
+    // 当存在 COLON 时在作者之后，也应拆分（支持全角冒号）
+    const hasColonSeparator = colonIndex > position;
+    if (colonIndex >= position && colonIndex < titleEnd && (hasAuthorSeparator || hasColonSeparator)) {
       const colonToken = tokens[colonIndex]!;
-      if (colonToken.value === ':') {
-        // 英文冒号：拆分为题名 + 副题名
+      if (colonToken.value === ':' || colonToken.value === '：') {
+        // 冒号（英文或全角）：拆分为题名 + 副题名
         title = this.readTextUntil(tokens, position, colonIndex).trim();
         subtitle = this.readTextUntil(tokens, colonIndex + 1, titleEnd).trim();
       } else {
-        // 中文冒号 "："：保留完整题名
+        // 其他分隔符：保留完整题名
         title = fullText;
       }
     } else {

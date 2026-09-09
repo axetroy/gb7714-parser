@@ -53,18 +53,18 @@ export class WebPageParser extends BaseParser {
 
     // 解析创建日期（如果有，格式为 (YYYY-MM-DD)）
     let createDate = '';
-    const createDateMatch = this.readTextUntilNextBracket(tokens, position);
-    if (createDateMatch) {
-      createDate = createDateMatch;
-      position = this.findNextBracket(tokens, position) + 1;
+    const parenOpenIndex = this.findNextBracket(tokens, position);
+    if (parenOpenIndex < tokens.length && tokens[parenOpenIndex]?.type === 'PAREN_OPEN') {
+      createDate = this.readTextUntilNextBracket(tokens, parenOpenIndex + 1);
+      position = this.findNextBracket(tokens, parenOpenIndex + 1) + 1;
     }
 
     // 解析引用日期（格式为 [YYYY-MM-DD]）
     let accessDate = '';
-    const accessDateMatch = this.readTextUntilNextBracket(tokens, position);
-    if (accessDateMatch) {
-      accessDate = accessDateMatch;
-      position = this.findNextBracket(tokens, position) + 1;
+    const bracketOpenIndex = this.findNextBracket(tokens, position);
+    if (bracketOpenIndex < tokens.length && tokens[bracketOpenIndex]?.type === 'BRACKET_OPEN') {
+      accessDate = this.readTextUntilNextBracket(tokens, bracketOpenIndex + 1);
+      position = this.findNextBracket(tokens, bracketOpenIndex + 1) + 1;
     }
 
     // 跳过 .
