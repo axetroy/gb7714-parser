@@ -286,9 +286,17 @@ export abstract class BaseParser implements ParserStrategy {
     const colonIndex = tokens.findIndex((t, i) => i >= position && (t.value === ':' || t.value === '：'));
     if (colonIndex >= position) {
       position = colonIndex + 1;
-      const pageTokens = tokens.slice(position).filter(t =>
-        t.type === 'NUMBER' || t.type === 'YEAR' || t.type === 'DASH' || t.type === 'TEXT'
-      );
+      // 只收集冒号后的连续页码 token（NUMBER/DASH/YEAR/TEXT），遇到 URL 等非页码 token 即停止
+      const pageTokens: Token[] = [];
+      for (let i = position; i < tokens.length; i++) {
+        const t = tokens[i]!;
+        if (t.type === 'URL' || t.type === 'PID' || t.type === 'COMMA' || t.type === 'DOT') break;
+        if (t.type === 'NUMBER' || t.type === 'YEAR' || t.type === 'DASH' || t.type === 'TEXT') {
+          pageTokens.push(t);
+        } else {
+          break;
+        }
+      }
       if (pageTokens.length > 0) {
         pages = pageTokens.map(t => t.value).join('').replace(/\.$/, '');
       }

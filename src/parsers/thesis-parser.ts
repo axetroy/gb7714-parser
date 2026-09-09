@@ -57,16 +57,23 @@ export class ThesisParser extends BaseParser {
     const awardInstitution = awardInfo.institution;
     const awardYear = awardInfo.year;
 
-    // 解析页码
+    // 解析页码（只收集连续的 NUMBER/DASH/TEXT，遇到 URL/DOI 等非页码 token 即停止）
     let pages: string | undefined;
     const yearIndex = tokens.findIndex((t, i) => i >= position && t.type === 'YEAR' && t.value === awardYear);
     if (yearIndex >= position) {
       const afterYear = tokens.slice(yearIndex + 1);
       const colonIndex = afterYear.findIndex(t => t.value === ':' || t.value === '：');
       if (colonIndex >= 0) {
-        const pageTokens = afterYear.slice(colonIndex + 1).filter(t =>
-          t.type === 'NUMBER' || t.type === 'DASH' || t.type === 'TEXT'
-        );
+        const pageTokens: Token[] = [];
+        for (let i = colonIndex + 1; i < afterYear.length; i++) {
+          const t = afterYear[i]!;
+          if (t.type === 'URL' || t.type === 'PID') break;
+          if (t.type === 'NUMBER' || t.type === 'DASH' || t.type === 'TEXT') {
+            pageTokens.push(t);
+          } else {
+            break;
+          }
+        }
         if (pageTokens.length > 0) {
           pages = pageTokens.map(t => t.value).join('').replace(/\.$/, '');
         }
