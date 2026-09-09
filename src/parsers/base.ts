@@ -147,9 +147,11 @@ export abstract class BaseParser implements ParserStrategy {
     let title: string;
     let subtitle: string | undefined;
 
-    // 仅当冒号为 ASCII ":" 时才拆分副题名
-    // 中文全角冒号 "：" 视为题名的一部分（如"昌平山水记：京东考古录"）
-    // 标准 §7.2.3：其他题名信息（副题名）用英文冒号分隔
+    // 标准 §6 符号说明使用全角冒号 "：" (U+FF1A) 作为副题名分隔符
+    // 但实际示例中：
+    //   - 西文文献（例[7][8]）使用 ASCII ":" 分隔副题名
+    //   - 中文古籍（例[3][4]）使用全角 "：" 作为题名内的章节/卷次标记，非副题名
+    // 策略：仅对 ASCII ":" 拆分副题名，全角 "：" 保留为题名一部分
     const colonIndex = findNextColon(tokens, position);
     if (colonIndex >= position && colonIndex < titleEnd) {
       const colonToken = tokens[colonIndex]!;
