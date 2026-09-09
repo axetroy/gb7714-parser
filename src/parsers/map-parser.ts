@@ -46,30 +46,8 @@ export class MapParser extends BaseParser {
     // 跳过空白
     position = this.skipWhitespace(tokens, position);
 
-    // 解析作者（如果有）
-    const { authors, position: afterAuthors } = this.parseOptionalAuthors(tokens, position);
-    position = afterAuthors;
-
-    // 跳过空白
-    position = this.skipWhitespace(tokens, position);
-
-    // 解析题名、比例尺和版本（到文献类型标识 [CM]）
-    let title = '';
-    let scale = '';
-    const titleEnd = this.findNextTypeIndicator(tokens, position);
-
-    // 查找比例尺（通常包含 "1:" 或 "比例尺"）
-    const fullText = this.readTextUntil(tokens, position, titleEnd);
-    const scaleMatch = fullText.match(/^(.*?)\.\s*(1\s*:\s*[\d\s]+|比例尺.*)$/);
-
-    if (scaleMatch) {
-      title = scaleMatch[1].trim();
-      scale = scaleMatch[2].trim();
-    } else {
-      title = fullText.trim().replace(/\.$/, '');
-    }
-
-    position = titleEnd;
+    // 解析作者、题名和比例尺（到文献类型标识 [CM]）
+    const { authors, title, scale, position: _afterTitle } = this.parseMapTitleAndScale(tokens, position, true);
 
     // 跳过文献类型标识 [CM]
     const { mediaType, position: afterType } = this.skipTypeIndicator(tokens, position);

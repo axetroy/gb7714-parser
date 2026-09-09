@@ -45,15 +45,8 @@ export class DatasetParser extends BaseParser {
     // 跳过空白
     position = this.skipWhitespace(tokens, position);
 
-    // 解析作者（如果有）
-    const { authors, position: afterAuthors } = this.parseOptionalAuthors(tokens, position);
-    position = afterAuthors;
-
-    // 跳过空白
-    position = this.skipWhitespace(tokens, position);
-
-    // 解析题名（到文献类型标识 [DS]）
-    const { title, position: afterTitle } = this.parseTitle(tokens, position);
+    // 解析作者和题名（含可选副题名）
+    const { authors, title, position: afterTitle } = this.parseTitleWithOptionalSubtitle(tokens, position);
     position = afterTitle;
 
     // 跳过文献类型标识 [DS]

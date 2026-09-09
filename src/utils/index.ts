@@ -142,6 +142,16 @@ export function findNextTypeIndicator(tokens: Token[], start: number): number {
 }
 
 /**
+ * 查找下一个 COLON 的位置
+ */
+export function findNextColon(tokens: Token[], start: number): number {
+  for (let i = start; i < tokens.length; i++) {
+    if (tokens[i]?.type === 'COLON') return i;
+  }
+  return tokens.length;
+}
+
+/**
  * 检查字符串是否是有效的日期格式
  */
 export function isValidDate(date: string): boolean {

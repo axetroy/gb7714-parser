@@ -1,7 +1,7 @@
 import type { Token, Author, MediaType, ParseError } from '../types/index.js';
 import { ParseErrorCode } from '../types/index.js';
 import type { ReferenceUnion, ParseOptions } from '../types/index.js';
-import { parseAuthors, parseTypeIndicator, readUntilDot, readUntilTypeIndicator, findNextDot, findNextTypeIndicator } from '../utils/index.js';
+import { parseAuthors, parseTypeIndicator, readUntilDot, readUntilTypeIndicator, findNextDot, findNextTypeIndicator, findNextColon } from '../utils/index.js';
 
 /**
  * 解析器策略接口
@@ -118,6 +118,121 @@ export abstract class BaseParser implements ParserStrategy {
     position = findNextTypeIndicator(tokens, position);
     const title = titleText.trim().replace(/\.$/, '');
     return { title, position };
+  }
+
+  /**
+   * Pattern 1：解析作者 + 题名（含可选副题名）+ 文献类型标识
+   * 格式：作者. 题名[: 副题名][文献类型标识/载体标识].
+   *
+   * 适用于：图书[M]、期刊[J]、学位论文[D]、连续出版物[J]、会议录[C]、报纸[N]、
+   *         数据集[DS]、预印本[PP]、网站/网页[EB] 等
+   *
+   * @param optionalAuthors 作者是否为可选（默认 false）。当为 true 时，若首段文本无顿号/逗号分隔符
+   *                        且不含中文姓名特征，则视为无作者，直接从题名开始解析。
+   */
+  protected parseTitleWithOptionalSubtitle(
+    tokens: Token[],
+    position: number,
+    optionalAuthors: boolean = false,
+  ): { authors: Author[]; title: string; subtitle?: string; position: number } {
+    // 解析作者
+    const authorParser = optionalAuthors ? this.parseOptionalAuthors : this.parseRequiredAuthors;
+    const { authors, position: afterAuthors } = authorParser(tokens, position);
+    position = afterAuthors;
+
+    // 解析题名和可选副题名（到文献类型标识为止）
+    const titleEnd = findNextTypeIndicator(tokens, position);
+    const fullText = this.readTextUntil(tokens, position, titleEnd).trim().replace(/\.$/, '');
+    const colonIndex = findNextColon(tokens, position);
+
+    let title: string;
+    let subtitle: string | undefined;
+    if (colonIndex >= position && colonIndex < titleEnd) {
+      title = this.readTextUntil(tokens, position, colonIndex).trim();
+      subtitle = this.readTextUntil(tokens, colonIndex + 1, titleEnd).trim();
+    } else {
+      title = fullText;
+    }
+
+    // 跳过文献类型标识
+    position = titleEnd;
+
+    return { authors, title, subtitle, position };
+  }
+
+  /**
+   * Pattern 2：解析作者 + 题名 + 附加字段（用冒号分隔）+ 文献类型标识
+   * 格式：作者. 题名: 附加字段[文献类型标识/载体标识].
+   *
+   * 适用于：报告[R]、专利[P]、档案[A] 等
+   *
+   * @param tokens Token 序列
+   * @param position 当前位置（作者已解析完毕）
+   * @param optionalAuthors 作者是否为可选（默认 false）
+   * @returns 解析结果，包含作者、题名、附加字段和下一个位置
+   */
+  protected parseTitleWithPrefix(
+    tokens: Token[],
+    position: number,
+    
+    optionalAuthors: boolean = false,
+  ): { authors: Author[]; title: string; extraField: string; position: number } {
+    // 解析作者
+    const authorParser = optionalAuthors ? this.parseOptionalAuthors : this.parseRequiredAuthors;
+    const { authors, position: afterAuthors } = authorParser(tokens, position);
+    position = afterAuthors;
+
+    // 解析题名和附加字段（到文献类型标识为止）
+    const titleEnd = findNextTypeIndicator(tokens, position);
+    const colonIndex = findNextColon(tokens, position);
+
+    let title: string;
+    let extraField: string;
+    if (colonIndex >= position && colonIndex < titleEnd) {
+      title = this.readTextUntil(tokens, position, colonIndex).trim().replace(/\.$/, '');
+      extraField = this.readTextUntil(tokens, colonIndex + 1, titleEnd).trim().replace(/\.$/, '');
+    } else {
+      title = this.readTextUntil(tokens, position, titleEnd).trim().replace(/\.$/, '');
+      extraField = '';
+    }
+
+    // 跳过文献类型标识
+    position = titleEnd;
+
+    return { authors, title, extraField, position };
+  }
+
+  /**
+   * Pattern 3：解析作者 + 题名 + 比例尺 + 文献类型标识
+   * 格式：作者. 题名. 比例尺[文献类型标识/载体标识].
+   *
+   * 适用于：地图[CM]
+   *
+   * @param optionalAuthors 作者是否为可选（默认 false）
+   */
+  protected parseMapTitleAndScale(
+    tokens: Token[],
+    position: number,
+    optionalAuthors: boolean = false,
+  ): { authors: Author[]; title: string; scale: string; position: number } {
+    // 解析作者
+    const authorParser = optionalAuthors ? this.parseOptionalAuthors : this.parseRequiredAuthors;
+    const { authors, position: afterAuthors } = authorParser(tokens, position);
+    position = afterAuthors;
+
+    // 解析题名（到第一个 DOT 之前）
+    const dotAfterTitle = findNextDot(tokens, position);
+    const title = this.readTextUntil(tokens, position, dotAfterTitle).trim().replace(/\.$/, '');
+    position = dotAfterTitle + 1;
+
+    // 解析比例尺（到文献类型标识之前）
+    const titleEnd = findNextTypeIndicator(tokens, position);
+    const scale = this.readTextUntil(tokens, position, titleEnd).trim().replace(/\.$/, '');
+
+    // 跳过文献类型标识
+    position = titleEnd;
+
+    return { authors, title, scale, position };
   }
 
   /**

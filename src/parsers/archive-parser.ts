@@ -44,30 +44,8 @@ export class ArchiveParser extends BaseParser {
     // 跳过空白
     position = this.skipWhitespace(tokens, position);
 
-    // 解析作者（如果有）
-    const { authors, position: afterAuthors } = this.parseOptionalAuthors(tokens, position);
-    position = afterAuthors;
-
-    // 跳过空白
-    position = this.skipWhitespace(tokens, position);
-
-    // 解析题名和档号（到文献类型标识 [A]）
-    let title = '';
-    let archiveNumber = '';
-    const titleEnd = this.findNextTypeIndicator(tokens, position);
-
-    // 查找冒号来分离题名和档号
-    const colonIndex = tokens.findIndex((t, i) => i >= position && i < titleEnd && (t.value === ':' || t.value === '：'));
-
-    if (colonIndex >= position && colonIndex < titleEnd) {
-      title = this.readTextUntil(tokens, position, colonIndex).trim().replace(/\.$/, '');
-      position = colonIndex + 1;
-      archiveNumber = this.readTextUntil(tokens, position, titleEnd).trim().replace(/\.$/, '');
-      position = titleEnd;
-    } else {
-      title = this.readTextUntil(tokens, position, titleEnd).trim().replace(/\.$/, '');
-      position = titleEnd;
-    }
+    // 解析作者、题名和档号（到文献类型标识 [A]）
+    const { authors, title, extraField: archiveNumber, position: _afterTitle } = this.parseTitleWithPrefix(tokens, position, true);
 
     // 跳过文献类型标识 [A]
     const { mediaType, position: afterType } = this.skipTypeIndicator(tokens, position);
