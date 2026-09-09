@@ -1,4 +1,4 @@
-import type { Author, MediaType } from '../types/index.js';
+import type { Author, MediaType, Token } from '../types/index.js';
 import { MediaType as MediaTypeEnum } from '../types/index.js';
 
 /**
@@ -62,6 +62,83 @@ export function formatAuthors(authors: Author[]): string {
   }
 
   return formatted.join(', ');
+}
+
+/**
+ * 从 token 序列中读取文本直到遇到 DOT，保留空格
+ */
+export function readUntilDot(tokens: Token[], start: number): string {
+  let result = '';
+  let lastEndPosition = -1;
+  let i = start;
+  while (i < tokens.length && tokens[i]?.type !== 'DOT') {
+    const token = tokens[i]!;
+    if (token.type === 'TEXT') {
+      if (result && lastEndPosition >= 0 && token.position > lastEndPosition) {
+        result += ' ';
+      }
+      result += token.value;
+      lastEndPosition = token.position + token.value.length;
+    } else if (token.type === 'COMMA') {
+      result += ',';
+      lastEndPosition = token.position + 1;
+    } else if (token.type === 'NUMBER') {
+      if (result && lastEndPosition >= 0 && token.position > lastEndPosition) {
+        result += ' ';
+      }
+      result += token.value;
+      lastEndPosition = token.position + token.value.length;
+    }
+    i++;
+  }
+  return result;
+}
+
+/**
+ * 从 token 序列中读取文本直到遇到 TYPE_INDICATOR，保留空格
+ */
+export function readUntilTypeIndicator(tokens: Token[], start: number): string {
+  let result = '';
+  let lastEndPosition = -1;
+  let i = start;
+  while (i < tokens.length && tokens[i]?.type !== 'TYPE_INDICATOR') {
+    const token = tokens[i]!;
+    if (token.type === 'TEXT') {
+      if (result && lastEndPosition >= 0 && token.position > lastEndPosition) {
+        result += ' ';
+      }
+      result += token.value;
+      lastEndPosition = token.position + token.value.length;
+    } else if (token.type === 'DOT') {
+      result += '.';
+      lastEndPosition = token.position + 1;
+    } else if (token.type === 'COLON') {
+      result += ':';
+      lastEndPosition = token.position + 1;
+    }
+    i++;
+  }
+  return result;
+}
+
+/**
+ * 查找下一个 DOT 的位置
+ */
+export function findNextDot(tokens: Token[], start: number): number {
+  for (let i = start; i < tokens.length; i++) {
+    if (tokens[i]?.type === 'DOT') return i;
+  }
+  return tokens.length;
+}
+
+/**
+ * 查找下一个 TYPE_INDICATOR 的位置
+ */
+export function findNextTypeIndicator(tokens: Token[], start: number): number {
+  for (let i = start; i < tokens.length; i++) {
+    if (tokens[i]?.type === 'TYPE_INDICATOR') return i;
+  }
+  return tokens.length;
 }
 
 /**

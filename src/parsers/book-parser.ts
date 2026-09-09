@@ -1,7 +1,7 @@
 import type { Token } from '../types/index.js';
 import type { Book, ParseOptions } from '../types/index.js';
 import type { ParserStrategy } from './base.js';
-import { parseTypeIndicator, parseAuthors } from '../utils/index.js';
+import { parseTypeIndicator, parseAuthors, readUntilDot, readUntilTypeIndicator, findNextDot, findNextTypeIndicator } from '../utils/index.js';
 
 /**
  * 图书解析器
@@ -37,17 +37,17 @@ export class BookParser implements ParserStrategy {
     // 跳过空白
     position = this.skipWhitespace(tokens, position);
 
-    // 解析作者
-    const authorsText = this.readUntilDot(tokens, position);
-    position = this.findNextDot(tokens, position) + 1;
+      // 解析作者
+    const authorsText = readUntilDot(tokens, position);
+    position = findNextDot(tokens, position) + 1;
     const authors = parseAuthors(authorsText);
 
     // 跳过空白
     position = this.skipWhitespace(tokens, position);
 
     // 解析题名
-    const titleText = this.readUntilTypeIndicator(tokens, position);
-    position = this.findNextTypeIndicator(tokens, position);
+    const titleText = readUntilTypeIndicator(tokens, position);
+    position = findNextTypeIndicator(tokens, position);
     const title = titleText.trim().replace(/\.$/, '');
 
     // 跳过文献类型标识 [M]
@@ -132,46 +132,6 @@ export class BookParser implements ParserStrategy {
       position++;
     }
     return position;
-  }
-
-  private readUntilDot(tokens: Token[], start: number): string {
-    let result = '';
-    let i = start;
-    while (i < tokens.length && tokens[i]?.type !== 'DOT') {
-      if (tokens[i]?.type === 'TEXT') {
-        result += tokens[i]!.value;
-      }
-      i++;
-    }
-    return result;
-  }
-
-  private findNextDot(tokens: Token[], start: number): number {
-    for (let i = start; i < tokens.length; i++) {
-      if (tokens[i]?.type === 'DOT') return i;
-    }
-    return tokens.length;
-  }
-
-  private readUntilTypeIndicator(tokens: Token[], start: number): string {
-    let result = '';
-    let i = start;
-    while (i < tokens.length && tokens[i]?.type !== 'TYPE_INDICATOR') {
-      if (tokens[i]?.type === 'TEXT') {
-        result += tokens[i]!.value;
-      } else if (tokens[i]?.type === 'DOT') {
-        result += '.';
-      }
-      i++;
-    }
-    return result;
-  }
-
-  private findNextTypeIndicator(tokens: Token[], start: number): number {
-    for (let i = start; i < tokens.length; i++) {
-      if (tokens[i]?.type === 'TYPE_INDICATOR') return i;
-    }
-    return tokens.length;
   }
 
   private readPublisherInfo(tokens: Token[], start: number): {

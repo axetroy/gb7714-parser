@@ -772,5 +772,15 @@ describe('真实案例测试', () => {
       expect(reference.title).toBe('The genome of Eucalyptus grandis');
       expect(formatted).toBe('Myburg A A, Grattapaglia D The genome of Eucalyptus grandis[J/OL]. Nature, 2014, 510: 356-362.');
     });
+
+    it('应该保留图书标题中的空格', () => {
+      const input = 'Boden M A. AI: Its nature and future[M]. Oxford university press, 2016.';
+      const { reference } = parse(input);
+      const formatted = format(reference);
+
+      expect(reference.authors[0].name).toBe('Boden M A');
+      expect(reference.title).toBe('AI: Its nature and future');
+      expect(formatted).toContain('AI: Its nature and future');
+    });
   });
 });
