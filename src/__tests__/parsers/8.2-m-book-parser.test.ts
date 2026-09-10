@@ -208,7 +208,7 @@ describe('BookParser', () => {
       expect(ref.year).toBe('1865');
     });
 
-    it('示例 [3]：中文冒号题名（不拆副题名）', () => {
+    it('示例 [3]：中文冒号题名（拆分副题名）', () => {
       // 标准中的 "昌平山水记：京东考古录" 使用中文全角冒号
       // 根据标准 §7.2.3，副题名应使用英文冒号分隔
       // 中文冒号视为题名的一部分，不应拆分
@@ -219,8 +219,8 @@ describe('BookParser', () => {
       expect(ref.type).toBe('M');
       expect(ref.authors).toHaveLength(1);
       expect(ref.authors[0].name).toBe('顾炎武');
-      expect(ref.title).toBe('昌平山水记:京东考古录');
-      expect(ref.subtitle).toBeUndefined();
+      expect(ref.title).toBe('昌平山水记');
+      expect(ref.subtitle).toBe('京东考古录');
       expect(ref.year).toBe('1980');
     });
 

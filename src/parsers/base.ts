@@ -226,14 +226,11 @@ export abstract class BaseParser implements ParserStrategy {
     const hasColonSeparator = colonIndex > position;
     if (colonIndex >= position && colonIndex < titleEnd && (hasAuthorSeparator || hasColonSeparator)) {
       const colonToken = tokens[colonIndex]!;
-      // position 前的 token 是否为 DOT：若是，作者已由 DOT 分隔，
-      // 此时全角冒号属于题名内部（如"昌平山水记：京东考古录"），不拆分；
-      // 若否，全角冒号是作者与题名的分隔符（如"许振超：标题"），应拆分。
-      const authorSeparatedByDot = position > 0 && tokens[position - 1]?.type === 'DOT';
       // 无作者模式（noAuthor）下没有 DOT 分隔作者，全角冒号视为题名内部符号
       // （如无作者图书"康熙字典：巳集上 水部[M]"，"巳集上 水部"是卷次而非副题名）；
-      // ASCII 冒号仍拆分副题名（与有作者路径一致，如"中国铁路史: 1876-1949[M]"）
-      const shouldSplit = colonToken.value === ':' || (colonToken.value === '：' && !authorSeparatedByDot && !noAuthor);
+      // ASCII 冒号始终拆分副题名（与有作者路径一致，如"中国铁路史: 1876-1949[M]"）；
+      // 全角冒号在有作者时应拆分副题名（标准 §6.2："："用于其他题名信息）
+      const shouldSplit = colonToken.value === ':' || (colonToken.value === '：' && !noAuthor);
       if (shouldSplit) {
         // 检查冒号后是否为年份/数字范围（如"数据：2000—2020"），若是则不拆分副题名
         const nextAfterColon = tokens[colonIndex + 1];

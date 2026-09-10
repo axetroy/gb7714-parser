@@ -66,7 +66,8 @@ describe('ProceedingsParser', () => {
       expect(result.type).toBe('C');
       expect(result.authors).toHaveLength(3);
       expect(result.authors[0].name).toBe('牛志明');
-      expect(result.title).toBe('综合湿地管理:综合湿地管理国际研讨会论文集');
+      expect(result.title).toBe('综合湿地管理');
+      expect(result.subtitle).toBe('综合湿地管理国际研讨会论文集');
       expect(result.publisherPlace).toBe('北京');
       expect(result.publisher).toBe('海洋出版社');
       expect(result.year).toBe('2012');
