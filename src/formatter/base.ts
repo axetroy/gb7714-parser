@@ -15,15 +15,18 @@ export abstract class BaseFormatter {
 
   /**
    * 格式化作者列表
-   * - 超过3个责任者 → 前3个 + "等"或"et al."
+   * - 有 authorsTruncated 标记 → 使用原文截断文本（"等"或"et al."）
+   * - 超过3个作者 → 前3个 + "等"或"et al."（根据 locale）
    * - 无责任者 → 空字符串（顺序编码制可省略，§7.1.3）
    */
-  protected formatAuthors(authors: Author[], truncated?: boolean): string {
+  protected formatAuthors(authors: Author[], truncated?: string): string {
     if (authors.length === 0) return '';
     const formatted = authors.map(a => a.name);
-    // 优先使用 authorsTruncated 标志，否则按作者数量判断
-    const shouldTruncate = truncated !== undefined ? truncated : formatted.length > 3;
-    if (shouldTruncate) {
+    // 优先使用截断标记，否则按作者数量判断
+    if (truncated !== undefined) {
+      return formatted.slice(0, 3).join(', ') + ', ' + truncated;
+    }
+    if (formatted.length > 3) {
       const suffix = this.options.locale === 'en' ? 'et al.' : '等';
       return formatted.slice(0, 3).join(', ') + `, ${suffix}`;
     }

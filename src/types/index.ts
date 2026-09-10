@@ -88,8 +88,8 @@ export interface Reference {
   mediaType?: MediaType;
   /** 作者列表 */
   authors: Author[];
-  /** 是否截断了作者列表（原文有超过 3 个作者，显示 "等"） */
-  authorsTruncated?: boolean;
+  /** 截断标记（原文有"等"/"et al."时被解析保留，用于精准还原） */
+  authorsTruncated?: string;
   /** 题名 */
   title: string;
   /** 其他题名信息（副题名、分卷书名等） */
@@ -122,8 +122,8 @@ export interface Reference {
 export interface HostReference {
   /** 出处文献作者 */
   authors?: Author[];
-  /** 是否截断了作者列表（原文有超过 3 个作者，显示 "等"） */
-  authorsTruncated?: boolean;
+  /** 截断标记（原文有"等"/"et al."时被解析保留，用于精准还原） */
+  authorsTruncated?: string;
   /** 出处文献题名 */
   title: string;
   /** 出处文献其他题名信息 */

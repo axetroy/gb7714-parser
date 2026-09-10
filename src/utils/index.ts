@@ -11,31 +11,33 @@ const ET_AL_PATTERN = /^(etal|et\s+al\.?|等)$/i;
  * 支持中文作者（逗号分隔）和西文作者
  *
  * @param text - 作者字符串，多个作者用逗号分隔
- * @returns 解析结果：作者数组 + 是否截断（原文含"等"/"et al."）
+ * @returns 解析结果：作者数组 + 截断标记（原文含"等"/"et al."时返回对应文本）
  *
  * @example
  * ```typescript
- * parseAuthors('张三');           // { authors: [{name:'张三'}], truncated: false }
- * parseAuthors('张三, 李四, 王五, 等');  // { authors: [{name:'张三'},{name:'李四'},{name:'王五'}], truncated: true }
- * parseAuthors('John Smith, et al.');    // { authors: [{name:'John Smith'}], truncated: true }
+ * parseAuthors('张三');                     // { authors: [{name:'张三'}], truncated: undefined }
+ * parseAuthors('张三, 李四, 王五, 等');     // { authors: [{name:'张三'},{name:'李四'},{name:'王五'}], truncated: '等' }
+ * parseAuthors('John Smith, et al.');       // { authors: [{name:'John Smith'}], truncated: 'et al.' }
  * ```
  */
-export function parseAuthors(text: string): { authors: Author[]; truncated: boolean } {
-  if (!text.trim()) return { authors: [], truncated: false };
+export function parseAuthors(text: string): { authors: Author[]; truncated?: string } {
+  if (!text.trim()) return { authors: [], truncated: undefined };
 
   // 使用中文逗号或英文逗号分隔
   const parts = text.split(/[,，]/);
 
   const authors: Author[] = [];
-  let truncated = false;
+  let truncated: string | undefined;
 
   for (const part of parts) {
     const name = part.trim();
     if (!name) continue;
 
-    // 检测 "et al" 和 "等"
-    if (ET_AL_PATTERN.test(name)) {
-      truncated = true;
+    // 检测并保留 "等" 或 "et al."
+    const match = ET_AL_PATTERN.exec(name);
+    if (match) {
+      // 保留原文形式（"等" 或 "et al." 或 "etal" 等）
+      truncated = name;
       continue;
     }
 
@@ -56,16 +58,20 @@ export function parseAuthors(text: string): { authors: Author[]; truncated: bool
 
 /**
  * 格式化作者为字符串
+ * @param authors - 作者数组
+ * @param truncated - 截断标记（原文的"等"或"et al."，用于精准还原）
  */
-export function formatAuthors(authors: Author[], truncated?: boolean, locale?: 'zh' | 'en'): string {
+export function formatAuthors(authors: Author[], truncated?: string): string {
   if (authors.length === 0) return '';
 
   const formatted = authors.map(a => a.name);
-  // 优先使用 truncated 标志，否则按作者数量判断
-  const shouldTruncate = truncated !== undefined ? truncated : formatted.length > 3;
-  if (shouldTruncate) {
-    const suffix = locale === 'en' ? 'et al.' : '等';
-    return formatted.slice(0, 3).join(', ') + `, ${suffix}`;
+
+  // 优先使用截断标记，否则按作者数量判断
+  if (truncated !== undefined) {
+    return formatted.slice(0, 3).join(', ') + ', ' + truncated;
+  }
+  if (formatted.length > 3) {
+    return formatted.slice(0, 3).join(', ') + ', et al.';
   }
 
   return formatted.join(', ');

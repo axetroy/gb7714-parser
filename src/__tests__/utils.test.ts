@@ -101,28 +101,28 @@ describe('Utils', () => {
 
 
     it('应该标记超过 3 个作者的解析结果', () => {
-      // 输入有4个作者但没有"等"，全部保留，truncated=false
+      // 输入有4个作者但没有"等"，全部保留，truncated=undefined
       const result = parseAuthors('张三, 李四, 王五, 赵六');
       expect(result.authors).toHaveLength(4);
-      expect(result.truncated).toBe(false);
+      expect(result.truncated).toBeUndefined();
     });
 
     it('应该标记含等的解析结果', () => {
       const result = parseAuthors('张三, 李四, 王五, 等');
       expect(result.authors).toHaveLength(3);
-      expect(result.truncated).toBe(true);
+      expect(result.truncated).toBe('等');
     });
 
     it('应该标记含 et al 的解析结果', () => {
       const result = parseAuthors('John Smith, Jane Doe, et al.');
       expect(result.authors).toHaveLength(2);
-      expect(result.truncated).toBe(true);
+      expect(result.truncated).toBe('et al.');
     });
 
     it('应该标记不含截断的解析结果', () => {
       const result = parseAuthors('张三, 李四');
       expect(result.authors).toHaveLength(2);
-      expect(result.truncated).toBe(false);
+      expect(result.truncated).toBeUndefined();
     });
 
   describe('formatAuthors', () => {
@@ -154,34 +154,34 @@ describe('Utils', () => {
         { name: '王五' },
         { name: '赵六' },
       ];
-      // 默认使用中文"等"
-      expect(formatAuthors(authors)).toBe('张三, 李四, 王五, 等');
+      // 默认使用 "et al."（向后兼容）
+      expect(formatAuthors(authors)).toBe('张三, 李四, 王五, et al.');
     });
 
-    it('应该使用 authorsTruncated=true 添加中文"等"', () => {
+    it('应该使用截断文本添加中文"等"', () => {
       const authors = [
         { name: '张三' },
         { name: '李四' },
       ];
-      expect(formatAuthors(authors, true, 'zh')).toBe('张三, 李四, 等');
+      expect(formatAuthors(authors, '等')).toBe('张三, 李四, 等');
     });
 
-    it('应该使用 authorsTruncated=true 添加英文"et al."', () => {
+    it('应该使用截断文本添加英文"et al."', () => {
       const authors = [
         { name: '张三' },
         { name: '李四' },
       ];
-      expect(formatAuthors(authors, true, 'en')).toBe('张三, 李四, et al.');
+      expect(formatAuthors(authors, 'et al.')).toBe('张三, 李四, et al.');
     });
 
-    it('authorsTruncated=false 时不添加"等"', () => {
+    it('不传截断标记时按作者数量判断', () => {
       const authors = [
         { name: '张三' },
         { name: '李四' },
         { name: '王五' },
         { name: '赵六' },
       ];
-      expect(formatAuthors(authors, false)).toBe('张三, 李四, 王五, 赵六');
+      expect(formatAuthors(authors)).toBe('张三, 李四, 王五, et al.');
     });
   });
 
