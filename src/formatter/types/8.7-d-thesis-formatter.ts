@@ -19,7 +19,9 @@ export class ThesisFormatter extends BaseFormatter {
       parts.push(`[${thesis.id}]`);
     }
 
-    parts.push(this.formatAuthors(thesis.authors, thesis.authorsTruncated));
+    if (thesis.authors.length > 0) {
+      parts.push(this.formatAuthors(thesis.authors, thesis.authorsTruncated) + '.');
+    }
 
     let title = thesis.title;
     if (thesis.subtitle) {

@@ -24,7 +24,9 @@ export class JournalFormatter extends BaseFormatter {
     if (this.options.citationStyle === 'author-date' && journal.year) {
       parts.push(`${this.formatAuthors(journal.authors, journal.authorsTruncated)}, ${journal.year}.`);
     } else {
-      parts.push(this.formatAuthors(journal.authors, journal.authorsTruncated));
+      if (journal.authors.length > 0) {
+      parts.push(this.formatAuthors(journal.authors, journal.authorsTruncated) + '.');
+    }
     }
 
     let title = journal.title;

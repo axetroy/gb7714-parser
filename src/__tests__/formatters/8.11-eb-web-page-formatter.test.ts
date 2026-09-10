@@ -19,7 +19,7 @@ describe('WebPageFormatter', () => {
         mediaType: MediaType.OL,
       };
       const result = formatter.format(reference);
-      expect(result).toBe('张三 网站标题[EB/OL]. (2025-01-01) [2025-09-07]. https://example.com.');
+      expect(result).toBe('张三. 网站标题[EB/OL]. (2025-01-01) [2025-09-07]. https://example.com.');
     });
 
     it('应该格式化没有创建日期的网页', () => {
@@ -32,7 +32,7 @@ describe('WebPageFormatter', () => {
         mediaType: MediaType.OL,
       };
       const result = formatter.format(reference);
-      expect(result).toBe('张三 网页标题[EB/OL]. [2025-09-07]. https://example.com.');
+      expect(result).toBe('张三. 网页标题[EB/OL]. [2025-09-07]. https://example.com.');
     });
 
     it('应该格式化没有作者的网页', () => {
@@ -60,7 +60,7 @@ describe('WebPageFormatter', () => {
         mediaType: MediaType.OL,
       };
       const result = formatter.format(reference);
-      expect(result).toBe('[6] 张三 网页标题[EB/OL]. (2025-01-01) [2025-09-07]. https://example.com.');
+      expect(result).toBe('[6] 张三. 网页标题[EB/OL]. (2025-01-01) [2025-09-07]. https://example.com.');
     });
 
     it('应该格式化不带媒体类型的网页', () => {
@@ -73,7 +73,7 @@ describe('WebPageFormatter', () => {
         url: 'https://example.com',
       };
       const result = formatter.format(reference);
-      expect(result).toBe('张三 网页标题[EB]. (2025-01-01) [2025-09-07]. https://example.com.');
+      expect(result).toBe('张三. 网页标题[EB]. (2025-01-01) [2025-09-07]. https://example.com.');
     });
   });
 });

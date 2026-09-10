@@ -21,7 +21,7 @@ describe('SerialFormatter', () => {
         publicationStartYear: '1984',
       };
       const result = formatter.format(reference as ReferenceUnion);
-      expect(result).toBe('中华医学会湖北分会 临床内科杂志[J]. 1984, 1(1)—. 武汉: 中华医学会湖北分会, 1984—.');
+      expect(result).toBe('中华医学会湖北分会. 临床内科杂志[J]. 1984, 1(1)—. 武汉: 中华医学会湖北分会, 1984—.');
     });
 
     it('应该格式化带有年份范围的连续出版物', () => {
@@ -40,7 +40,7 @@ describe('SerialFormatter', () => {
         publicationEndYear: '1990',
       };
       const result = formatter.format(reference as ReferenceUnion);
-      expect(result).toBe('中国图书馆学会 图书馆学通讯[J]. 1957(1)—1990(4). 北京: 北京图书馆, 1957—1990.');
+      expect(result).toBe('中国图书馆学会. 图书馆学通讯[J]. 1957(1)—1990(4). 北京: 北京图书馆, 1957—1990.');
     });
 
     it('应该格式化带有续篇部分的连续出版物', () => {

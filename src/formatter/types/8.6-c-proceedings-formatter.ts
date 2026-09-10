@@ -17,7 +17,9 @@ export class ProceedingsFormatter extends BaseFormatter {
       parts.push(`[${proceedings.id}]`);
     }
 
-    parts.push(this.formatAuthors(proceedings.authors, proceedings.authorsTruncated));
+    if (proceedings.authors.length > 0) {
+      parts.push(this.formatAuthors(proceedings.authors, proceedings.authorsTruncated) + '.');
+    }
     parts.push(`${proceedings.title}${buildTypeIndicator('C', proceedings.mediaType)}.`);
 
     if (proceedings.conferenceName && proceedings.conferenceYear) {

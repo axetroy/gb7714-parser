@@ -20,7 +20,9 @@ export class SerialFormatter extends BaseFormatter {
     }
 
     if (serial.authors && serial.authors.length > 0) {
-      parts.push(this.formatAuthors(serial.authors, serial.authorsTruncated));
+      if (serial.authors.length > 0) {
+      parts.push(this.formatAuthors(serial.authors, serial.authorsTruncated) + '.');
+    }
     }
 
     // 刊名 + 文献类型标识

@@ -16,7 +16,7 @@ describe('MapFormatter', () => {
         dimensions: '128 cm × 84 cm',
       };
       const result = formatter.format(reference);
-      expect(result).toBe('张三 地图标题. 1:25000[CM].');
+      expect(result).toBe('张三. 地图标题. 1:25000[CM].');
     });
 
     it('应该格式化带有出版者信息的地图', () => {
@@ -30,7 +30,7 @@ describe('MapFormatter', () => {
         year: '2025',
       };
       const result = formatter.format(reference);
-      expect(result).toBe('张三 地图标题. 1:25000[CM]. 北京: 地图出版社, 2025.');
+      expect(result).toBe('张三. 地图标题. 1:25000[CM]. 北京: 地图出版社, 2025.');
     });
 
     it('应该格式化带有尺寸的地图', () => {
@@ -45,7 +45,7 @@ describe('MapFormatter', () => {
         dimensions: '128 cm × 84 cm',
       };
       const result = formatter.format(reference);
-      expect(result).toBe('张三 地图标题. 1:25000[CM]. 北京: 地图出版社, 2025. 128 cm × 84 cm.');
+      expect(result).toBe('张三. 地图标题. 1:25000[CM]. 北京: 地图出版社, 2025. 128 cm × 84 cm.');
     });
 
     it('应该格式化带有版本的地图', () => {
@@ -56,7 +56,7 @@ describe('MapFormatter', () => {
         version: '第2版',
       };
       const result = formatter.format(reference);
-      expect(result).toBe('张三 地图标题[CM]. 第2版.');
+      expect(result).toBe('张三. 地图标题[CM]. 第2版.');
     });
 
     it('应该格式化带有 URL 的地图', () => {
@@ -67,7 +67,7 @@ describe('MapFormatter', () => {
         url: 'https://example.com',
       };
       const result = formatter.format(reference);
-      expect(result).toBe('张三 地图标题[CM]. https://example.com');
+      expect(result).toBe('张三. 地图标题[CM]. https://example.com');
     });
 
     it('应该格式化带有 id 的地图', () => {
@@ -78,7 +78,7 @@ describe('MapFormatter', () => {
         title: '地图标题',
       };
       const result = formatter.format(reference);
-      expect(result).toBe('[42] 张三 地图标题[CM].');
+      expect(result).toBe('[42] 张三. 地图标题[CM].');
     });
 
     it('应该格式化没有作者的地图', () => {

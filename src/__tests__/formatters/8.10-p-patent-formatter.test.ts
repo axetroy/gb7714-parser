@@ -16,7 +16,7 @@ describe('PatentFormatter', () => {
         announceDate: '2025-09-07',
       };
       const result = formatter.format(reference);
-      expect(result).toBe('张三 发明名称: CN2025001[P]. 2025-09-07.');
+      expect(result).toBe('张三. 发明名称: CN2025001[P]. 2025-09-07.');
     });
 
     it('应该格式化带有页码的专利', () => {
@@ -29,7 +29,7 @@ describe('PatentFormatter', () => {
         pages: '10',
       };
       const result = formatter.format(reference);
-      expect(result).toBe('张三 发明名称: CN2025001[P]. 2025-09-07: 10.');
+      expect(result).toBe('张三. 发明名称: CN2025001[P]. 2025-09-07: 10.');
     });
 
     it('应该格式化没有公告日期的专利', () => {
@@ -40,7 +40,7 @@ describe('PatentFormatter', () => {
         patentNumber: 'CN2025001',
       };
       const result = formatter.format(reference);
-      expect(result).toBe('张三 发明名称: CN2025001[P].');
+      expect(result).toBe('张三. 发明名称: CN2025001[P].');
     });
 
     it('应该格式化带有 URL 的专利', () => {
@@ -53,7 +53,7 @@ describe('PatentFormatter', () => {
         url: 'https://example.com',
       };
       const result = formatter.format(reference);
-      expect(result).toBe('张三 发明名称: CN2025001[P]. 2025-09-07. https://example.com');
+      expect(result).toBe('张三. 发明名称: CN2025001[P]. 2025-09-07. https://example.com');
     });
 
     it('应该格式化带有 id 的专利', () => {
@@ -66,7 +66,7 @@ describe('PatentFormatter', () => {
         announceDate: '2025-09-07',
       };
       const result = formatter.format(reference);
-      expect(result).toBe('[11] 张三 发明名称: CN2025001[P]. 2025-09-07.');
+      expect(result).toBe('[11] 张三. 发明名称: CN2025001[P]. 2025-09-07.');
     });
 
     it('应该格式化没有作者的专利', () => {
@@ -78,7 +78,7 @@ describe('PatentFormatter', () => {
         announceDate: '2025-09-07',
       };
       const result = formatter.format(reference);
-      expect(result).toBe(' 发明名称: CN2025001[P]. 2025-09-07.');
+      expect(result).toBe('发明名称: CN2025001[P]. 2025-09-07.');
     });
   });
 });

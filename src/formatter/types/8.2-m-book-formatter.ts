@@ -19,7 +19,9 @@ export class BookFormatter extends BaseFormatter {
       parts.push(`[${book.id}]`);
     }
 
-    parts.push(this.formatAuthors(book.authors, book.authorsTruncated));
+    if (book.authors.length > 0) {
+      parts.push(this.formatAuthors(book.authors, book.authorsTruncated) + '.');
+    }
 
     let title = book.title;
     if (book.subtitle) {
@@ -29,7 +31,9 @@ export class BookFormatter extends BaseFormatter {
 
     // 其他责任者（译者、编者等）
     if (book.otherAuthors && book.otherAuthors.length > 0) {
+      if (book.otherAuthors.length > 0) {
       parts.push(this.formatAuthors(book.otherAuthors) + '.');
+    }
     }
 
     if (book.version) {

@@ -15,7 +15,7 @@ describe('GenericFormatter', () => {
         year: '2025',
       } as ReferenceUnion;
       const result = formatter.format(reference);
-      expect(result).toBe('张三 通用标题[X]. 2025.');
+      expect(result).toBe('张三. 通用标题[X]. 2025.');
     });
 
     it('应该处理带有出版者信息的通用类型', () => {
@@ -28,7 +28,7 @@ describe('GenericFormatter', () => {
         publisher: '出版社',
       } as ReferenceUnion;
       const result = formatter.format(reference);
-      expect(result).toBe('张三 通用标题[X]. 2025. 北京: 出版社.');
+      expect(result).toBe('张三. 通用标题[X]. 2025. 北京: 出版社.');
     });
 
     it('应该处理带有 URL 的通用类型', () => {
@@ -39,7 +39,7 @@ describe('GenericFormatter', () => {
         url: 'https://example.com',
       } as ReferenceUnion;
       const result = formatter.format(reference);
-      expect(result).toBe('张三 通用标题[X]. https://example.com');
+      expect(result).toBe('张三. 通用标题[X]. https://example.com');
     });
 
     it('应该处理没有年份的通用类型', () => {
@@ -49,7 +49,7 @@ describe('GenericFormatter', () => {
         title: '通用标题',
       } as ReferenceUnion;
       const result = formatter.format(reference);
-      expect(result).toBe('张三 通用标题[X].');
+      expect(result).toBe('张三. 通用标题[X].');
     });
 
     it('应该处理带有 id 的通用类型', () => {
@@ -60,7 +60,7 @@ describe('GenericFormatter', () => {
         title: '通用标题',
       } as ReferenceUnion;
       const result = formatter.format(reference);
-      expect(result).toBe('[42] 张三 通用标题[X].');
+      expect(result).toBe('[42] 张三. 通用标题[X].');
     });
 
     it('应该处理没有作者的通用类型', () => {
@@ -81,7 +81,7 @@ describe('GenericFormatter', () => {
         year: '2025',
       } as ReferenceUnion;
       const result = formatter.format(reference);
-      expect(result).toBe('张三 通用标题[X]. 2025.');
+      expect(result).toBe('张三. 通用标题[X]. 2025.');
     });
   });
 });

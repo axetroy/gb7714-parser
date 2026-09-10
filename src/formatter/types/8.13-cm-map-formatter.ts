@@ -18,7 +18,9 @@ export class MapFormatter extends BaseFormatter {
     }
 
     if (map.authors && map.authors.length > 0) {
-      parts.push(this.formatAuthors(map.authors, map.authorsTruncated));
+      if (map.authors.length > 0) {
+      parts.push(this.formatAuthors(map.authors, map.authorsTruncated) + '.');
+    }
     }
 
     let title = map.title;

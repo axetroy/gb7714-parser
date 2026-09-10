@@ -19,7 +19,7 @@ describe('JournalFormatter', () => {
         pages: '15-22',
       };
       const result = formatter.format(reference);
-      expect(result).toBe('张三, 李四 人工智能在教育中的应用[J]. 现代教育技术, 2025, 35(2): 15-22.');
+      expect(result).toBe('张三, 李四. 人工智能在教育中的应用[J]. 现代教育技术, 2025, 35(2): 15-22.');
     });
 
     it('应该格式化没有卷号/期号的期刊', () => {
@@ -31,7 +31,7 @@ describe('JournalFormatter', () => {
         year: '2025',
       };
       const result = formatter.format(reference);
-      expect(result).toBe('张三 论文标题[J]. 期刊名, 2025.');
+      expect(result).toBe('张三. 论文标题[J]. 期刊名, 2025.');
     });
 
     it('应该对超过 3 个作者使用 "等"', () => {
@@ -48,7 +48,7 @@ describe('JournalFormatter', () => {
         year: '2025',
       };
       const result = formatter.format(reference);
-      expect(result).toBe('张三, 李四, 王五, 等 论文标题[J]. 期刊名, 2025.');
+      expect(result).toBe('张三, 李四, 王五, 等. 论文标题[J]. 期刊名, 2025.');
     });
 
     it('应该格式化机构作为作者', () => {
@@ -60,7 +60,7 @@ describe('JournalFormatter', () => {
         year: '2025',
       };
       const result = formatter.format(reference);
-      expect(result).toBe('中国科学院 研究报告[J]. 科学通报, 2025.');
+      expect(result).toBe('中国科学院. 研究报告[J]. 科学通报, 2025.');
     });
 
     it('应该格式化带有完整姓名的作者', () => {
@@ -72,7 +72,7 @@ describe('JournalFormatter', () => {
         year: '2025',
       };
       const result = formatter.format(reference);
-      expect(result).toBe('Smith John Paper Title[J]. Journal Name, 2025.');
+      expect(result).toBe('Smith John. Paper Title[J]. Journal Name, 2025.');
     });
 
     it('应该格式化带有 id 的期刊', () => {
@@ -85,7 +85,7 @@ describe('JournalFormatter', () => {
         year: '2025',
       };
       const result = formatter.format(reference);
-      expect(result).toBe('[1] 张三 论文标题[J]. 期刊名, 2025.');
+      expect(result).toBe('[1] 张三. 论文标题[J]. 期刊名, 2025.');
     });
 
     it('应该格式化带有 pid 的期刊', () => {
@@ -98,7 +98,7 @@ describe('JournalFormatter', () => {
         pid: '10.1234/test',
       };
       const result = formatter.format(reference);
-      expect(result).toBe('张三 论文标题[J]. 期刊名, 2025. PID:10.1234/test');
+      expect(result).toBe('张三. 论文标题[J]. 期刊名, 2025. PID:10.1234/test');
     });
 
     it('应该格式化带有 URL 的期刊', () => {
@@ -111,7 +111,7 @@ describe('JournalFormatter', () => {
         url: 'https://example.com',
       };
       const result = formatter.format(reference);
-      expect(result).toBe('张三 论文标题[J]. 期刊名, 2025. https://example.com');
+      expect(result).toBe('张三. 论文标题[J]. 期刊名, 2025. https://example.com');
     });
 
     it('应该在 2015 版本中使用 DOI', () => {
@@ -125,7 +125,7 @@ describe('JournalFormatter', () => {
         pid: '10.1234/test',
       };
       const result = formatter2015.format(reference);
-      expect(result).toBe('张三 论文标题[J]. 期刊名, 2025. DOI:10.1234/test');
+      expect(result).toBe('张三. 论文标题[J]. 期刊名, 2025. DOI:10.1234/test');
     });
 
     it('应该在 2025 版本中使用 PID', () => {
@@ -139,7 +139,7 @@ describe('JournalFormatter', () => {
         pid: '10.1234/test',
       };
       const result = formatter2025.format(reference);
-      expect(result).toBe('张三 论文标题[J]. 期刊名, 2025. PID:10.1234/test');
+      expect(result).toBe('张三. 论文标题[J]. 期刊名, 2025. PID:10.1234/test');
     });
 
     it('应该格式化带有副标题的期刊', () => {
@@ -154,7 +154,7 @@ describe('JournalFormatter', () => {
         issue: '1',
       };
       const result = formatter.format(reference);
-      expect(result).toBe('张三 人工智能研究: 综述篇[J]. 计算机学报, 2025, 48(1).');
+      expect(result).toBe('张三. 人工智能研究: 综述篇[J]. 计算机学报, 2025, 48(1).');
     });
 
     it('应该使用中文区域设置默认使用 "等"', () => {

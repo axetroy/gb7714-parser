@@ -21,7 +21,7 @@ describe('Formatter (integration)', () => {
         pages: '89',
       };
       const result = format(reference);
-      expect(result).toBe('王五 深度学习研究[D]. 北京: 北京大学, 2025: 89.');
+      expect(result).toBe('王五. 深度学习研究[D]. 北京: 北京大学, 2025: 89.');
     });
 
     it('应该在存在 id 时格式化 id', () => {
@@ -34,7 +34,7 @@ describe('Formatter (integration)', () => {
         year: '2025',
       };
       const result = format(reference);
-      expect(result).toBe('[1] 张三 论文标题[J]. 期刊名, 2025.');
+      expect(result).toBe('[1] 张三. 论文标题[J]. 期刊名, 2025.');
     });
 
     it('应该格式化报纸引用', () => {
@@ -48,7 +48,7 @@ describe('Formatter (integration)', () => {
         edition: '03',
       };
       const result = format(reference);
-      expect(result).toBe('张三 新闻标题[N]. 人民日报, 2025, 09-07: 03.');
+      expect(result).toBe('张三. 新闻标题[N]. 人民日报, 2025, 09-07: 03.');
     });
   });
 });

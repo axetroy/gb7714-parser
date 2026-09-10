@@ -19,7 +19,7 @@ describe('DatasetFormatter', () => {
         mediaType: MediaType.OL,
       };
       const result = formatter.format(reference);
-      expect(result).toBe('张三 数据集标题[DS/OL]. 国家数据中心 (2025-09-07) [2025-10-01].');
+      expect(result).toBe('张三. 数据集标题[DS/OL]. 国家数据中心 (2025-09-07) [2025-10-01].');
     });
 
     it('应该格式化没有平台的数据集', () => {
@@ -31,7 +31,7 @@ describe('DatasetFormatter', () => {
         mediaType: MediaType.OL,
       };
       const result = formatter.format(reference);
-      expect(result).toBe('张三 数据集标题[DS/OL].');
+      expect(result).toBe('张三. 数据集标题[DS/OL].');
     });
 
     it('应该格式化带有 URL 的数据集', () => {
@@ -44,7 +44,7 @@ describe('DatasetFormatter', () => {
         mediaType: MediaType.OL,
       };
       const result = formatter.format(reference);
-      expect(result).toBe('张三 数据集标题[DS/OL]. https://example.com');
+      expect(result).toBe('张三. 数据集标题[DS/OL]. https://example.com');
     });
 
     it('应该格式化带有 id 的数据集', () => {
@@ -57,7 +57,7 @@ describe('DatasetFormatter', () => {
         mediaType: MediaType.OL,
       };
       const result = formatter.format(reference);
-      expect(result).toBe('[43] 张三 数据集标题[DS/OL].');
+      expect(result).toBe('[43] 张三. 数据集标题[DS/OL].');
     });
 
     it('应该格式化带有版本的数据集', () => {
@@ -71,7 +71,7 @@ describe('DatasetFormatter', () => {
         mediaType: MediaType.OL,
       };
       const result = formatter.format(reference);
-      expect(result).toBe('张三 数据集标题[DS/OL]. v2.0. 国家数据中心 [2025-10-01].');
+      expect(result).toBe('张三. 数据集标题[DS/OL]. v2.0. 国家数据中心 [2025-10-01].');
     });
 
     it('应该格式化带有发布日期的数据集', () => {
@@ -85,7 +85,7 @@ describe('DatasetFormatter', () => {
         mediaType: MediaType.OL,
       };
       const result = formatter.format(reference);
-      expect(result).toBe('张三 数据集标题[DS/OL]. 国家数据中心 (2025-09-07) [2025-10-01].');
+      expect(result).toBe('张三. 数据集标题[DS/OL]. 国家数据中心 (2025-09-07) [2025-10-01].');
     });
 
     it('应该格式化没有作者的数据集', () => {
@@ -108,7 +108,7 @@ describe('DatasetFormatter', () => {
         accessDate: '2025-10-01',
       };
       const result = formatter.format(reference);
-      expect(result).toBe('张三 数据集标题[DS].');
+      expect(result).toBe('张三. 数据集标题[DS].');
     });
   });
 });

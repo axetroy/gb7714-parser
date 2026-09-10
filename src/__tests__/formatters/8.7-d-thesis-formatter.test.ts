@@ -18,7 +18,7 @@ describe('ThesisFormatter', () => {
         pages: '89',
       };
       const result = formatter.format(reference);
-      expect(result).toBe('王五 深度学习研究[D]. 北京: 北京大学, 2025: 89.');
+      expect(result).toBe('王五. 深度学习研究[D]. 北京: 北京大学, 2025: 89.');
     });
 
     it('应该格式化没有授予地的学位论文', () => {
@@ -30,7 +30,7 @@ describe('ThesisFormatter', () => {
         awardYear: '2025',
       };
       const result = formatter.format(reference);
-      expect(result).toBe('王五 深度学习研究[D]. 北京大学, 2025.');
+      expect(result).toBe('王五. 深度学习研究[D]. 北京大学, 2025.');
     });
 
     it('应该格式化没有授予机构的学位论文', () => {
@@ -42,7 +42,7 @@ describe('ThesisFormatter', () => {
         awardYear: '2025',
       } as Thesis;
       const result = formatter.format(reference);
-      expect(result).toBe('王五 深度学习研究[D].');
+      expect(result).toBe('王五. 深度学习研究[D].');
     });
 
     it('应该格式化没有页码的学位论文', () => {
@@ -55,7 +55,7 @@ describe('ThesisFormatter', () => {
         awardYear: '2025',
       };
       const result = formatter.format(reference);
-      expect(result).toBe('王五 深度学习研究[D]. 北京: 北京大学, 2025.');
+      expect(result).toBe('王五. 深度学习研究[D]. 北京: 北京大学, 2025.');
     });
 
     it('应该格式化带有 URL 的学位论文', () => {
@@ -69,7 +69,7 @@ describe('ThesisFormatter', () => {
         url: 'https://example.com',
       };
       const result = formatter.format(reference);
-      expect(result).toBe('王五 深度学习研究[D]. 北京: 北京大学, 2025. https://example.com');
+      expect(result).toBe('王五. 深度学习研究[D]. 北京: 北京大学, 2025. https://example.com');
     });
 
     it('应该格式化带有 id 的学位论文', () => {
@@ -83,7 +83,7 @@ describe('ThesisFormatter', () => {
         awardYear: '2025',
       };
       const result = formatter.format(reference);
-      expect(result).toBe('[8] 王五 深度学习研究[D]. 北京: 北京大学, 2025.');
+      expect(result).toBe('[8] 王五. 深度学习研究[D]. 北京: 北京大学, 2025.');
     });
 
     it('应该格式化带有副标题的学位论文', () => {
@@ -97,7 +97,7 @@ describe('ThesisFormatter', () => {
         awardYear: '2025',
       };
       const result = formatter.format(reference);
-      expect(result).toBe('王五 深度学习: 基于Transformer的研究[D]. 北京: 北京大学, 2025.');
+      expect(result).toBe('王五. 深度学习: 基于Transformer的研究[D]. 北京: 北京大学, 2025.');
     });
 
     it('应该格式化没有作者的学位论文', () => {
@@ -110,7 +110,7 @@ describe('ThesisFormatter', () => {
         awardYear: '2025',
       };
       const result = formatter.format(reference);
-      expect(result).toBe(' 深度学习研究[D]. 北京: 北京大学, 2025.');
+      expect(result).toBe('深度学习研究[D]. 北京: 北京大学, 2025.');
     });
   });
 });

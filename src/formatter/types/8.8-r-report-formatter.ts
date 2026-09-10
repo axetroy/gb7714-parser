@@ -19,7 +19,9 @@ export class ReportFormatter extends BaseFormatter {
       parts.push(`[${report.id}]`);
     }
 
-    parts.push(this.formatAuthors(report.authors, report.authorsTruncated));
+    if (report.authors.length > 0) {
+      parts.push(this.formatAuthors(report.authors, report.authorsTruncated) + '.');
+    }
 
     let title = report.title;
     if (report.reportNumber) {

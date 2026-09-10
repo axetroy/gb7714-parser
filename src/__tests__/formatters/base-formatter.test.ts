@@ -56,7 +56,7 @@ describe('Formatter base functionality', () => {
         year: '2025',
       };
       const result = format(reference);
-      expect(result).toBe('李四 机器学习: 理论与实践[M]. 北京: 出版社, 2025.');
+      expect(result).toBe('李四. 机器学习: 理论与实践[M]. 北京: 出版社, 2025.');
     });
 
     it('应该格式化带有副标题的期刊', () => {
@@ -71,7 +71,7 @@ describe('Formatter base functionality', () => {
         issue: '1',
       };
       const result = format(reference);
-      expect(result).toBe('张三 人工智能研究: 综述篇[J]. 计算机学报, 2025, 48(1).');
+      expect(result).toBe('张三. 人工智能研究: 综述篇[J]. 计算机学报, 2025, 48(1).');
     });
 
     it('应该格式化带有副标题的学位论文', () => {
@@ -85,7 +85,7 @@ describe('Formatter base functionality', () => {
         awardYear: '2025',
       };
       const result = format(reference);
-      expect(result).toBe('王五 深度学习: 基于Transformer的研究[D]. 北京: 北京大学, 2025.');
+      expect(result).toBe('王五. 深度学习: 基于Transformer的研究[D]. 北京: 北京大学, 2025.');
     });
   });
 
@@ -101,7 +101,7 @@ describe('Formatter base functionality', () => {
         year: '2025',
       };
       const result = format(reference);
-      expect(result).toBe('Smith AI Handbook[M]. 张三. 北京: 出版社, 2025.');
+      expect(result).toBe('Smith. AI Handbook[M]. 张三. 北京: 出版社, 2025.');
     });
 
     it('应该格式化带有多个其他作者的图书', () => {
@@ -118,7 +118,7 @@ describe('Formatter base functionality', () => {
         year: '2025',
       };
       const result = format(reference);
-      expect(result).toBe('Smith AI Handbook[M]. 张三, 李四. 北京: 出版社, 2025.');
+      expect(result).toBe('Smith. AI Handbook[M]. 张三, 李四. 北京: 出版社, 2025.');
     });
   });
 
@@ -139,7 +139,7 @@ describe('Formatter base functionality', () => {
       } as ReferenceUnion;
       const result = format(reference);
       // 标准 §8.3.2 要求析出文献题名后需有文献类型标识
-      expect(result).toBe('张三 析出文献标题[Z]// 李四 图书标题. 北京: 出版社, 2025: 100-110.');
+      expect(result).toBe('张三. 析出文献标题[Z]// 李四. 图书标题. 北京: 出版社, 2025: 100-110.');
     });
 
     it('应该格式化没有页码的析出文献', () => {
@@ -157,7 +157,7 @@ describe('Formatter base functionality', () => {
       } as ReferenceUnion;
       const result = format(reference);
       // 标准 §8.3.2 要求析出文献题名后需有文献类型标识
-      expect(result).toBe('张三 析出文献标题[Z]// 李四 图书标题. 北京: 出版社, 2025.');
+      expect(result).toBe('张三. 析出文献标题[Z]// 李四. 图书标题. 北京: 出版社, 2025.');
     });
 
     it('应该格式化带有副标题的析出文献', () => {
@@ -172,7 +172,7 @@ describe('Formatter base functionality', () => {
       } as ReferenceUnion;
       const result = format(reference);
       // 标准 §8.3.2 要求析出文献题名后需有文献类型标识
-      expect(result).toBe('张三 析出文献: 副标题[Z]// 图书标题.');
+      expect(result).toBe('张三. 析出文献: 副标题[Z]// 图书标题.');
     });
   });
 
@@ -197,7 +197,7 @@ describe('Formatter base functionality', () => {
         year: '2025',
       };
       const result = formatter.format(reference);
-      expect(result).toBe('张三 论文标题[J]. 期刊名, 2025.');
+      expect(result).toBe('张三. 论文标题[J]. 期刊名, 2025.');
     });
   });
 });

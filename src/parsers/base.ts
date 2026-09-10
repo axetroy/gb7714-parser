@@ -105,7 +105,7 @@ export abstract class BaseParser implements ParserStrategy {
    */
   protected parseOptionalAuthors(tokens: Token[], position: number): { authors: Author[]; truncated: string | undefined; position: number; preDotText?: string } {
     let authors: Author[] = [];
-    let truncated = false;
+    let truncated: string | undefined;
     // 找到第一个 TYPE_INDICATOR 的位置，作为搜索边界
     const typeIndicatorIndex = findNextTypeIndicator(tokens, position);
     // 在 TYPE_INDICATOR 之前寻找 DOT（作者分隔符）
@@ -154,7 +154,7 @@ export abstract class BaseParser implements ParserStrategy {
         // position 保持原位，外层会从当前位置找到 TYPE_INDICATOR 并跳过
       }
     }
-    return { authors, position };
+    return { authors, truncated, position };
   }
 
   /**
@@ -296,11 +296,11 @@ export abstract class BaseParser implements ParserStrategy {
 
     // 解析作者
     const authorResult = noAuthor
-      ? { authors: [] as Author[], position }
+      ? { authors: [] as Author[], truncated: undefined, position }
       : optionalAuthors
         ? this.parseOptionalAuthors(tokens, position)
         : this.parseRequiredAuthors(tokens, position);
-    const { authors, position: afterAuthors } = authorResult;
+    const { authors, truncated, position: afterAuthors } = authorResult;
     position = afterAuthors;
 
     // 解析题名和附加字段（到文献类型标识为止）
@@ -348,7 +348,7 @@ export abstract class BaseParser implements ParserStrategy {
     // 跳过文献类型标识
     position = titleEnd;
 
-    return { authors, title, extraField, subtitle, position };
+    return { authors, truncated, title, extraField, subtitle, position };
   }
 
   /**
@@ -375,11 +375,11 @@ export abstract class BaseParser implements ParserStrategy {
 
     // 解析作者
     const authorResult = noAuthor
-      ? { authors: [] as Author[], position }
+      ? { authors: [] as Author[], truncated: undefined, position }
       : optionalAuthors
         ? this.parseOptionalAuthors(tokens, position)
         : this.parseRequiredAuthors(tokens, position);
-    const { authors, position: afterAuthors } = authorResult;
+    const { authors, truncated, position: afterAuthors } = authorResult;
     position = afterAuthors;
 
     // 解析题名（到第一个 DOT、COLON 或 TYPE_INDICATOR 之前，取较前者）
@@ -427,7 +427,7 @@ export abstract class BaseParser implements ParserStrategy {
       if (tokens[position]?.type === 'DOT') position++;
     }
 
-    return { authors, title, scale, position };
+    return { authors, truncated, title, scale, position };
   }
 
   /**

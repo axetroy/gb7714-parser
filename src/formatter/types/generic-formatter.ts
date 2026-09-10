@@ -17,7 +17,7 @@ export class GenericFormatter extends BaseFormatter {
     }
 
     if (ref.authors.length > 0) {
-      parts.push(this.formatAuthors(ref.authors, ref.authorsTruncated));
+      parts.push(this.formatAuthors(ref.authors, ref.authorsTruncated) + '.');
     }
 
     parts.push(`${ref.title}${buildTypeIndicator(ref.type, ref.mediaType)}.`);
