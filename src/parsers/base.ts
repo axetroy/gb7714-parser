@@ -189,10 +189,15 @@ export abstract class BaseParser implements ParserStrategy {
     position: number,
     optionalAuthors: boolean = false,
   ): { authors: Author[]; title: string; subtitle?: string; position: number } {
-    // 无作者检测（仅必有作者模式）：类型标识 [X] 之前没有 DOT 时，著录直接从题名开始，
+    // 无作者检测：类型标识 [X] 之前没有 DOT 时，著录直接从题名开始，
     // 此时不能把题名文本误解析为作者（标准 B.1 示例[8]「康熙字典：巳集上 水部[M]」等）。
-    // optionalAuthors 模式下保持原有启发式（机构名作者、作者：题名 等）。
-    const noAuthor = !optionalAuthors && !this.hasAuthorSeparator(tokens, position);
+    // 例外：当 optionalAuthors=true 且存在 COLON（如"作者：标题"格式）时，允许解析作者。
+    const noDot = !this.hasAuthorSeparator(tokens, position);
+    const hasColonBeforeType = (() => {
+      const ti = findNextTypeIndicator(tokens, position);
+      return tokens.slice(position, ti).some(t => t.type === 'COLON');
+    })();
+    const noAuthor = noDot && !(optionalAuthors && hasColonBeforeType);
 
     // 解析作者
     const { authors, position: afterAuthors, preDotText } = noAuthor
@@ -277,9 +282,14 @@ export abstract class BaseParser implements ParserStrategy {
 
     optionalAuthors: boolean = false,
   ): { authors: Author[]; title: string; extraField: string; subtitle?: string; position: number } {
-    // 无作者检测（仅必有作者模式）：类型标识前没有 DOT 时，著录直接从题名开始，
-    // 不能把题名文本误解析为作者（同 parseTitleWithOptionalSubtitle）
-    const noAuthor = !optionalAuthors && !this.hasAuthorSeparator(tokens, position);
+    // 无作者检测：类型标识前没有 DOT 时，著录直接从题名开始，
+    // 不能把题名文本误解析为作者。例外：optionalAuthors=true 且存在 COLON 时允许解析作者。
+    const noDot = !this.hasAuthorSeparator(tokens, position);
+    const hasColonBeforeType = (() => {
+      const ti = findNextTypeIndicator(tokens, position);
+      return tokens.slice(position, ti).some(t => t.type === 'COLON');
+    })();
+    const noAuthor = noDot && !(optionalAuthors && hasColonBeforeType);
 
     // 解析作者
     const authorResult = noAuthor
@@ -351,9 +361,14 @@ export abstract class BaseParser implements ParserStrategy {
     position: number,
     optionalAuthors: boolean = false,
   ): { authors: Author[]; title: string; scale?: string; position: number } {
-    // 无作者检测（仅必有作者模式）：类型标识前没有 DOT 时，著录直接从题名开始，
-    // 不能把题名文本误解析为作者（同 parseTitleWithOptionalSubtitle）
-    const noAuthor = !optionalAuthors && !this.hasAuthorSeparator(tokens, position);
+    // 无作者检测：类型标识前没有 DOT 时，著录直接从题名开始，
+    // 不能把题名文本误解析为作者。例外：optionalAuthors=true 且存在 COLON 时允许解析作者。
+    const noDot = !this.hasAuthorSeparator(tokens, position);
+    const hasColonBeforeType = (() => {
+      const ti = findNextTypeIndicator(tokens, position);
+      return tokens.slice(position, ti).some(t => t.type === 'COLON');
+    })();
+    const noAuthor = noDot && !(optionalAuthors && hasColonBeforeType);
 
     // 解析作者
     const authorResult = noAuthor

@@ -45,7 +45,7 @@ export class ArchiveParser extends BaseParser {
     position = this.skipWhitespace(tokens, position);
 
     // 解析作者、题名和档号（到文献类型标识 [A]）
-    const { authors, title, extraField: archiveNumber, position: _afterTitle } = this.parseTitleWithPrefix(tokens, position, true);
+    const { authors, title, extraField: archiveNumber, position: _afterTitle } = this.parseTitleWithPrefix(tokens, position);
 
     // 跳过文献类型标识 [A]
     const { mediaType, position: afterType } = this.skipTypeIndicator(tokens, position);

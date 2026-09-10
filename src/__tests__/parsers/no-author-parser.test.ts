@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { parse } from '../../index.js';
-import type { Book, Thesis, Proceedings, Newspaper, Dataset, Report, Serial, Patent, ComputerProgram } from '../../types/index.js';
+import type { Book, Thesis, Proceedings, Newspaper, Dataset, Report, Serial, Patent, ComputerProgram, WebPage, Archive, Map, Preprint, Standard } from '../../types/index.js';
 
 /**
  * 无作者文献解析（必有作者模式）
@@ -172,5 +172,77 @@ describe('无作者文献（类型标识前无 DOT）', () => {
       expect(ref.authors).toHaveLength(2);
       expect(ref.title).toBe('递归宏观经济理论');
     });
+  });
+
+  it('网站 [EB]：标准 B.10 示例 [8]', () => {
+    const input = '[8] 西黄丸[EB/OL]. (2023-10-07) [2025-08-26]. https://ydz.chp.org.cn/JHJ/item?bookId=1&entryId=1154.';
+    const result = parse(input);
+    const ref = result.reference as WebPage;
+
+    expect(ref.type).toBe('EB');
+    expect(ref.authors).toHaveLength(0);
+    expect(ref.title).toBe('西黄丸');
+  });
+
+  it('网站 [EB]：英文无作者', () => {
+    const input = '[9] Library of Congress[EB/OL]. [2020-06-12]. https://www.loc.gov.';
+    const result = parse(input);
+    const ref = result.reference as WebPage;
+
+    expect(ref.type).toBe('EB');
+    expect(ref.authors).toHaveLength(0);
+    expect(ref.title).toBe('Library of Congress');
+  });
+
+  it('档案 [A]', () => {
+    const input = '[5] 无名档案[A]. 北京: 档案馆, 2025.';
+    const result = parse(input);
+    const ref = result.reference as Archive;
+
+    expect(ref.type).toBe('A');
+    expect(ref.authors).toHaveLength(0);
+    expect(ref.title).toBe('无名档案');
+  });
+
+  it('地图 [CM]', () => {
+    const input = '[1] 中国地图[CM]. 北京: 测绘出版社, 2023.';
+    const result = parse(input);
+    const ref = result.reference as Map;
+
+    expect(ref.type).toBe('CM');
+    expect(ref.authors).toHaveLength(0);
+    expect(ref.title).toBe('中国地图');
+  });
+
+  it('预印本 [PP]', () => {
+    const input = '[5] 无作者预印本[PP/OL]. https://arxiv.org';
+    const result = parse(input);
+    const ref = result.reference as Preprint;
+
+    expect(ref.type).toBe('PP');
+    expect(ref.authors).toHaveLength(0);
+    expect(ref.title).toBe('无作者预印本');
+  });
+
+  it('标准 [S]：标准 B.8 示例 [1]', () => {
+    const input = '[1] GB/T 3792—2021 信息与文献 资源描述[S].';
+    const result = parse(input);
+    const ref = result.reference as Standard;
+
+    expect(ref.type).toBe('S');
+    expect(ref.authors).toHaveLength(0);
+    expect(ref.standardNumber).toBe('GB/T 3792—2021');
+    expect(ref.standardName).toBe('信息与文献 资源描述');
+  });
+
+  it('标准 [S]：ISO 西文标准无作者', () => {
+    const input = '[5] ISO 21378: 2019 Audit data collection[S].';
+    const result = parse(input);
+    const ref = result.reference as Standard;
+
+    expect(ref.type).toBe('S');
+    expect(ref.authors).toHaveLength(0);
+    expect(ref.standardNumber).toBe('ISO 21378: 2019');
+    expect(ref.standardName).toBe('Audit data collection');
   });
 });

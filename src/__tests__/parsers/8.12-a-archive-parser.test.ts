@@ -67,8 +67,8 @@ describe('ArchiveParser', () => {
       const result = parser.parse(tokens);
 
       expect(result.type).toBe('A');
-      // Note: Parser treats Chinese text before dot as author
-      expect(result.authors.length).toBeGreaterThan(0);
+      expect(result.authors).toHaveLength(0);
+      expect(result.title).toBe('无名档案');
     });
 
     it('应该解析带有多个作者的档案', () => {

@@ -47,7 +47,7 @@ export class MapParser extends BaseParser {
     position = this.skipWhitespace(tokens, position);
 
     // 解析作者、题名和比例尺（到文献类型标识 [CM]）
-    const { authors, title, scale, position: _afterTitle } = this.parseMapTitleAndScale(tokens, position, true);
+    const { authors, title, scale, position: _afterTitle } = this.parseMapTitleAndScale(tokens, position);
 
     // 跳过文献类型标识 [CM]
     const { mediaType, position: afterType } = this.skipTypeIndicator(tokens, position);

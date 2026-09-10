@@ -67,8 +67,8 @@ describe('PreprintParser', () => {
       const result = parser.parse(tokens);
 
       expect(result.type).toBe('PP');
-      // Note: Parser treats Chinese text before dot as author
-      expect(result.authors.length).toBeGreaterThan(0);
+      expect(result.authors).toHaveLength(0);
+      expect(result.title).toBe('无作者预印本');
     });
 
     it('应该解析带有多个作者的预印本', () => {

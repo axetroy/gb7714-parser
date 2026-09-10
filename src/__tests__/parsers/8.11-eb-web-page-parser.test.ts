@@ -166,8 +166,7 @@ describe('WebPageParser', () => {
 
       expect(r.type).toBe('EB');
       expect(r.title).toBe('中国国家博物馆');
-      expect(r.authors).toHaveLength(1);
-      expect(r.authors[0].name).toBe('中国国家博物馆');
+      expect(r.authors).toHaveLength(0);
       expect(r.accessDate).toBe('2025-05-06');
       expect(r.url).toBe('https://www.chnmuseum.cn/');
     });
