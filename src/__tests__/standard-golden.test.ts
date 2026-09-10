@@ -62,7 +62,7 @@ function normalizeTitle(t: string): string {
 /** 判定 fixture 是否存在已知质量问题，需要跳过字段校验 */
 function shouldSkipExample(ex: typeof fixtures.groups[0]['examples'][0], r: any): boolean {
   const c = ex.content;
-  const e = ex.expected;
+  const e = ex.expected as Record<string, unknown> | undefined;
   if (!e) return false;
   const gotTitle = r.subtitle ? r.title + ': ' + r.subtitle : r.title;
 
@@ -75,7 +75,7 @@ function shouldSkipExample(ex: typeof fixtures.groups[0]['examples'][0], r: any)
   // 期望期刊名为纯中文短词（实为译者名）
   if (e.journalTitle && /^[\u4e00-\u9fa5]{1,4}$/.test(String(e.journalTitle))) return true;
   // 期望标题极短（被截断）
-  if (e.title && e.title.length < 15 && gotTitle && gotTitle.length > String(e.title).length * 2) return true;
+  if (e.title && String(e.title).length < 15 && gotTitle && gotTitle.length > String(e.title).length * 2) return true;
   // 页码包含 URL 片段
   if ((e as any).pages && /\.id=|&synUpdate|comcnthesis|wanfang|index\?/.test(String((e as any).pages))) return true;
   // 标题包含 URL
@@ -146,7 +146,7 @@ function shouldSkipExample(ex: typeof fixtures.groups[0]['examples'][0], r: any)
   if (c.includes('Shinotsuka') && (e as any).pages === '70') return true;
   if (c.includes('Wang Liping') && (e as any).pages === '70') return true;
   // 杨立华 URL 空格问题（fixture 本身含空格）
-  if (c.includes('杨立华') && (gotTitle?.includes('http') || gotTitle?.includes('h tt') || e.title?.includes('h tt'))) return true;
+  if (c.includes('杨立华') && (gotTitle?.includes('http') || gotTitle?.includes('h tt') || String(e.title)?.includes('h tt'))) return true;
   // International Organization 期望标题包含作者
   if (c.includes('International Organization') && String(e.title)?.includes('International')) return true;
   // 赵慧 期望标题被截断
@@ -207,7 +207,7 @@ function shouldSkipExample(ex: typeof fixtures.groups[0]['examples'][0], r: any)
   if (c.includes('赵学功') && (e as any).year === '3884') return true;
   if (c.includes('中国造纸学会') && (e as any).year === '0080') return true;
   // 杨立华 URL空格问题
-  if (c.includes('杨立华') && (gotTitle?.includes('http') || gotTitle?.includes('h tt') || e.title?.includes('h tt'))) return true;
+  if (c.includes('杨立华') && (gotTitle?.includes('http') || gotTitle?.includes('h tt') || String(e.title)?.includes('h tt'))) return true;
   // International Organization 期望标题包含作者
   if (c.includes('International Organization') && String(e.title)?.includes('International')) return true;
   // 赵慧 期望标题被截断
