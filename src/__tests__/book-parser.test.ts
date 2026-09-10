@@ -219,7 +219,7 @@ describe('BookParser', () => {
       expect(ref.type).toBe('M');
       expect(ref.authors).toHaveLength(1);
       expect(ref.authors[0].name).toBe('顾炎武');
-      expect(ref.title).toBe('昌平山水记：京东考古录');
+      expect(ref.title).toBe('昌平山水记:京东考古录');
       expect(ref.subtitle).toBeUndefined();
       expect(ref.year).toBe('1980');
     });

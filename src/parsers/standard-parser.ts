@@ -57,7 +57,7 @@ export class StandardParser extends BaseParser {
 
     // 收集标准编号和标准名称：找到首个已知前缀（GB/ISO/IEC 等）的 token，
     // 从其开始收集直到遇到中文 token 或类型标识为止
-    const knownPrefixes = ['GB', 'ISO', 'IEC', 'JB', 'HG', 'YD', 'DL', 'NY', 'NB', 'WB', 'CJ', 'DB', 'SB', 'SN'];
+    const knownPrefixes = ['GB', 'ISO', 'IEC', 'JB', 'HG', 'YD', 'DL', 'NY', 'NB', 'WB', 'CJ', 'DB', 'SB', 'SN', 'YY', 'IEEE', 'AIAA'];
     let scanPos = position;
     let numberTokens: Token[] = [];
     let foundPrefix = false;
@@ -77,6 +77,7 @@ export class StandardParser extends BaseParser {
         continue;
       }
       // foundPrefix 后：继续收集编号部分
+      // 编号格式：PREFIX + 编号 + YEAR，YEAR 后即为标准名称
       if (
         t.type === 'TEXT' ||
         t.type === 'SLASH' ||
@@ -84,12 +85,21 @@ export class StandardParser extends BaseParser {
         t.type === 'NUMBER' ||
         t.type === 'DASH' ||
         t.type === 'COLON' ||
-        t.type === 'DOT'
+        t.type === 'DOT' ||
+        t.type === 'PAREN_OPEN' ||
+        t.type === 'PAREN_CLOSE'
       ) {
         // 遇到中文 token 表示编号结束
         if (/[\u4e00-\u9fa5]/.test(t.value)) break;
         numberTokens.push(t);
         scanPos++;
+        // YEAR 后检查是否紧跟中文：若是，编号结束；否则继续收集
+        if (t.type === 'YEAR') {
+          const nextT = tokens[scanPos];
+          if (nextT && /[\u4e00-\u9fa5]/.test(nextT.value)) break;
+          // 年份后仍为非中文（如 ISO 21378: 2019 Audit...），也停止
+          if (nextT && nextT.type !== 'NUMBER' && nextT.type !== 'DASH' && nextT.type !== 'DOT' && nextT.type !== 'SLASH') break;
+        }
       } else {
         break;
       }
@@ -103,10 +113,17 @@ export class StandardParser extends BaseParser {
       lastEnd = tok.position + tok.value.length;
     }
 
-    // 剩余部分为标准名称（扫描位置之后的中文 TEXT）
+    // 剩余部分为标准名称（扫描位置之后的所有 token，拼接时保留空格）
     if (scanPos < titleEnd) {
-      const nameTokens = tokens.slice(scanPos, titleEnd).filter(t => t.type === 'TEXT' && /[\u4e00-\u9fa5]/.test(t.value));
-      standardName = nameTokens.map(t => t.value).join(' ').trim();
+      const nameTokens = tokens.slice(scanPos, titleEnd);
+      standardName = '';
+      let lastEnd = -1;
+      for (const tok of nameTokens) {
+        if (lastEnd >= 0 && tok.position > lastEnd) standardName += ' ';
+        standardName += tok.value;
+        lastEnd = tok.position + tok.value.length;
+      }
+      standardName = standardName.trim();
     }
 
     position = titleEnd;

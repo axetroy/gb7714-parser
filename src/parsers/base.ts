@@ -193,9 +193,17 @@ export abstract class BaseParser implements ParserStrategy {
       const authorSeparatedByDot = position > 0 && tokens[position - 1]?.type === 'DOT';
       const shouldSplit = colonToken.value === ':' || (colonToken.value === '：' && !authorSeparatedByDot);
       if (shouldSplit) {
-        // 冒号：拆分为题名 + 副题名
-        title = this.readTextUntil(tokens, position, colonIndex).trim();
-        subtitle = this.readTextUntil(tokens, colonIndex + 1, titleEnd).trim();
+        // 检查冒号后是否为年份/数字范围（如"数据：2000—2020"），若是则不拆分副题名
+        const nextAfterColon = tokens[colonIndex + 1];
+        const isYearRange = nextAfterColon && (nextAfterColon.type === 'YEAR' || nextAfterColon.type === 'NUMBER');
+        if (isYearRange) {
+          // 冒号后为年份，保留完整题名为一体
+          title = fullText;
+        } else {
+          // 冒号：拆分为题名 + 副题名
+          title = this.readTextUntil(tokens, position, colonIndex).trim();
+          subtitle = this.readTextUntil(tokens, colonIndex + 1, titleEnd).trim();
+        }
       } else {
         // 全角冒号属于题名内部：保留完整题名
         title = fullText;
@@ -507,6 +515,12 @@ export abstract class BaseParser implements ParserStrategy {
         }
         result += token.value;
         lastEndPosition = token.position + token.value.length;
+      } else if (token.type === 'DASH') {
+        // 连字符分隔词组，添加空格
+        if (result && lastEndPosition >= 0) {
+          result += ' ';
+        }
+        lastEndPosition = token.position + token.value.length;
       } else {
         // 非文本 token（COMMA 等）：不加入结果，但更新 lastEndPosition
         // 确保后续 TEXT token 能正确检测位置间隙并插入空格
@@ -556,7 +570,8 @@ export abstract class BaseParser implements ParserStrategy {
         lastEndPosition = token.position + 1;
         lastContentEnd = lastEndPosition;
       } else if (token.type === 'COLON') {
-        result += token.value;
+        // 标准 §6 使用全角冒号，但实际著录中统一使用 ASCII 冒号
+        result += ':';
         lastEndPosition = token.position + 1;
         lastContentEnd = lastEndPosition;
       } else if (token.type === 'COMMA') {

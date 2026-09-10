@@ -50,8 +50,42 @@ export class ComponentPartParser extends BaseParser {
     position = this.skipWhitespace(tokens, position);
 
     // 解析析出文献作者
-    const { authors, position: afterAuthors } = this.parseRequiredAuthors(tokens, position);
-    position = afterAuthors;
+    // 如果文本直接以 [类型]// 开头（无作者），跳过作者解析，从 // 前提取题名
+    const doubleSlashIndex = tokens.findIndex((t, i) => i >= position && t.type === 'DOUBLE_SLASH');
+    const typeIndicatorSection = doubleSlashIndex >= 0 ? tokens.slice(position, doubleSlashIndex) : [];
+    // 判断是否有作者：查找 [类型] 前面是否紧跟着 DOT（表示作者已结束）
+    // 格式 A: 题名[类型]// （无作者）：DOT 不在 TYPE_INDICATOR 前
+    // 格式 B: 作者. 题名[类型]// （有作者）：DOT 在 TYPE_INDICATOR 前，且 DOT 后有文本
+    const typeIndicatorIdx = typeIndicatorSection.findIndex(t => t.type === 'TYPE_INDICATOR');
+    // 有作者的条件：[类型] 前面存在 DOT，且 DOT 后还有文本（非空）
+    // 格式 A: 题名[类型]// → 无 DOT，无作者
+    // 格式 B: 作者. 题名[类型]// → 有 DOT 且在 [类型] 前有文本
+    const dotBeforeTypeIndicator = typeIndicatorIdx >= 0 &&
+      typeIndicatorSection.slice(0, typeIndicatorIdx).some(t => t.type === 'DOT');
+    const hasTextAfterDot = dotBeforeTypeIndicator &&
+      typeIndicatorSection.slice(0, typeIndicatorIdx).some((_token, i, arr) => {
+        const dotIdx = arr.findIndex((x, j) => j <= i && x.type === 'DOT');
+        return dotIdx >= 0 && arr.slice(dotIdx + 1, typeIndicatorIdx).some(x => x.type === 'TEXT' && x.value.trim());
+      });
+    const hasAuthor = dotBeforeTypeIndicator && hasTextAfterDot;
+    let authors: Author[] = [];
+    // 记录提取题名的起始位置
+    let titleStart = position;
+    if (hasAuthor) {
+      const authorResult = this.parseRequiredAuthors(tokens, position);
+      authors = authorResult.authors;
+      titleStart = authorResult.position;
+      position = authorResult.position;
+    } else if (typeIndicatorIdx >= 0) {
+      // 无作者格式：题名[类型]//主文献作者. 主文献题名...
+      position = doubleSlashIndex + 1;
+    } else {
+      // 无法确定，回退到原来的逻辑
+      const authorResult = this.parseRequiredAuthors(tokens, position);
+      authors = authorResult.authors;
+      titleStart = authorResult.position;
+      position = authorResult.position;
+    }
 
     // 跳过空白
     position = this.skipWhitespace(tokens, position);
@@ -60,9 +94,8 @@ export class ComponentPartParser extends BaseParser {
     let componentTitle = '';
     let componentType: string = 'Z'; // 默认类型
     let componentMediaType: import('../types/index.js').MediaType | undefined;
-    const doubleSlashIndex = tokens.findIndex((t, i) => i >= position && t.type === 'DOUBLE_SLASH');
-    if (doubleSlashIndex >= position) {
-      componentTitle = this.readTextUntil(tokens, position, doubleSlashIndex).trim().replace(/\.$/, '');
+    if (doubleSlashIndex >= titleStart) {
+      componentTitle = this.readTextUntil(tokens, titleStart, doubleSlashIndex).trim().replace(/\.$/, '');
       // 尝试从题名中提取文献类型标识（从文本中提取）
       const typeMatch = componentTitle.match(/\[([A-Z\/]+)\]$/);
       if (typeMatch) {
@@ -75,8 +108,8 @@ export class ComponentPartParser extends BaseParser {
           componentTitle = componentTitle.replace(/\s*\[([A-Z\/]+)\]\s*$/, '').trim();
         }
       } else {
-        // 检查是否在 DOUBLE_SLASH 之前有 TYPE_INDICATOR token
-        const typeIndicatorToken = tokens.slice(position, doubleSlashIndex).find(t => t.type === 'TYPE_INDICATOR');
+        // 检查是否在 DOUBLE_SLASH 之前有 TYPE_INDICATOR token（用 titleStart 而非 position）
+        const typeIndicatorToken = tokens.slice(titleStart, doubleSlashIndex).find(t => t.type === 'TYPE_INDICATOR');
         if (typeIndicatorToken) {
           const parsed = parseTypeIndicator(typeIndicatorToken.value);
           componentType = parsed.baseType || 'Z';
