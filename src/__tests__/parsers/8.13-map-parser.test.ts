@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { MapParser } from '../../parsers/map-parser.js';
+import { MapParser } from '../../parsers/8.13-map-parser.js';
 import { tokenize } from '../../tokenizer/index.js';
 
 describe('MapParser', () => {

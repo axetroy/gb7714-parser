@@ -28,23 +28,27 @@ GB/T 7714 参考文献格式解析库，用于解析、校验和格式化符合�
 src/
 ├── types/index.ts          # 核心类型定义（17种文献类型、5种载体标识）
 ├── tokenizer/index.ts      # 词法分析器 - 将输入字符串切分为词法单元
-├── parsers/
-│   ├── base.ts            # 解析器策略接口和分发器
-│   ├── journal-parser.ts  # 期刊 [J] 解析器
-│   ├── serial-parser.ts   # 连续出版物解析器（标准 §8.4）
-│   ├── book-parser.ts     # 图书 [M] 解析器
-│   ├── thesis-parser.ts   # 学位论文 [D] 解析器
-│   ├── proceedings-parser.ts  # 会议录 [C] 解析器
-│   ├── report-parser.ts   # 报告 [R] 解析器
-│   ├── standard-parser.ts # 标准 [S] 解析器
-│   ├── patent-parser.ts   # 专利 [P] 解析器
-│   ├── web-page-parser.ts # 网站/网页 [EB] 解析器
-│   ├── archive-parser.ts  # 档案 [A] 解析器
-│   ├── map-parser.ts      # 地图 [CM] 解析器
-│   ├── dataset-parser.ts  # 数据集 [DS] 解析器
-│   ├── preprint-parser.ts # 预印本 [PP] 解析器
-│   ├── component-part-parser.ts  # 析出文献解析器
-│   └── index.ts           # 解析器导出
+├── parsers/                # 文件名以标准章节号开头，便于对照 GB/T 7714-2025
+│   ├── base.ts                   # 解析器策略接口和分发器
+│   ├── 8.2-book-parser.ts        # 图书 [M]（标准 §8.2）
+│   ├── 8.3-component-part-parser.ts  # 图书中的析出文献（标准 §8.3）
+│   ├── 8.4-serial-parser.ts      # 连续出版物（标准 §8.4）
+│   ├── 8.5-journal-parser.ts     # 期刊析出 [J]（标准 §8.5）
+│   ├── 8.5-newspaper-parser.ts   # 报纸析出 [N]（标准 §8.5）
+│   ├── 8.6-proceedings-parser.ts # 会议录 [C]（标准 §8.6）
+│   ├── 8.7-thesis-parser.ts      # 学位论文 [D]（标准 §8.7）
+│   ├── 8.8-report-parser.ts      # 报告 [R]（标准 §8.8）
+│   ├── 8.9-standard-parser.ts    # 标准 [S]（标准 §8.9）
+│   ├── 8.10-patent-parser.ts     # 专利 [P]（标准 §8.10）
+│   ├── 8.11-web-page-parser.ts   # 网站/网页 [EB]（标准 §8.11）
+│   ├── 8.12-archive-parser.ts    # 档案 [A]（标准 §8.12）
+│   ├── 8.13-map-parser.ts        # 地图 [CM]（标准 §8.13）
+│   ├── 8.14-dataset-parser.ts    # 数据集 [DS]（标准 §8.14）
+│   ├── 8.15-preprint-parser.ts   # 预印本 [PP]（标准 §8.15）
+│   ├── 9.3-author-date-parser.ts # 著者-出版年制（标准 §9.3）
+│   ├── A.1-computer-program-parser.ts # 计算机程序 [CP]（标准附录 A.1）
+│   ├── A.1-database-parser.ts    # 数据库 [DB]（标准附录 A.1）
+│   └── index.ts                  # 解析器导出
 ├── validator/index.ts     # 校验器 - 验证引用是否符合 GB/T 7714 规范
 ├── formatter/index.ts     # 格式化器 - 将结构化对象转换为 GB/T 7714 字符串
 ├── utils/index.ts         # 工具函数
@@ -55,7 +59,7 @@ src/
 
 - 测试文件位于 `src/__tests__/` 目录
 - 运行所有测试：`npm test`
-- 运行特定测试文件：`npx vitest run src/__tests__/journal-parser.test.ts`
+- 运行特定测试文件：`npx vitest run src/__tests__/8.5-journal-parser.test.ts`
 - 监听模式：`npm run test:watch`
 - 测试覆盖率：`npm run test:coverage`
 

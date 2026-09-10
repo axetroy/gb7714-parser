@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { ThesisParser } from '../../parsers/thesis-parser.js';
+import { ThesisParser } from '../../parsers/8.7-thesis-parser.js';
 import { tokenize } from '../../tokenizer/index.js';
 
 describe('ThesisParser', () => {

@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { DatasetParser } from '../../parsers/dataset-parser.js';
+import { DatasetParser } from '../../parsers/8.14-dataset-parser.js';
 import { tokenize } from '../../tokenizer/index.js';
 
 describe('DatasetParser', () => {

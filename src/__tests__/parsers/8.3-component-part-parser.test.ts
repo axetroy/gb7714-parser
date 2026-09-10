@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { ComponentPartParser } from '../../parsers/component-part-parser.js';
+import { ComponentPartParser } from '../../parsers/8.3-component-part-parser.js';
 import { tokenize } from '../../tokenizer/index.js';
 
 describe('ComponentPartParser', () => {

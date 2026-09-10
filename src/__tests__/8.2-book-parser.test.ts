@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { BookParser } from '../parsers/book-parser.js';
+import { BookParser } from '../parsers/8.2-book-parser.js';
 import { tokenize } from '../tokenizer/index.js';
 import { parse } from '../index.js';
 import type { Book } from '../types/index.js';

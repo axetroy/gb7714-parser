@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { AuthorDateParser } from '../../parsers/author-date-parser.js';
+import { AuthorDateParser } from '../../parsers/9.3-author-date-parser.js';
 import { tokenize } from '../../tokenizer/index.js';
 
 describe('AuthorDateParser', () => {

@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { ComputerProgramParser } from '../../parsers/computer-program-parser.js';
+import { ComputerProgramParser } from '../../parsers/A.1-computer-program-parser.js';
 import { tokenize } from '../../tokenizer/index.js';
 
 describe('ComputerProgramParser', () => {

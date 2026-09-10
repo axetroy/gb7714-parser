@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { PatentParser } from '../../parsers/patent-parser.js';
+import { PatentParser } from '../../parsers/8.10-patent-parser.js';
 import { tokenize } from '../../tokenizer/index.js';
 
 describe('PatentParser', () => {

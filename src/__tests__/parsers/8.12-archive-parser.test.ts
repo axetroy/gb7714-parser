@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { ArchiveParser } from '../../parsers/archive-parser.js';
+import { ArchiveParser } from '../../parsers/8.12-archive-parser.js';
 import { tokenize } from '../../tokenizer/index.js';
 
 describe('ArchiveParser', () => {

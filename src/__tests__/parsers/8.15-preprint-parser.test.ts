@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { PreprintParser } from '../../parsers/preprint-parser.js';
+import { PreprintParser } from '../../parsers/8.15-preprint-parser.js';
 import { tokenize } from '../../tokenizer/index.js';
 
 describe('PreprintParser', () => {
