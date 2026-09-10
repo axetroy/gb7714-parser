@@ -224,16 +224,21 @@ describe('BookParser', () => {
       expect(ref.year).toBe('1980');
     });
 
-    it('示例 [4]：无作者（已知缺陷）', () => {
-      // 标准示例 [4] 无主要责任者，直接从题名开始
-      // 当前解析器假设必有作者，会将题名误解析为作者
-      // 此为已知限制
+    it('示例 [4]：无作者图书（标准 B.1 示例 [8]）', () => {
+      // 标准示例 [8] 无主要责任者，著录直接从题名开始：
+      // 文献类型标识 [M] 之前没有 DOT，整段前缀都是题名，不应误解析为作者
       const input = '[4] 康熙字典：巳集上 水部[M]. 影印本. 北京: 中华书局, 1962: 50.';
       const result = parse(input);
       const ref = result.reference as Book;
 
       expect(ref.type).toBe('M');
+      expect(ref.authors).toHaveLength(0);
+      expect(ref.title).toBe('康熙字典:巳集上 水部');
+      expect(ref.subtitle).toBeUndefined();
+      expect(ref.publisherPlace).toBe('北京');
+      expect(ref.publisher).toBe('中华书局');
       expect(ref.year).toBe('1962');
+      expect(ref.version).toBe('影印本');
       expect(ref.pages).toBe('50');
     });
 

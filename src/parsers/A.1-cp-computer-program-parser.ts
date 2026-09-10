@@ -1,4 +1,4 @@
-import type { Token } from '../types/index.js';
+import type { Token, Author } from '../types/index.js';
 import type { ComputerProgram, ParseOptions } from '../types/index.js';
 import { BaseParser } from './base.js';
 
@@ -45,9 +45,15 @@ export class ComputerProgramParser extends BaseParser {
     // 跳过空白
     position = this.skipWhitespace(tokens, position);
 
-    // 解析作者
-    const { authors, position: afterAuthors } = this.parseRequiredAuthors(tokens, position);
-    position = afterAuthors;
+    // 解析作者（类型标识前无 DOT 时无作者，著录直接从题名开始）
+    let authors: Author[] = [];
+    let position_after_authors = position;
+    if (this.hasAuthorSeparator(tokens, position)) {
+      const required = this.parseRequiredAuthors(tokens, position);
+      authors = required.authors;
+      position_after_authors = required.position;
+    }
+    position = position_after_authors;
 
     // 跳过空白
     position = this.skipWhitespace(tokens, position);

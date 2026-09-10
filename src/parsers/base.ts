@@ -67,6 +67,24 @@ export abstract class BaseParser implements ParserStrategy {
   }
 
   /**
+   * 检测 position 与下一个 TYPE_INDICATOR 之间是否存在 DOT（作者与题名的分隔符）。
+   * 标准著录格式为「主要责任者. 题名[类型标识]」；若类型标识之前没有 DOT，
+   * 说明该文献无主要责任者，著录直接从题名开始（如标准 B.1 示例[8]「康熙字典：巳集上 水部[M]」、
+   * B.8 标准文献「GB/T 3792—2021 信息与文献 资源描述[S]」）。
+   *
+   * @param tokens Token 序列
+   * @param position 当前位置（序号之后）
+   * @returns 是否存在作者分隔符（DOT）
+   */
+  protected hasAuthorSeparator(tokens: Token[], position: number): boolean {
+    const typeIndicatorIndex = findNextTypeIndicator(tokens, position);
+    for (let i = position; i < typeIndicatorIndex && i < tokens.length; i++) {
+      if (tokens[i]?.type === 'DOT') return true;
+    }
+    return false;
+  }
+
+  /**
    * 解析必有作者（格式：作者.）
    * @param tokens Token 序列
    * @param position 当前位置
@@ -171,10 +189,17 @@ export abstract class BaseParser implements ParserStrategy {
     position: number,
     optionalAuthors: boolean = false,
   ): { authors: Author[]; title: string; subtitle?: string; position: number } {
+    // 无作者检测（仅必有作者模式）：类型标识 [X] 之前没有 DOT 时，著录直接从题名开始，
+    // 此时不能把题名文本误解析为作者（标准 B.1 示例[8]「康熙字典：巳集上 水部[M]」等）。
+    // optionalAuthors 模式下保持原有启发式（机构名作者、作者：题名 等）。
+    const noAuthor = !optionalAuthors && !this.hasAuthorSeparator(tokens, position);
+
     // 解析作者
-    const { authors, position: afterAuthors, preDotText } = optionalAuthors
-      ? this.parseOptionalAuthors(tokens, position)
-      : this.parseRequiredAuthors(tokens, position);
+    const { authors, position: afterAuthors, preDotText } = noAuthor
+      ? { authors: [] as Author[], position, preDotText: undefined as string | undefined }
+      : optionalAuthors
+        ? this.parseOptionalAuthors(tokens, position)
+        : this.parseRequiredAuthors(tokens, position);
     position = afterAuthors;
 
     // 解析题名和可选副题名（到文献类型标识为止）
@@ -200,7 +225,10 @@ export abstract class BaseParser implements ParserStrategy {
       // 此时全角冒号属于题名内部（如"昌平山水记：京东考古录"），不拆分；
       // 若否，全角冒号是作者与题名的分隔符（如"许振超：标题"），应拆分。
       const authorSeparatedByDot = position > 0 && tokens[position - 1]?.type === 'DOT';
-      const shouldSplit = colonToken.value === ':' || (colonToken.value === '：' && !authorSeparatedByDot);
+      // 无作者模式（noAuthor）下没有 DOT 分隔作者，全角冒号视为题名内部符号
+      // （如无作者图书"康熙字典：巳集上 水部[M]"，"巳集上 水部"是卷次而非副题名）；
+      // ASCII 冒号仍拆分副题名（与有作者路径一致，如"中国铁路史: 1876-1949[M]"）
+      const shouldSplit = colonToken.value === ':' || (colonToken.value === '：' && !authorSeparatedByDot && !noAuthor);
       if (shouldSplit) {
         // 检查冒号后是否为年份/数字范围（如"数据：2000—2020"），若是则不拆分副题名
         const nextAfterColon = tokens[colonIndex + 1];
@@ -246,13 +274,19 @@ export abstract class BaseParser implements ParserStrategy {
   protected parseTitleWithPrefix(
     tokens: Token[],
     position: number,
-    
+
     optionalAuthors: boolean = false,
   ): { authors: Author[]; title: string; extraField: string; subtitle?: string; position: number } {
+    // 无作者检测（仅必有作者模式）：类型标识前没有 DOT 时，著录直接从题名开始，
+    // 不能把题名文本误解析为作者（同 parseTitleWithOptionalSubtitle）
+    const noAuthor = !optionalAuthors && !this.hasAuthorSeparator(tokens, position);
+
     // 解析作者
-    const authorResult = optionalAuthors
-      ? this.parseOptionalAuthors(tokens, position)
-      : this.parseRequiredAuthors(tokens, position);
+    const authorResult = noAuthor
+      ? { authors: [] as Author[], position }
+      : optionalAuthors
+        ? this.parseOptionalAuthors(tokens, position)
+        : this.parseRequiredAuthors(tokens, position);
     const { authors, position: afterAuthors } = authorResult;
     position = afterAuthors;
 
@@ -317,10 +351,16 @@ export abstract class BaseParser implements ParserStrategy {
     position: number,
     optionalAuthors: boolean = false,
   ): { authors: Author[]; title: string; scale?: string; position: number } {
+    // 无作者检测（仅必有作者模式）：类型标识前没有 DOT 时，著录直接从题名开始，
+    // 不能把题名文本误解析为作者（同 parseTitleWithOptionalSubtitle）
+    const noAuthor = !optionalAuthors && !this.hasAuthorSeparator(tokens, position);
+
     // 解析作者
-    const authorResult = optionalAuthors
-      ? this.parseOptionalAuthors(tokens, position)
-      : this.parseRequiredAuthors(tokens, position);
+    const authorResult = noAuthor
+      ? { authors: [] as Author[], position }
+      : optionalAuthors
+        ? this.parseOptionalAuthors(tokens, position)
+        : this.parseRequiredAuthors(tokens, position);
     const { authors, position: afterAuthors } = authorResult;
     position = afterAuthors;
 
