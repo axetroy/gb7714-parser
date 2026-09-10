@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { StandardParser } from '../../parsers/8.9-standard-parser.js';
+import { StandardParser } from '../../parsers/8.9-s-standard-parser.js';
 import { tokenize } from '../../tokenizer/index.js';
 
 describe('StandardParser', () => {

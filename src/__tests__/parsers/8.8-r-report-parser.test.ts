@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { ReportParser } from '../../parsers/8.8-report-parser.js';
+import { ReportParser } from '../../parsers/8.8-r-report-parser.js';
 import { tokenize } from '../../tokenizer/index.js';
 
 describe('ReportParser', () => {

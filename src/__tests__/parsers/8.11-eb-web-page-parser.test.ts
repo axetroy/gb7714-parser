@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { WebPageParser } from '../../parsers/8.11-web-page-parser.js';
+import { WebPageParser } from '../../parsers/8.11-eb-web-page-parser.js';
 import { tokenize } from '../../tokenizer/index.js';
 
 describe('WebPageParser', () => {

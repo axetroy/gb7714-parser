@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { SerialParser } from '../../parsers/8.4-serial-parser.js';
+import { SerialParser } from '../../parsers/8.4-j-serial-parser.js';
 import { tokenize } from '../../tokenizer/index.js';
 
 describe('SerialParser', () => {

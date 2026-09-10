@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { NewspaperParser } from '../../parsers/8.5-newspaper-parser.js';
+import { NewspaperParser } from '../../parsers/8.5-n-newspaper-parser.js';
 import { tokenize } from '../../tokenizer/index.js';
 
 describe('NewspaperParser', () => {

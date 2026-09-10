@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { DatabaseParser } from '../../parsers/A.1-database-parser.js';
+import { DatabaseParser } from '../../parsers/A.1-db-database-parser.js';
 import { tokenize } from '../../tokenizer/index.js';
 
 describe('DatabaseParser', () => {

@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { JournalParser } from '../../parsers/8.5-journal-parser.js';
+import { JournalParser } from '../../parsers/8.5-j-journal-parser.js';
 import { tokenize } from '../../tokenizer/index.js';
 import { parse } from '../../index.js';
 import type { Journal } from '../../types/index.js';
