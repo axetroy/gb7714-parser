@@ -51,6 +51,47 @@ describe('ThesisParser', () => {
       expect(result.awardYear).toBe('2024');
       expect(result.pages).toBe('150');
     });
+
+    it('应该解析带有授予地的学位论文', () => {
+      const input = '[2] 赵六. 机器学习算法研究[D]. 上海: 上海交通大学, 2024.';
+      const result = parser.parse(tokenize(input));
+
+      expect(result.awardPlace).toBe('上海');
+      expect(result.awardInstitution).toBe('上海交通大学');
+      expect(result.awardYear).toBe('2024');
+    });
+
+    it('应该解析带有 URL 的学位论文', () => {
+      const input = '[3] 孙七. 计算机视觉[D]. 北京: 北京大学, 2025. https://example.com';
+      const result = parser.parse(tokenize(input));
+
+      expect(result.url).toBe('https://example.com');
+    });
+
+    it('应该解析没有页码的学位论文', () => {
+      const input = '[4] 周八. 数据挖掘[D]. 广州: 中山大学, 2024.';
+      const result = parser.parse(tokenize(input));
+
+      expect(result.pages).toBeUndefined();
+    });
+
+    it('应该保留学位授予地中的空格', () => {
+      const input = '[5] Smith J. Deep learning[D]. New York: Columbia University, 2023.';
+      const result = parser.parse(tokenize(input));
+
+      expect(result.awardPlace).toBe('New York');
+      expect(result.awardInstitution).toBe('Columbia University');
+      expect(result.awardYear).toBe('2023');
+    });
+
+    it('应该保留学位授予单位和授予地中的多个空格', () => {
+      const input = '[6] author. Research[D]. Boston  MA:  Massachusetts  Institute  of  Technology, 2022.';
+      const result = parser.parse(tokenize(input));
+
+      expect(result.awardPlace).toBe('Boston  MA');
+      expect(result.awardInstitution).toBe('Massachusetts  Institute  of  Technology');
+      expect(result.awardYear).toBe('2022');
+    });
   });
 
   describe('标准 §8.7 示例', () => {
