@@ -18,10 +18,12 @@ export abstract class BaseFormatter {
    * - 超过3个责任者 → 前3个 + "等"或"et al."
    * - 无责任者 → 空字符串（顺序编码制可省略，§7.1.3）
    */
-  protected formatAuthors(authors: Author[]): string {
+  protected formatAuthors(authors: Author[], truncated?: boolean): string {
     if (authors.length === 0) return '';
     const formatted = authors.map(a => a.name);
-    if (formatted.length > 3) {
+    // 优先使用 authorsTruncated 标志，否则按作者数量判断
+    const shouldTruncate = truncated !== undefined ? truncated : formatted.length > 3;
+    if (shouldTruncate) {
       const suffix = this.options.locale === 'en' ? 'et al.' : '等';
       return formatted.slice(0, 3).join(', ') + `, ${suffix}`;
     }

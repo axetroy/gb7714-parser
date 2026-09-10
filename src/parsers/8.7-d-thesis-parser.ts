@@ -44,7 +44,7 @@ export class ThesisParser extends BaseParser {
     position = this.skipWhitespace(tokens, position);
 
     // 解析作者和题名（含可选副题名）
-    const { authors, title, subtitle, position: afterTitle } = this.parseTitleWithOptionalSubtitle(tokens, position);
+    const { authors, truncated, title, subtitle, position: afterTitle } = this.parseTitleWithOptionalSubtitle(tokens, position);
     position = afterTitle;
 
     // 跳过文献类型标识 [D]
@@ -89,6 +89,7 @@ export class ThesisParser extends BaseParser {
     return {
       type: 'D' as never,
       authors,
+      authorsTruncated: truncated || undefined,
       title,
       subtitle,
       awardPlace: awardPlace || undefined,

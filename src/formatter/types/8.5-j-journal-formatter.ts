@@ -22,9 +22,9 @@ export class JournalFormatter extends BaseFormatter {
 
     // 著者-出版年制: 作者, 年.
     if (this.options.citationStyle === 'author-date' && journal.year) {
-      parts.push(`${this.formatAuthors(journal.authors)}, ${journal.year}.`);
+      parts.push(`${this.formatAuthors(journal.authors, journal.authorsTruncated)}, ${journal.year}.`);
     } else {
-      parts.push(this.formatAuthors(journal.authors));
+      parts.push(this.formatAuthors(journal.authors, journal.authorsTruncated));
     }
 
     let title = journal.title;

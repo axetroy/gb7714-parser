@@ -129,7 +129,8 @@ export class ComponentPartParser extends BaseParser {
       const hostAuthorText = this.readTextUntil(tokens, position, nextDotIndex).trim();
       // 检查是否是作者（包含逗号或中文）
       if (hostAuthorText.includes(',') || hostAuthorText.includes('，') || /^[\u4e00-\u9fa5]+$/.test(hostAuthorText)) {
-        hostAuthors = parseAuthors(hostAuthorText);
+        const { authors: _hAuthors, truncated: _ht } = parseAuthors(hostAuthorText);
+        hostAuthors = _hAuthors;
         position = nextDotIndex + 1;
       }
     }

@@ -90,11 +90,11 @@ export abstract class BaseParser implements ParserStrategy {
    * @param position 当前位置
    * @returns 解析结果，包含作者数组和下一个位置
    */
-  protected parseRequiredAuthors(tokens: Token[], position: number): { authors: Author[]; position: number; preDotText?: string } {
+  protected parseRequiredAuthors(tokens: Token[], position: number): { authors: Author[]; truncated: boolean; position: number; preDotText?: string } {
     const authorsText = readUntilDot(tokens, position);
     position = findNextDot(tokens, position) + 1;
-    const authors = parseAuthors(authorsText);
-    return { authors, position };
+    const { authors, truncated } = parseAuthors(authorsText);
+    return { authors, truncated, position };
   }
 
   /**
@@ -103,8 +103,9 @@ export abstract class BaseParser implements ParserStrategy {
    * @param position 当前位置
    * @returns 解析结果，包含作者数组和下一个位置
    */
-  protected parseOptionalAuthors(tokens: Token[], position: number): { authors: Author[]; position: number; preDotText?: string } {
+  protected parseOptionalAuthors(tokens: Token[], position: number): { authors: Author[]; truncated: boolean; position: number; preDotText?: string } {
     let authors: Author[] = [];
+    let truncated = false;
     // 找到第一个 TYPE_INDICATOR 的位置，作为搜索边界
     const typeIndicatorIndex = findNextTypeIndicator(tokens, position);
     // 在 TYPE_INDICATOR 之前寻找 DOT（作者分隔符）
@@ -125,9 +126,11 @@ export abstract class BaseParser implements ParserStrategy {
         if (hasParen) {
           // 不是作者，将 DOT 前文本纳入题名范围
           position = dotIndex + 1;
-          return { authors, position, preDotText: authorText };
+          return { authors, truncated, position, preDotText: authorText };
         } else {
-          authors = parseAuthors(authorText);
+          const { authors: _a2, truncated: _t2 } = parseAuthors(authorText);
+          authors = _a2;
+          truncated = _t2;
           position = dotIndex + 1;
         }
       } else {
@@ -144,7 +147,9 @@ export abstract class BaseParser implements ParserStrategy {
         ? this.readTextUntil(tokens, position, colonInText).trim()
         : beforeTypeIndicator;
       if (this.isLikelyAuthorText(authorText)) {
-        authors = parseAuthors(authorText);
+        const { authors: _a2, truncated: _t2 } = parseAuthors(authorText);
+        authors = _a2;
+        truncated = _t2;
         // 不移动 position：让外层 parseTitleWithOptionalSubtitle 重新扫描 TYPE_INDICATOR
         // position 保持原位，外层会从当前位置找到 TYPE_INDICATOR 并跳过
       }
@@ -188,7 +193,7 @@ export abstract class BaseParser implements ParserStrategy {
     tokens: Token[],
     position: number,
     optionalAuthors: boolean = false,
-  ): { authors: Author[]; title: string; subtitle?: string; position: number } {
+  ): { authors: Author[]; truncated: boolean; title: string; subtitle?: string; position: number } {
     // 无作者检测：类型标识 [X] 之前没有 DOT 时，著录直接从题名开始，
     // 此时不能把题名文本误解析为作者（标准 B.1 示例[8]「康熙字典：巳集上 水部[M]」等）。
     // 例外：当 optionalAuthors=true 且存在 COLON（如"作者：标题"格式）时，允许解析作者。
@@ -200,11 +205,12 @@ export abstract class BaseParser implements ParserStrategy {
     const noAuthor = noDot && !(optionalAuthors && hasColonBeforeType);
 
     // 解析作者
-    const { authors, position: afterAuthors, preDotText } = noAuthor
-      ? { authors: [] as Author[], position, preDotText: undefined as string | undefined }
+    const authorResult = noAuthor
+      ? { authors: [] as Author[], truncated: false, position, preDotText: undefined as string | undefined }
       : optionalAuthors
         ? this.parseOptionalAuthors(tokens, position)
         : this.parseRequiredAuthors(tokens, position);
+    const { authors, truncated, position: afterAuthors, preDotText } = authorResult;
     position = afterAuthors;
 
     // 解析题名和可选副题名（到文献类型标识为止）
@@ -259,7 +265,7 @@ export abstract class BaseParser implements ParserStrategy {
     // 跳过文献类型标识
     position = titleEnd;
 
-    return { authors, title, subtitle, position };
+    return { authors, truncated, title, subtitle, position };
   }
 
   /**
@@ -278,7 +284,7 @@ export abstract class BaseParser implements ParserStrategy {
     position: number,
 
     optionalAuthors: boolean = false,
-  ): { authors: Author[]; title: string; extraField: string; subtitle?: string; position: number } {
+  ): { authors: Author[]; truncated: boolean; title: string; extraField: string; subtitle?: string; position: number } {
     // 无作者检测：类型标识前没有 DOT 时，著录直接从题名开始，
     // 不能把题名文本误解析为作者。例外：optionalAuthors=true 且存在 COLON 时允许解析作者。
     const noDot = !this.hasAuthorSeparator(tokens, position);
@@ -357,7 +363,7 @@ export abstract class BaseParser implements ParserStrategy {
     tokens: Token[],
     position: number,
     optionalAuthors: boolean = false,
-  ): { authors: Author[]; title: string; scale?: string; position: number } {
+  ): { authors: Author[]; truncated: boolean; title: string; scale?: string; position: number } {
     // 无作者检测：类型标识前没有 DOT 时，著录直接从题名开始，
     // 不能把题名文本误解析为作者。例外：optionalAuthors=true 且存在 COLON 时允许解析作者。
     const noDot = !this.hasAuthorSeparator(tokens, position);
@@ -794,6 +800,7 @@ export class Parser {
 
     // 尝试提取作者和题名
     let authors: Author[] = [];
+    let _truncated = false;
     let title = '';
     let createDate: string | undefined;
     let accessDate: string | undefined;
@@ -802,7 +809,8 @@ export class Parser {
     if (textTokens.length >= 2) {
       // 假设第一个文本是作者，第二个是题名
       const authorText = textTokens[0]!.value;
-      authors = parseAuthors(authorText);
+      const { authors: _ga, truncated: _gt } = parseAuthors(authorText);
+      authors = _ga;
       title = textTokens[1]!.value;
     } else if (textTokens.length === 1) {
       title = textTokens[0]!.value;
@@ -840,6 +848,7 @@ export class Parser {
         id: options?.preserveId
           ? tokens.find(t => t.type === 'NUMBER')?.value
           : undefined,
+        authorsTruncated: _truncated || undefined,
       },
       warnings,
       errors,

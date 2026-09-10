@@ -52,7 +52,8 @@ export class DatabaseParser extends BaseParser {
     if (firstDotIndex < typeIndicatorIndex) {
       // DOT 出现在 TYPE_INDICATOR 之前，说明有作者
       const beforeDot = this.readTextUntil(tokens, position, firstDotIndex);
-      authors = parseAuthors(beforeDot);
+      const { authors: _a3, truncated: _t3 } = parseAuthors(beforeDot);
+      authors = _a3;
       position = firstDotIndex + 1;
     }
 
@@ -79,6 +80,7 @@ export class DatabaseParser extends BaseParser {
     return {
       type: 'DB' as never,
       authors,
+      
       title,
       databaseName: title,
       publisherPlace: publisherPlace || undefined,

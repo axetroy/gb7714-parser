@@ -69,6 +69,7 @@ export class ReportParser extends BaseParser {
     return {
       type: 'R' as never,
       authors,
+      
       title,
       subtitle: subtitle || undefined,
       reportNumber: reportNumber || undefined,

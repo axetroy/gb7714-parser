@@ -63,7 +63,7 @@ export class BookParser extends BaseParser {
     // 解析作者和题名（含可选副题名）
     // 无作者图书（类型标识 [M] 前无 DOT，如标准 B.1 示例[8]「康熙字典：巳集上 水部[M]」）
     // 由 parseTitleWithOptionalSubtitle 内部统一处理：authors 为空，整段前缀作为题名
-    const { authors, title, subtitle, position: afterTitle } = this.parseTitleWithOptionalSubtitle(tokens, position);
+    const { authors, truncated, title, subtitle, position: afterTitle } = this.parseTitleWithOptionalSubtitle(tokens, position);
     position = afterTitle;
 
     // 跳过文献类型标识 [M] 和随后的 .
@@ -117,6 +117,7 @@ export class BookParser extends BaseParser {
     return {
       type: 'M' as never,
       authors,
+      authorsTruncated: truncated || undefined,
       title,
       subtitle,
       publisherPlace: publisherPlace || undefined,

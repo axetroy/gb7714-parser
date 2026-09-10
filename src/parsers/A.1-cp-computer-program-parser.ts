@@ -106,6 +106,7 @@ export class ComputerProgramParser extends BaseParser {
     return {
       type: 'CP' as never,
       authors,
+      
       title,
       programVersion,
       runtimeEnvironment,

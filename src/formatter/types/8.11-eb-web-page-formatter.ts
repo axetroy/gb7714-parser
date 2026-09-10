@@ -18,7 +18,7 @@ export class WebPageFormatter extends BaseFormatter {
     }
 
     if (webPage.authors && webPage.authors.length > 0) {
-      parts.push(this.formatAuthors(webPage.authors));
+      parts.push(this.formatAuthors(webPage.authors, webPage.authorsTruncated));
     }
 
     parts.push(`${webPage.title}${buildTypeIndicator('EB', webPage.mediaType)}.`);

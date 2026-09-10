@@ -11,28 +11,33 @@ const ET_AL_PATTERN = /^(etal|et\s+al\.?|等)$/i;
  * 支持中文作者（逗号分隔）和西文作者
  *
  * @param text - 作者字符串，多个作者用逗号分隔
- * @returns 解析后的作者数组（已过滤 "et al"/"等"）
+ * @returns 解析结果：作者数组 + 是否截断（原文含"等"/"et al."）
  *
  * @example
  * ```typescript
- * parseAuthors('张三');  // [{ name: '张三' }]
- * parseAuthors('John Smith, et al.');  // [{ name: 'John Smith' }]
+ * parseAuthors('张三');           // { authors: [{name:'张三'}], truncated: false }
+ * parseAuthors('张三, 李四, 王五, 等');  // { authors: [{name:'张三'},{name:'李四'},{name:'王五'}], truncated: true }
+ * parseAuthors('John Smith, et al.');    // { authors: [{name:'John Smith'}], truncated: true }
  * ```
  */
-export function parseAuthors(text: string): Author[] {
-  if (!text.trim()) return [];
+export function parseAuthors(text: string): { authors: Author[]; truncated: boolean } {
+  if (!text.trim()) return { authors: [], truncated: false };
 
   // 使用中文逗号或英文逗号分隔
   const parts = text.split(/[,，]/);
 
   const authors: Author[] = [];
+  let truncated = false;
 
   for (const part of parts) {
     const name = part.trim();
     if (!name) continue;
 
-    // 过滤 "et al" 和 "等"
-    if (ET_AL_PATTERN.test(name)) continue;
+    // 检测 "et al" 和 "等"
+    if (ET_AL_PATTERN.test(name)) {
+      truncated = true;
+      continue;
+    }
 
     // 检查是否是机构作者
     if (name.includes('学会') || name.includes('协会') || name.includes('研究院') ||
@@ -46,19 +51,21 @@ export function parseAuthors(text: string): Author[] {
     authors.push({ name });
   }
 
-  return authors;
+  return { authors, truncated };
 }
 
 /**
  * 格式化作者为字符串
  */
-export function formatAuthors(authors: Author[]): string {
+export function formatAuthors(authors: Author[], truncated?: boolean, locale?: 'zh' | 'en'): string {
   if (authors.length === 0) return '';
 
   const formatted = authors.map(a => a.name);
-
-  if (formatted.length > 3) {
-    return formatted.slice(0, 3).join(', ') + ', et al.';
+  // 优先使用 truncated 标志，否则按作者数量判断
+  const shouldTruncate = truncated !== undefined ? truncated : formatted.length > 3;
+  if (shouldTruncate) {
+    const suffix = locale === 'en' ? 'et al.' : '等';
+    return formatted.slice(0, 3).join(', ') + `, ${suffix}`;
   }
 
   return formatted.join(', ');

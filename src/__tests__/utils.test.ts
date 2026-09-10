@@ -4,17 +4,17 @@ import { parseAuthors, formatAuthors, isValidDate, isValidYear, truncate, remove
 describe('Utils', () => {
   describe('parseAuthors', () => {
     it('应该解析空字符串', () => {
-      expect(parseAuthors('')).toEqual([]);
-      expect(parseAuthors('  ')).toEqual([]);
+      expect(parseAuthors('').authors).toEqual([]);
+      expect(parseAuthors('  ').authors).toEqual([]);
     });
 
     it('应该解析中文作者', () => {
-      const result = parseAuthors('张三');
+      const { authors: result } = parseAuthors('张三');
       expect(result).toEqual([{ name: '张三' }]);
     });
 
     it('应该解析多个中文作者', () => {
-      const result = parseAuthors('张三，李四，王五');
+      const { authors: result } = parseAuthors('张三，李四，王五');
       expect(result).toHaveLength(3);
       expect(result[0].name).toBe('张三');
       expect(result[1].name).toBe('李四');
@@ -22,66 +22,66 @@ describe('Utils', () => {
     });
 
     it('应该解析英文作者', () => {
-      const result = parseAuthors('John Smith');
+      const { authors: result } = parseAuthors('John Smith');
       expect(result).toEqual([{ name: 'John Smith' }]);
     });
 
     it('应该解析机构作者', () => {
-      const result = parseAuthors('中国计算机学会');
+      const { authors: result } = parseAuthors('中国计算机学会');
       expect(result).toEqual([{ name: '中国计算机学会', isOrganization: true }]);
     });
 
     it('应该解析带 Institute 的机构作者', () => {
-      const result = parseAuthors('MIT Institute');
+      const { authors: result } = parseAuthors('MIT Institute');
       expect(result).toEqual([{ name: 'MIT Institute', isOrganization: true }]);
     });
 
     it('应该解析带 University 的机构作者', () => {
-      const result = parseAuthors('Beijing University');
+      const { authors: result } = parseAuthors('Beijing University');
       expect(result).toEqual([{ name: 'Beijing University', isOrganization: true }]);
     });
 
     it('应该解析带 Society 的机构作者', () => {
-      const result = parseAuthors('IEEE Society');
+      const { authors: result } = parseAuthors('IEEE Society');
       expect(result).toEqual([{ name: 'IEEE Society', isOrganization: true }]);
     });
 
     it('应该解析单个姓氏', () => {
-      const result = parseAuthors('Smith');
+      const { authors: result } = parseAuthors('Smith');
       expect(result).toEqual([{ name: 'Smith' }]);
     });
 
     it('应该过滤 et al', () => {
-      const result = parseAuthors('et al.');
+      const { authors: result } = parseAuthors('et al.');
       expect(result).toEqual([]);
     });
 
     it('应该过滤 et al（无点号）', () => {
-      const result = parseAuthors('et al');
+      const { authors: result } = parseAuthors('et al');
       expect(result).toEqual([]);
     });
 
     it('应该过滤 等', () => {
-      const result = parseAuthors('等');
+      const { authors: result } = parseAuthors('等');
       expect(result).toEqual([]);
     });
 
     it('应该在作者列表中过滤 et al', () => {
-      const result = parseAuthors('Smith J, Doe A, et al.');
+      const { authors: result } = parseAuthors('Smith J, Doe A, et al.');
       expect(result).toHaveLength(2);
       expect(result[0].name).toBe('Smith J');
       expect(result[1].name).toBe('Doe A');
     });
 
     it('应该在作者列表中过滤 等', () => {
-      const result = parseAuthors('张三，李四，等');
+      const { authors: result } = parseAuthors('张三，李四，等');
       expect(result).toHaveLength(2);
       expect(result[0].name).toBe('张三');
       expect(result[1].name).toBe('李四');
     });
 
     it('应该解析多个英文作者', () => {
-      const result = parseAuthors('Smith J, Doe A, Johnson B');
+      const { authors: result } = parseAuthors('Smith J, Doe A, Johnson B');
       expect(result).toHaveLength(3);
       expect(result[0].name).toBe('Smith J');
       expect(result[1].name).toBe('Doe A');
@@ -89,15 +89,41 @@ describe('Utils', () => {
     });
 
     it('应该解析带缩写名的作者', () => {
-      const result = parseAuthors('A A Myburg');
+      const { authors: result } = parseAuthors('A A Myburg');
       expect(result).toEqual([{ name: 'A A Myburg' }]);
     });
 
     it('应该解析多个中文作者', () => {
-      const result = parseAuthors('张三，李四，王五，赵六');
+      const { authors: result } = parseAuthors('张三，李四，王五，赵六');
       expect(result).toHaveLength(4);
     });
   });
+
+
+    it('应该标记超过 3 个作者的解析结果', () => {
+      // 输入有4个作者但没有"等"，全部保留，truncated=false
+      const result = parseAuthors('张三, 李四, 王五, 赵六');
+      expect(result.authors).toHaveLength(4);
+      expect(result.truncated).toBe(false);
+    });
+
+    it('应该标记含等的解析结果', () => {
+      const result = parseAuthors('张三, 李四, 王五, 等');
+      expect(result.authors).toHaveLength(3);
+      expect(result.truncated).toBe(true);
+    });
+
+    it('应该标记含 et al 的解析结果', () => {
+      const result = parseAuthors('John Smith, Jane Doe, et al.');
+      expect(result.authors).toHaveLength(2);
+      expect(result.truncated).toBe(true);
+    });
+
+    it('应该标记不含截断的解析结果', () => {
+      const result = parseAuthors('张三, 李四');
+      expect(result.authors).toHaveLength(2);
+      expect(result.truncated).toBe(false);
+    });
 
   describe('formatAuthors', () => {
     it('应该格式化空数组', () => {
@@ -128,7 +154,34 @@ describe('Utils', () => {
         { name: '王五' },
         { name: '赵六' },
       ];
-      expect(formatAuthors(authors)).toBe('张三, 李四, 王五, et al.');
+      // 默认使用中文"等"
+      expect(formatAuthors(authors)).toBe('张三, 李四, 王五, 等');
+    });
+
+    it('应该使用 authorsTruncated=true 添加中文"等"', () => {
+      const authors = [
+        { name: '张三' },
+        { name: '李四' },
+      ];
+      expect(formatAuthors(authors, true, 'zh')).toBe('张三, 李四, 等');
+    });
+
+    it('应该使用 authorsTruncated=true 添加英文"et al."', () => {
+      const authors = [
+        { name: '张三' },
+        { name: '李四' },
+      ];
+      expect(formatAuthors(authors, true, 'en')).toBe('张三, 李四, et al.');
+    });
+
+    it('authorsTruncated=false 时不添加"等"', () => {
+      const authors = [
+        { name: '张三' },
+        { name: '李四' },
+        { name: '王五' },
+        { name: '赵六' },
+      ];
+      expect(formatAuthors(authors, false)).toBe('张三, 李四, 王五, 赵六');
     });
   });
 

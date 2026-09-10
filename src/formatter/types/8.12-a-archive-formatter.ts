@@ -18,7 +18,7 @@ export class ArchiveFormatter extends BaseFormatter {
     }
 
     if (archive.authors && archive.authors.length > 0) {
-      parts.push(this.formatAuthors(archive.authors));
+      parts.push(this.formatAuthors(archive.authors, archive.authorsTruncated));
     }
 
     let title = archive.title;

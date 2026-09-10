@@ -300,4 +300,19 @@ describe('BookParser', () => {
       expect(ref.subtitle).toBe('rock art in the 21st century');
       expect(ref.year).toBe('2024');
     });
+
+
+    it('应该标记含"等"的作者列表', () => {
+      const input = '[1] 张三, 李四, 王五, 等. 图书标题[M]. 北京: 出版社, 2025.';
+      const result = parse(input);
+      expect(result.reference.authorsTruncated).toBe(true);
+      expect(result.reference.authors).toHaveLength(3);
+    });
+
+    it('应该标记含"et al."的作者列表', () => {
+      const input = '[1] John Smith, Jane Doe, et al. Book Title[M]. New York: Publisher, 2025.';
+      const result = parse(input);
+      expect(result.reference.authorsTruncated).toBe(true);
+      expect(result.reference.authors).toHaveLength(2);
+    });
   });

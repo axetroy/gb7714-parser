@@ -18,7 +18,7 @@ export class PreprintFormatter extends BaseFormatter {
     }
 
     if (preprint.authors && preprint.authors.length > 0) {
-      parts.push(this.formatAuthors(preprint.authors));
+      parts.push(this.formatAuthors(preprint.authors, preprint.authorsTruncated));
     }
 
     parts.push(`${preprint.title}${buildTypeIndicator('PP', preprint.mediaType)}.`);

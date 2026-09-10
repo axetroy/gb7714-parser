@@ -19,7 +19,7 @@ export class BookFormatter extends BaseFormatter {
       parts.push(`[${book.id}]`);
     }
 
-    parts.push(this.formatAuthors(book.authors));
+    parts.push(this.formatAuthors(book.authors, book.authorsTruncated));
 
     let title = book.title;
     if (book.subtitle) {

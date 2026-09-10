@@ -97,6 +97,7 @@ export class PatentParser extends BaseParser {
     return {
       type: 'P' as never,
       authors,
+      
       title,
       patentNumber: patentNumber || '',
       announceDate: announceDate || undefined,

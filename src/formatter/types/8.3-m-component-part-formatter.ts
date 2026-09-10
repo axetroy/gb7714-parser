@@ -20,7 +20,7 @@ export class ComponentPartFormatter extends BaseFormatter {
     }
 
     if (component.authors.length > 0) {
-      parts.push(this.formatAuthors(component.authors));
+      parts.push(this.formatAuthors(component.authors, component.authorsTruncated));
     }
 
     // 析出文献题名 + 文献类型标识
@@ -35,7 +35,7 @@ export class ComponentPartFormatter extends BaseFormatter {
     // 出处文献
     if (component.host) {
       if (component.host.authors && component.host.authors.length > 0) {
-        parts.push(this.formatAuthors(component.host.authors));
+        parts.push(this.formatAuthors(component.host.authors, component.host.authorsTruncated));
       }
       parts.push(`${component.host.title}.`);
 

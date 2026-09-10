@@ -20,7 +20,7 @@ export class NewspaperFormatter extends BaseFormatter {
     }
 
     if (newspaper.authors.length > 0) {
-      parts.push(this.formatAuthors(newspaper.authors));
+      parts.push(this.formatAuthors(newspaper.authors, newspaper.authorsTruncated));
     }
 
     parts.push(`${newspaper.title}${buildTypeIndicator('N', newspaper.mediaType)}.`);

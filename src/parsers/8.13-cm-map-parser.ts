@@ -120,6 +120,7 @@ export class MapParser extends BaseParser {
     return {
       type: 'CM' as never,
       authors,
+      
       title,
       scale: scale || undefined,
       version,

@@ -136,7 +136,8 @@ export class AuthorDateParser extends BaseParser {
 
       // 解析作者
       const authorText = parenContent.join('');
-      authors = parseAuthors(authorText);
+      const { authors: _a2, truncated: _t2 } = parseAuthors(authorText);
+      authors = _a2;
 
       position++; // 跳过 )
     }
@@ -219,6 +220,7 @@ export class AuthorDateParser extends BaseParser {
     return {
       type: referenceType as never,
       authors,
+      
       title,
       year: year || undefined,
       pages: pages || undefined,

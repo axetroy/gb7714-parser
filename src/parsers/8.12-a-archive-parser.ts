@@ -104,6 +104,7 @@ export class ArchiveParser extends BaseParser {
     return {
       type: 'A' as never,
       authors,
+      
       title,
       archiveNumber: archiveNumber || undefined,
       collectionPlace: collectionPlace || undefined,
