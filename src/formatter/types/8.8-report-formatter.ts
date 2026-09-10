@@ -1,0 +1,53 @@
+import type { ReferenceUnion, Author, MediaType } from '../../types/index.js';
+import { buildTypeIndicator } from '../../utils/index.js';
+import { BaseFormatter } from '../base.js';
+
+/**
+ * 报告格式化器
+ *
+ * 对应标准 GB/T 7714-2025 §8.8 报告
+ *
+ * 格式: 作者. 题名;报告编号[R]. 发布日期;引文页码.
+ */
+export class ReportFormatter extends BaseFormatter {
+  format(ref: ReferenceUnion): string {
+    const report = ref as {
+      id?: string;
+      authors: Author[];
+      title: string;
+      reportNumber?: string;
+      releaseDate?: string;
+      pages?: string;
+      url?: string;
+      mediaType?: MediaType;
+    };
+
+    const parts: string[] = [];
+
+    if (report.id) {
+      parts.push(`[${report.id}]`);
+    }
+
+    parts.push(this.formatAuthors(report.authors));
+
+    let title = report.title;
+    if (report.reportNumber) {
+      title += `;${report.reportNumber}`;
+    }
+    parts.push(`${title}${buildTypeIndicator('R', report.mediaType)}.`);
+
+    if (report.releaseDate) {
+      let info = report.releaseDate;
+      if (report.pages) {
+        info += `;${report.pages}`;
+      }
+      parts.push(info + '.');
+    }
+
+    if (report.url) {
+      parts.push(report.url);
+    }
+
+    return parts.join(' ');
+  }
+}

@@ -50,7 +50,26 @@ src/
 │   ├── A.1-database-parser.ts    # 数据库 [DB]（标准附录 A.1）
 │   └── index.ts                  # 解析器导出
 ├── validator/index.ts     # 校验器 - 验证引用是否符合 GB/T 7714 规范
-├── formatter/index.ts     # 格式化器 - 将结构化对象转换为 GB/T 7714 字符串
+├── formatter/              # 文件名与 parsers/ 一一对应，同样以标准章节号开头
+│   ├── base.ts                   # 格式化器基类（formatAuthors/formatYear/pidSuffix 等共享逻辑）
+│   ├── types/
+│   │   ├── 8.2-book-formatter.ts        # 图书 [M]（标准 §8.2）
+│   │   ├── 8.3-component-part-formatter.ts # 图书中的析出文献（标准 §8.3）
+│   │   ├── 8.4-serial-formatter.ts      # 连续出版物（标准 §8.4）
+│   │   ├── 8.5-journal-formatter.ts     # 期刊析出 [J]（标准 §8.5）
+│   │   ├── 8.5-newspaper-formatter.ts   # 报纸析出 [N]（标准 §8.5）
+│   │   ├── 8.6-proceedings-formatter.ts # 会议录 [C]（标准 §8.6）
+│   │   ├── 8.7-thesis-formatter.ts      # 学位论文 [D]（标准 §8.7）
+│   │   ├── 8.8-report-formatter.ts      # 报告 [R]（标准 §8.8）
+│   │   ├── 8.9-standard-formatter.ts    # 标准 [S]（标准 §8.9）
+│   │   ├── 8.10-patent-formatter.ts     # 专利 [P]（标准 §8.10）
+│   │   ├── 8.11-web-page-formatter.ts   # 网站/网页 [EB]（标准 §8.11）
+│   │   ├── 8.12-archive-formatter.ts    # 档案 [A]（标准 §8.12）
+│   │   ├── 8.13-map-formatter.ts        # 地图 [CM]（标准 §8.13）
+│   │   ├── 8.14-dataset-formatter.ts    # 数据集 [DS]（标准 §8.14）
+│   │   ├── 8.15-preprint-formatter.ts   # 预印本 [PP]（标准 §8.15）
+│   │   └── generic-formatter.ts         # 通用兜底（[Z] 其他、[G] 汇编等）
+│   └── index.ts                  # Formatter 主类：按类型分发 + 引用标注（§9.2/§9.3）+ 排序（§9.3.2）
 ├── utils/index.ts         # 工具函数
 └── index.ts               # 主入口 API
 ```
@@ -103,7 +122,7 @@ interface ParserStrategy {
 3. 在 `src/parsers/` 中创建实现 `ParserStrategy` 的解析器
 4. 在 `src/index.ts` 中注册解析器
 5. 在 `src/validator/index.ts` 中添加校验规则
-6. 在 `src/formatter/index.ts` 中添加格式化方法
+6. 在 `src/formatter/types/` 中创建继承 `BaseFormatter` 的格式化器，并在 `src/formatter/index.ts` 中分发
 7. 编写测试
 
 ### 修改解析逻辑

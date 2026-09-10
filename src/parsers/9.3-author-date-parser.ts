@@ -1,4 +1,4 @@
-import type { Token, Author } from '../types/index.js';
+import type { Token, Author, MediaType } from '../types/index.js';
 import type { Reference, ParseOptions } from '../types/index.js';
 import { BaseParser } from './base.js';
 import { parseTypeIndicator, parseAuthors } from '../utils/index.js';
@@ -157,7 +157,7 @@ export class AuthorDateParser extends BaseParser {
     // 跳过文献类型标识
     const typeIndicator = tokens.find(t => t.type === 'TYPE_INDICATOR');
     let referenceType = 'Z';
-    let mediaType: import('../types/index.js').MediaType | undefined;
+    let mediaType: MediaType | undefined;
     if (typeIndicator) {
       const parsed = parseTypeIndicator(typeIndicator.value);
       referenceType = parsed.baseType || 'Z';

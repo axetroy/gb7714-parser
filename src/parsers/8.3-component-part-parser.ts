@@ -1,4 +1,4 @@
-import type { Token, Author } from '../types/index.js';
+import type { Token, Author, MediaType } from '../types/index.js';
 import type { ComponentPart, ParseOptions } from '../types/index.js';
 import { BaseParser } from './base.js';
 import { parseTypeIndicator, parseAuthors } from '../utils/index.js';
@@ -93,7 +93,7 @@ export class ComponentPartParser extends BaseParser {
     // 解析析出文献题名（到 //）
     let componentTitle = '';
     let componentType: string = 'Z'; // 默认类型
-    let componentMediaType: import('../types/index.js').MediaType | undefined;
+    let componentMediaType: MediaType | undefined;
     if (doubleSlashIndex >= titleStart) {
       componentTitle = this.readTextUntil(tokens, titleStart, doubleSlashIndex).trim().replace(/\.$/, '');
       // 尝试从题名中提取文献类型标识（从文本中提取）
