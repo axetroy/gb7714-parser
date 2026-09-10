@@ -1,10 +1,38 @@
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue'
-import { parse, format, validate, parseCitation } from '../../../src/index.ts'
+import { parse, format, validate } from '../../../src/index.ts'
+import appendixB from '../data/appendix-b-examples.json'
 
 type Mode = 'parse' | 'format' | 'validate'
 
-const input = ref('[1] 张三，李四. 人工智能在教育中的应用[J]. 现代教育技术，2025，35(2)：15-22. DOI:10.1234/test')
+interface Example {
+  id: number
+  content: string
+}
+
+interface ExampleGroup {
+  section: string
+  count: number
+  examples: Example[]
+}
+
+// 附录 B 标准示例（来自 GB/T 7714-2025 附录 B，每条带全局序号 [NUMBER]）
+const exampleGroups = computed<ExampleGroup[]>(() => {
+  let globalIndex = 0
+  return appendixB.groups.map(group => ({
+    section: group.section,
+    count: group.count,
+    examples: group.examples.map(ex => ({
+      id: ++globalIndex,
+      content: ex.content,
+    })),
+  }))
+})
+
+// 默认加载第一个示例 [1]
+const firstExample = exampleGroups.value[0]!.examples[0]!
+
+const input = ref(`[${firstExample.id}] ${firstExample.content}`)
 const mode = ref<Mode>('parse')
 const output = ref('')
 const errors = ref<string[]>([])
@@ -18,23 +46,14 @@ const preserveId = ref(false)
 // 格式化选项
 const formatVersion = ref<'2015' | '2025'>('2025')
 
-// 示例输入
-const examples = {
-  parse: [
-    '[1] 张三，李四. 人工智能在教育中的应用[J]. 现代教育技术，2025，35(2)：15-22.',
-    '[2] 李四. 机器学习导论[M]. 北京: 清华大学出版社, 2024: 156.',
-    '[3] 王琦. 融合星载GNSS-R数据的土壤湿度反演方法研究[D]. 武汉: 武汉大学, 2022: 87.',
-    '[4] Myburg A A, Grattapaglia D, et al. The genome of Eucalyptus grandis[J/OL]. Nature, 2014, 510: 356-362.',
-    '[5] GB/T 7714-2025 信息与文献 参考文献著录规则[S]. 北京: 中国标准出版社, 2025.',
-    '(张三, 2025)',
-    '[1,2,3]',
-  ],
-  format: [],
-  validate: []
-}
+const activeGroupId = ref(0)
+const activeExampleId = ref(firstExample.id)
 
-// 预设的格式化输入（需要先解析才能格式化）
-const formatInput = ref('[1] 张三，李四. 人工智能在教育中的应用[J]. 现代教育技术，2025，35(2)：15-22.')
+// 当前选中分组的示例列表
+const activeExamples = computed(() => {
+  const group = exampleGroups.value[activeGroupId.value]
+  return group ? group.examples : []
+})
 
 const processInput = () => {
   errors.value = []
@@ -53,31 +72,31 @@ const processInput = () => {
         version: parseVersion.value,
         preserveId: preserveId.value
       })
-      
+
       output.value = JSON.stringify(result.reference, null, 2)
       warnings.value = result.warnings || []
-      
+
     } else if (mode.value === 'format') {
       // 先解析，再格式化
       const parseResult = parse(input.value, {
         version: formatVersion.value
       })
-      
+
       const formatted = format(parseResult.reference, {
         version: formatVersion.value
       })
-      
+
       output.value = formatted
       warnings.value = parseResult.warnings || []
-      
+
     } else if (mode.value === 'validate') {
       const parseResult = parse(input.value)
       const report = validate(parseResult.reference)
-      
+
       isValid.value = report.valid
       output.value = JSON.stringify(report, null, 2)
       warnings.value = parseResult.warnings || []
-      
+
       if (!report.valid) {
         errors.value = report.errors.map(e => `[${e.level}] ${e.field}: ${e.message}`)
       }
@@ -87,8 +106,10 @@ const processInput = () => {
   }
 }
 
-const loadExample = (example: string) => {
-  input.value = example
+// 加载标准示例：在原文前加上全局序号 [NUMBER]
+const loadExample = (example: Example) => {
+  activeExampleId.value = example.id
+  input.value = `[${example.id}] ${example.content}`
   processInput()
 }
 
@@ -119,21 +140,21 @@ watch(mode, () => {
     <div class="playground-header">
       <h3 style="margin: 0;">在线 Playground</h3>
       <div class="playground-tabs">
-        <button 
+        <button
           class="playground-tab"
           :class="{ active: mode === 'parse' }"
           @click="mode = 'parse'"
         >
           解析
         </button>
-        <button 
+        <button
           class="playground-tab"
           :class="{ active: mode === 'format' }"
           @click="mode = 'format'"
         >
           格式化
         </button>
-        <button 
+        <button
           class="playground-tab"
           :class="{ active: mode === 'validate' }"
           @click="mode = 'validate'"
@@ -171,23 +192,37 @@ watch(mode, () => {
       </div>
     </div>
 
-    <!-- 示例输入 -->
+    <!-- GB/T 7714-2025 附录 B 标准示例 -->
     <div class="playground-examples">
-      <div class="playground-examples-title">示例:</div>
-      <div class="playground-example-buttons">
-        <button 
-          class="playground-example-button"
-          v-for="(example, index) in examples.parse"
-          :key="index"
-          @click="loadExample(example)"
-        >
-          示例 {{ index + 1 }}
-        </button>
+      <div class="playground-examples-title">
+        GB/T 7714-2025 附录 B 标准示例（{{ exampleGroups.reduce((n, g) => n + g.examples.length, 0) }} 条）:
+      </div>
+      <div class="playground-example-groups">
+        <div class="playground-example-group">
+          <label class="playground-group-label">选择分组:</label>
+          <select v-model.number="activeGroupId">
+            <option v-for="(group, index) in exampleGroups" :key="index" :value="index">
+              {{ group.section }}（{{ group.count }}）
+            </option>
+          </select>
+        </div>
+        <div class="playground-example-buttons">
+          <button
+            class="playground-example-button"
+            :class="{ active: activeExampleId === example.id }"
+            v-for="example in activeExamples"
+            :key="example.id"
+            @click="loadExample(example)"
+            :title="example.content"
+          >
+            [{{ example.id }}]
+          </button>
+        </div>
       </div>
     </div>
 
     <!-- 输入 -->
-    <textarea 
+    <textarea
       class="playground-input"
       v-model="input"
       :placeholder="mode === 'parse' ? '请输入参考文献字符串...' : '请输入参考文献字符串...'"
@@ -195,7 +230,7 @@ watch(mode, () => {
 
     <!-- 操作按钮 -->
     <div class="playground-actions">
-      <button 
+      <button
         class="playground-button"
         @click="processInput"
       >
