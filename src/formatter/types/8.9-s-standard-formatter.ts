@@ -1,4 +1,4 @@
-import type { ReferenceUnion, MediaType } from '../../types/index.js';
+import type { ReferenceUnion, Standard } from '../../types/index.js';
 import { buildTypeIndicator } from '../../utils/index.js';
 import { BaseFormatter } from '../base.js';
 
@@ -9,13 +9,7 @@ import { BaseFormatter } from '../base.js';
  */
 export class StandardFormatter extends BaseFormatter {
   format(ref: ReferenceUnion): string {
-    const standard = ref as {
-      id?: string;
-      standardNumber: string;
-      standardName: string;
-      url?: string;
-      mediaType?: MediaType;
-    };
+    const standard = ref as Standard;
 
     const parts: string[] = [];
 
@@ -23,7 +17,7 @@ export class StandardFormatter extends BaseFormatter {
       parts.push(`[${standard.id}]`);
     }
 
-    parts.push(`${standard.standardNumber} ${standard.standardName}${buildTypeIndicator('S', standard.mediaType, (standard as Record<string, unknown>).includeTypeIndicator !== false)}.`);
+    parts.push(`${standard.standardNumber} ${standard.standardName}${buildTypeIndicator('S', standard.mediaType, standard.includeTypeIndicator !== false)}.`);
 
     if (standard.url) {
       parts.push(standard.url);

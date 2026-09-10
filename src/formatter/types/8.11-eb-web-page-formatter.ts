@@ -1,4 +1,4 @@
-import type { ReferenceUnion, Author, MediaType } from '../../types/index.js';
+import type { ReferenceUnion, WebPage } from '../../types/index.js';
 import { buildTypeIndicator } from '../../utils/index.js';
 import { BaseFormatter } from '../base.js';
 
@@ -9,15 +9,7 @@ import { BaseFormatter } from '../base.js';
  */
 export class WebPageFormatter extends BaseFormatter {
   format(ref: ReferenceUnion): string {
-    const webPage = ref as {
-      id?: string;
-      authors?: Author[];
-      title: string;
-      createDate?: string;
-      accessDate: string;
-      url?: string;
-      mediaType?: MediaType;
-    };
+    const webPage = ref as WebPage;
 
     const parts: string[] = [];
 

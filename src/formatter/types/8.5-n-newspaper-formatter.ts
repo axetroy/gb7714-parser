@@ -1,4 +1,4 @@
-import type { ReferenceUnion, Author, MediaType } from '../../types/index.js';
+import type { ReferenceUnion, Newspaper } from '../../types/index.js';
 import { buildTypeIndicator } from '../../utils/index.js';
 import { BaseFormatter } from '../base.js';
 
@@ -11,18 +11,7 @@ import { BaseFormatter } from '../base.js';
  */
 export class NewspaperFormatter extends BaseFormatter {
   format(ref: ReferenceUnion): string {
-    const newspaper = ref as {
-      id?: string;
-      authors: Author[];
-      title: string;
-      newspaperTitle?: string;
-      year?: string;
-      monthDay?: string;
-      edition?: string;
-      url?: string;
-      pid?: string;
-      mediaType?: MediaType;
-    };
+    const newspaper = ref as Newspaper;
 
     const parts: string[] = [];
 

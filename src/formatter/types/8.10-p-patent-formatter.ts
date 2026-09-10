@@ -1,4 +1,4 @@
-import type { ReferenceUnion, Author, MediaType } from '../../types/index.js';
+import type { ReferenceUnion, Patent } from '../../types/index.js';
 import { buildTypeIndicator } from '../../utils/index.js';
 import { BaseFormatter } from '../base.js';
 
@@ -9,16 +9,7 @@ import { BaseFormatter } from '../base.js';
  */
 export class PatentFormatter extends BaseFormatter {
   format(ref: ReferenceUnion): string {
-    const patent = ref as {
-      id?: string;
-      authors: Author[];
-      title: string;
-      patentNumber: string;
-      announceDate?: string;
-      pages?: string;
-      url?: string;
-      mediaType?: MediaType;
-    };
+    const patent = ref as Patent;
 
     const parts: string[] = [];
 

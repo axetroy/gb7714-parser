@@ -1,4 +1,4 @@
-import type { ReferenceUnion, Author, MediaType } from '../../types/index.js';
+import type { ReferenceUnion, Preprint } from '../../types/index.js';
 import { buildTypeIndicator } from '../../utils/index.js';
 import { BaseFormatter } from '../base.js';
 
@@ -9,17 +9,7 @@ import { BaseFormatter } from '../base.js';
  */
 export class PreprintFormatter extends BaseFormatter {
   format(ref: ReferenceUnion): string {
-    const preprint = ref as {
-      id?: string;
-      authors?: Author[];
-      title: string;
-      version?: string;
-      platform?: string;
-      createDate?: string;
-      accessDate: string;
-      url?: string;
-      mediaType?: MediaType;
-    };
+    const preprint = ref as Preprint;
 
     const parts: string[] = [];
 

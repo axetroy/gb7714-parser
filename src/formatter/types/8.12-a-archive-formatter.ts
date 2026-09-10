@@ -1,4 +1,4 @@
-import type { ReferenceUnion, Author, MediaType } from '../../types/index.js';
+import type { ReferenceUnion, Archive } from '../../types/index.js';
 import { buildTypeIndicator } from '../../utils/index.js';
 import { BaseFormatter } from '../base.js';
 
@@ -9,17 +9,7 @@ import { BaseFormatter } from '../base.js';
  */
 export class ArchiveFormatter extends BaseFormatter {
   format(ref: ReferenceUnion): string {
-    const archive = ref as {
-      id?: string;
-      authors?: Author[];
-      title: string;
-      archiveNumber?: string;
-      collectionPlace?: string;
-      collector?: string;
-      formedDate?: string;
-      url?: string;
-      mediaType?: MediaType;
-    };
+    const archive = ref as Archive;
 
     const parts: string[] = [];
 

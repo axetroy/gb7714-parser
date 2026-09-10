@@ -1,4 +1,4 @@
-import type { ReferenceUnion, Author, MediaType } from '../../types/index.js';
+import type { ReferenceUnion, Thesis } from '../../types/index.js';
 import { buildTypeIndicator } from '../../utils/index.js';
 import { BaseFormatter } from '../base.js';
 
@@ -11,18 +11,7 @@ import { BaseFormatter } from '../base.js';
  */
 export class ThesisFormatter extends BaseFormatter {
   format(ref: ReferenceUnion): string {
-    const thesis = ref as {
-      id?: string;
-      authors: Author[];
-      title: string;
-      subtitle?: string;
-      awardPlace?: string;
-      awardInstitution: string;
-      awardYear?: string;
-      pages?: string;
-      url?: string;
-      mediaType?: MediaType;
-    };
+    const thesis = ref as Thesis;
 
     const parts: string[] = [];
 

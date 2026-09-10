@@ -1,4 +1,4 @@
-import type { ReferenceUnion, Author, MediaType } from '../../types/index.js';
+import type { ReferenceUnion, Map } from '../../types/index.js';
 import { buildTypeIndicator } from '../../utils/index.js';
 import { BaseFormatter } from '../base.js';
 
@@ -9,19 +9,7 @@ import { BaseFormatter } from '../base.js';
  */
 export class MapFormatter extends BaseFormatter {
   format(ref: ReferenceUnion): string {
-    const map = ref as {
-      id?: string;
-      authors?: Author[];
-      title: string;
-      scale?: string;
-      version?: string;
-      publisherPlace?: string;
-      publisher?: string;
-      year?: string;
-      dimensions?: string;
-      url?: string;
-      mediaType?: MediaType;
-    };
+    const map = ref as Map;
 
     const parts: string[] = [];
 

@@ -1,4 +1,4 @@
-import type { ReferenceUnion, Author, MediaType } from '../../types/index.js';
+import type { ReferenceUnion, Report } from '../../types/index.js';
 import { buildTypeIndicator } from '../../utils/index.js';
 import { BaseFormatter } from '../base.js';
 
@@ -11,16 +11,7 @@ import { BaseFormatter } from '../base.js';
  */
 export class ReportFormatter extends BaseFormatter {
   format(ref: ReferenceUnion): string {
-    const report = ref as {
-      id?: string;
-      authors: Author[];
-      title: string;
-      reportNumber?: string;
-      releaseDate?: string;
-      pages?: string;
-      url?: string;
-      mediaType?: MediaType;
-    };
+    const report = ref as Report;
 
     const parts: string[] = [];
 

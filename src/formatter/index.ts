@@ -15,7 +15,6 @@ import { MapFormatter } from './types/8.13-cm-map-formatter.js';
 import { DatasetFormatter } from './types/8.14-ds-dataset-formatter.js';
 import { PreprintFormatter } from './types/8.15-pp-preprint-formatter.js';
 import { GenericFormatter } from './types/generic-formatter.js';
-import type { Serial } from '../types/index.js';
 
 /**
  * 语种分类
@@ -81,7 +80,7 @@ export class Formatter {
     switch (reference.type) {
       case 'J':
         // 检查是否是连续出版物（有 serialTitle 字段）
-        if ('serialTitle' in reference && (reference as Serial).serialTitle) {
+        if ('serialTitle' in reference && reference.serialTitle) {
           return this.serialFormatter.format(reference);
         }
         return this.journalFormatter.format(reference);

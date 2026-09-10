@@ -1,4 +1,4 @@
-import type { ReferenceUnion, Author, MediaType } from '../../types/index.js';
+import type { ReferenceUnion, Proceedings } from '../../types/index.js';
 import { buildTypeIndicator } from '../../utils/index.js';
 import { BaseFormatter } from '../base.js';
 
@@ -9,16 +9,7 @@ import { BaseFormatter } from '../base.js';
  */
 export class ProceedingsFormatter extends BaseFormatter {
   format(ref: ReferenceUnion): string {
-    const proceedings = ref as {
-      id?: string;
-      authors: Author[];
-      title: string;
-      conferenceName?: string;
-      conferenceYear?: string;
-      pages?: string;
-      url?: string;
-      mediaType?: MediaType;
-    };
+    const proceedings = ref as Proceedings;
 
     const parts: string[] = [];
 

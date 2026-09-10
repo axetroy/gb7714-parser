@@ -1,4 +1,4 @@
-import type { ReferenceUnion, Author, MediaType } from '../../types/index.js';
+import type { ReferenceUnion, Book } from '../../types/index.js';
 import { buildTypeIndicator } from '../../utils/index.js';
 import { BaseFormatter } from '../base.js';
 
@@ -11,21 +11,7 @@ import { BaseFormatter } from '../base.js';
  */
 export class BookFormatter extends BaseFormatter {
   format(ref: ReferenceUnion): string {
-    const book = ref as {
-      id?: string;
-      authors: Author[];
-      title: string;
-      subtitle?: string;
-      otherAuthors?: Author[];
-      version?: string;
-      publisherPlace?: string;
-      publisher?: string;
-      year?: string;
-      pages?: string;
-      url?: string;
-      pid?: string;
-      mediaType?: MediaType;
-    };
+    const book = ref as Book;
 
     const parts: string[] = [];
 
@@ -51,7 +37,7 @@ export class BookFormatter extends BaseFormatter {
     }
 
     if (book.publisherPlace && book.publisher && book.year) {
-      const formattedYear = this.formatYear(book.year, (book as Record<string, unknown>).alternativeYear as string | undefined);
+      const formattedYear = this.formatYear(book.year, book.alternativeYear);
       let info = `${book.publisherPlace}: ${book.publisher}, ${formattedYear}`;
       if (book.pages) {
         info += `: ${book.pages}`;
