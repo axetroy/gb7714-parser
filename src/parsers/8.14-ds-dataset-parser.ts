@@ -61,6 +61,11 @@ export class DatasetParser extends BaseParser {
       if (versionText && !versionText.includes('(') && !versionText.includes('（')) {
         version = versionText;
         position = versionEnd + 1;
+        // 处理版本号含小数点的情况（如 V1.0 → TEXT("V1") DOT NUMBER("0")）
+        if (tokens[position]?.type === 'NUMBER' && /^\d/.test(tokens[position]!.value)) {
+          version += '.' + tokens[position]!.value.replace(/\.$/, '');
+          position++;
+        }
       }
     }
 

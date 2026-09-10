@@ -69,7 +69,8 @@ export class SerialParser extends BaseParser {
     position = this.skipWhitespace(tokens, position);
 
     // 解析作者和题名（含可选副题名）
-    const { authors, title, subtitle, position: afterTitle } = this.parseTitleWithOptionalSubtitle(tokens, position);
+    // 连续出版物可能没有作者，此时第一个 DOT 前的文本是题名而非作者
+    const { authors, title, subtitle, position: afterTitle } = this.parseTitleWithOptionalSubtitle(tokens, position, true);
     position = afterTitle;
 
     // 跳过文献类型标识 [J]

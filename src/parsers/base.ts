@@ -72,7 +72,7 @@ export abstract class BaseParser implements ParserStrategy {
    * @param position 当前位置
    * @returns 解析结果，包含作者数组和下一个位置
    */
-  protected parseRequiredAuthors(tokens: Token[], position: number): { authors: Author[]; position: number } {
+  protected parseRequiredAuthors(tokens: Token[], position: number): { authors: Author[]; position: number; preDotText?: string } {
     const authorsText = readUntilDot(tokens, position);
     position = findNextDot(tokens, position) + 1;
     const authors = parseAuthors(authorsText);
@@ -85,7 +85,7 @@ export abstract class BaseParser implements ParserStrategy {
    * @param position 当前位置
    * @returns 解析结果，包含作者数组和下一个位置
    */
-  protected parseOptionalAuthors(tokens: Token[], position: number): { authors: Author[]; position: number } {
+  protected parseOptionalAuthors(tokens: Token[], position: number): { authors: Author[]; position: number; preDotText?: string } {
     let authors: Author[] = [];
     // 找到第一个 TYPE_INDICATOR 的位置，作为搜索边界
     const typeIndicatorIndex = findNextTypeIndicator(tokens, position);
@@ -101,8 +101,17 @@ export abstract class BaseParser implements ParserStrategy {
       // DOT 明确分隔了作者与题名，因此接受任何非空文本作为作者
       const beforeDot = this.readTextUntil(tokens, position, dotIndex);
       if (beforeDot.trim()) {
-        authors = parseAuthors(beforeDot);
-        position = dotIndex + 1;
+        // 若文本含全角括号（如"机构（分支）"），更可能是题名而非作者
+        const authorText = beforeDot.trim();
+        const hasParen = authorText.includes('\uFF08') || authorText.includes('\uFF09');
+        if (hasParen) {
+          // 不是作者，将 DOT 前文本纳入题名范围
+          position = dotIndex + 1;
+          return { authors, position, preDotText: authorText };
+        } else {
+          authors = parseAuthors(authorText);
+          position = dotIndex + 1;
+        }
       } else {
         position = dotIndex + 1;
       }
@@ -163,7 +172,7 @@ export abstract class BaseParser implements ParserStrategy {
     optionalAuthors: boolean = false,
   ): { authors: Author[]; title: string; subtitle?: string; position: number } {
     // 解析作者
-    const { authors, position: afterAuthors } = optionalAuthors
+    const { authors, position: afterAuthors, preDotText } = optionalAuthors
       ? this.parseOptionalAuthors(tokens, position)
       : this.parseRequiredAuthors(tokens, position);
     position = afterAuthors;
@@ -210,6 +219,11 @@ export abstract class BaseParser implements ParserStrategy {
       }
     } else {
       title = fullText;
+    }
+
+    // 若 parseOptionalAuthors 检测到 DOT 前有含括号的题名文本，将其前缀加入题名
+    if (preDotText && title) {
+      title = preDotText + '. ' + title;
     }
 
     // 跳过文献类型标识
@@ -302,7 +316,7 @@ export abstract class BaseParser implements ParserStrategy {
     tokens: Token[],
     position: number,
     optionalAuthors: boolean = false,
-  ): { authors: Author[]; title: string; scale: string; position: number } {
+  ): { authors: Author[]; title: string; scale?: string; position: number } {
     // 解析作者
     const authorResult = optionalAuthors
       ? this.parseOptionalAuthors(tokens, position)
@@ -310,17 +324,50 @@ export abstract class BaseParser implements ParserStrategy {
     const { authors, position: afterAuthors } = authorResult;
     position = afterAuthors;
 
-    // 解析题名（到第一个 DOT 之前）
+    // 解析题名（到第一个 DOT、COLON 或 TYPE_INDICATOR 之前，取较前者）
+    // COLON 分隔副题名/卷次，不应包含在题名中
     const dotAfterTitle = findNextDot(tokens, position);
-    const title = this.readTextUntil(tokens, position, dotAfterTitle).trim().replace(/\.$/, '');
-    position = dotAfterTitle + 1;
+    const typeIndicatorPos = findNextTypeIndicator(tokens, position);
+    const colonPos = tokens.findIndex((t, i) => i >= position && t.type === 'COLON');
+    const titleEndPos = Math.min(
+      typeIndicatorPos,
+      dotAfterTitle,
+      colonPos >= 0 ? colonPos : tokens.length,
+    );
+    let title = this.readTextUntil(tokens, position, titleEndPos).trim().replace(/\.$/, '');
+    position = titleEndPos;
 
-    // 解析比例尺（到文献类型标识之前）
-    const titleEnd = findNextTypeIndicator(tokens, position);
-    const scale = this.readTextUntil(tokens, position, titleEnd).trim().replace(/\.$/, '');
-
-    // 跳过文献类型标识
-    position = titleEnd;
+    // 解析比例尺：在 TYPE_INDICATOR 之前、DOT 之后的文本
+    // 情况1：TYPE_INDICATOR 紧跟题名（如 "题名[CM]."）→ 无比例尺
+    // 情况2：题名后有点号再是比例尺（如 "题名. 比例尺[CM]."）
+    let scale: string | undefined = undefined;
+    if (tokens[position]?.type === 'TYPE_INDICATOR') {
+      // 类型标识紧跟题名，无比例尺
+      position++; // 跳过 [CM]
+      if (tokens[position]?.type === 'DOT') position++; // 跳过 .
+    } else {
+      // 跳过当前位置的 DOT（如果有的话），再找下一个分隔符
+      if (tokens[position]?.type === 'DOT') position++;
+      const scaleEnd = Math.min(
+        findNextDot(tokens, position),
+        findNextTypeIndicator(tokens, position),
+      );
+      const scaleText = this.readTextUntil(tokens, position, scaleEnd).trim().replace(/\.$/, '');
+      // 判断是否为比例尺：包含冒号或纯数字模式（如 "1:25 000"）
+      // 不含冒号但有中文的（如 "第 2 册"）视为题名的一部分
+      if (scaleText && /[:：]/.test(scaleText)) {
+        scale = scaleText;
+      } else if (scaleText && /^\d/.test(scaleText)) {
+        // 纯数字开头可能是比例尺
+        scale = scaleText;
+      } else {
+        // 非比例尺文本（如卷次），合并入题名
+        title = title + '. ' + scaleText;
+      }
+      position = scaleEnd;
+      if (tokens[position]?.type === 'TYPE_INDICATOR') position++;
+      if (tokens[position]?.type === 'DOT') position++;
+    }
 
     return { authors, title, scale, position };
   }
@@ -683,11 +730,22 @@ export class Parser {
       if (typeMatch) {
         type = typeMatch[1]!;
       }
+    } else {
+      // 无类型标识时的 EB 回退检测：(DATE) [DATE]. URL 模式（标准 §8.11 无类型标识示例）
+      const hasParenDate = tokens.some(t => t.type === 'PAREN_OPEN');
+      const hasBracketDate = tokens.some(t => t.type === 'BRACKET_OPEN' && t.value === '[');
+      const hasURL = tokens.some(t => t.type === 'URL');
+      if (hasParenDate && hasBracketDate && hasURL) {
+        type = 'EB';
+      }
     }
 
     // 尝试提取作者和题名
     let authors: Author[] = [];
     let title = '';
+    let createDate: string | undefined;
+    let accessDate: string | undefined;
+    let url: string | undefined;
 
     if (textTokens.length >= 2) {
       // 假设第一个文本是作者，第二个是题名
@@ -698,11 +756,35 @@ export class Parser {
       title = textTokens[0]!.value;
     }
 
+    // EB 回退：提取创建日期、引用日期和 URL
+    if (type === 'EB') {
+      for (let i = 0; i < tokens.length; i++) {
+        const t = tokens[i]!;
+        if (t.type === 'PAREN_OPEN') {
+          const next = tokens[i + 1];
+          if (next?.type === 'DATE') {
+            createDate = next.value;
+          }
+        }
+        if (t.type === 'BRACKET_OPEN' && i + 1 < tokens.length && tokens[i + 1]?.type === 'DATE') {
+          accessDate = tokens[i + 1]!.value;
+        }
+        if (t.type === 'URL') {
+          url = t.value.replace(/\.$/, '');
+        }
+      }
+      errors.shift(); // 移除 GENERIC_FALLBACK 错误，EB 回退属于正常解析
+      warnings.shift(); // 移除通用解析警告
+    }
+
     return {
       reference: {
         type: type as never,
         authors,
         title,
+        createDate,
+        accessDate,
+        url,
         id: options?.preserveId
           ? tokens.find(t => t.type === 'NUMBER')?.value
           : undefined,

@@ -38,7 +38,19 @@ export class JournalParser extends BaseParser {
     if (!typeIndicator) return false;
 
     // 检查文献类型是否是期刊 [J] 或 [J/OL]
-    return /^\[(J|J\/OL)\]$/.test(typeIndicator.value);
+    if (!/^\[(J|J\/OL)\]$/.test(typeIndicator.value)) return false;
+
+    // 期刊文章不应匹配连续出版物格式（含破折号范围标记如 "1984, 1(1)—."）
+    const hasSerialPattern = tokens.some((t, i) => {
+      if (t.type === 'DASH') {
+        const next = tokens[i + 1];
+        return next && (next.type === 'COMMA' || next.type === 'DOT');
+      }
+      return false;
+    });
+    if (hasSerialPattern) return false;
+
+    return true;
   }
 
   /**

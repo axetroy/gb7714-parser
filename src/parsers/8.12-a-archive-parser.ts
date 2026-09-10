@@ -68,11 +68,27 @@ export class ArchiveParser extends BaseParser {
         collector = this.readTextUntil(tokens, position, commaIndex).trim();
         position = commaIndex + 1;
 
-        // 解析形成日期
+        // 解析形成日期（包括 parenthetical 中文日期，如 "1887 (光绪十三年三月十三日)"）
         const dateToken = tokens.slice(position).find(t => t.type === 'DATE' || t.type === 'YEAR');
         if (dateToken) {
-          formedDate = dateToken.value;
-          position = tokens.indexOf(dateToken) + 1;
+          const datePos = tokens.indexOf(dateToken);
+          const dateEnd = datePos + 1;
+          // 检查后面是否有 parenthetical 文本（如 "(光绪十三年三月十三日)"）
+          let formedEnd = dateEnd;
+          if (tokens[formedEnd]?.type === 'PAREN_OPEN') {
+            // 找到匹配的右括号
+            let depth = 1;
+            for (let i = formedEnd + 1; i < tokens.length && depth > 0; i++) {
+              if (tokens[i]?.type === 'PAREN_OPEN') depth++;
+              else if (tokens[i]?.type === 'PAREN_CLOSE') depth--;
+              if (depth === 0) {
+                formedEnd = i + 1;
+                break;
+              }
+            }
+          }
+          formedDate = this.readTextUntil(tokens, position, formedEnd).trim();
+          position = formedEnd;
         }
       } else {
         collector = this.readTextUntil(tokens, position, tokens.length).trim();

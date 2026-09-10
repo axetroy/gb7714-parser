@@ -1130,7 +1130,7 @@
           "sourceLine": 1011,
           "skip": false,
           "expected": {
-            "type": "Z",
+            "type": "EB",
             "title": "allimg",
             "authors": [
               "《昨日之歌》图书封面"
@@ -1278,7 +1278,7 @@
             "year": "1982",
             "publisherPlace": "北京",
             "publisher": "地图出版社",
-            "title": "中国历史地图集. 第2 册",
+            "title": "中国历史地图集. 第 2 册",
             "authors": [
               "谭其骧"
             ]
@@ -3427,7 +3427,7 @@
           "sourceLine": 1641,
           "skip": false,
           "expected": {
-            "type": "Z",
+            "type": "EB",
             "title": "mg",
             "authors": [
               "《昨日之歌》图书封面"
@@ -3686,7 +3686,7 @@
             "year": "1982",
             "publisherPlace": "北京",
             "publisher": "地图出版社",
-            "title": "中国历史地图集:第2 册",
+            "title": "中国历史地图集. 第 2 册",
             "authors": [
               "谭其骧"
             ]
