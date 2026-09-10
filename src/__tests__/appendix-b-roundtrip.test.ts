@@ -9,7 +9,6 @@ import appendixB from './__fixtures__/appendix-b-examples.json';
  * 能够输出合理的参考文献字符串（不抛异常，包含关键元素）。
  */
 describe('appendix-b roundtrip (parse → format)', () => {
-  const typeRe = /\[([A-Z]+(?:\/[A-Z]+)?)\]/;
   let globalIndex = 0;
 
   for (const group of appendixB.groups) {
@@ -18,20 +17,14 @@ describe('appendix-b roundtrip (parse → format)', () => {
       it(`[${globalIndex}] ${group.section} 示例 ${ex.id}`, () => {
         const input = `[${globalIndex}] ${ex.content}`;
         const result = parse(input);
-        const formatted = format(result.reference).trim();
-        const typeId = (ex.content.match(typeRe) || [])[1] || '?';
-        // 某些类型标识如 [EB]、[Z] 可能匹配不到，使用实际解析类型
 
         // 基础断言：可解析、可格式化、不抛异常
         expect(result.reference.type).toBeDefined();
         expect(() => format(result.reference)).not.toThrow();
 
-        // 格式输出不为空
-        expect(formatted.length).toBeGreaterThan(0);
+        const formatted = format(result.reference).trim();
 
-        // 格式输出包含类型标识（兼容各种类型）
-        const hasTypeIndicator = /\[[A-Z]+(?:\/[A-Z]+)?\]/.test(formatted);
-        expect(hasTypeIndicator).toBe(true);
+        expect(formatted).toBe(input.trim());
       });
     }
   }
