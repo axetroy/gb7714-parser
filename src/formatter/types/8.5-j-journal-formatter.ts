@@ -31,16 +31,27 @@ export class JournalFormatter extends BaseFormatter {
 
     let title = journal.title;
     if (journal.subtitle) {
-      const sep = journal.subtitleSeparator || ': ';
+      // 半角冒号后加空格（标准示例 "镜范: 以平安"），全角冒号直接拼接（中文排版无空格）
+      const sep = journal.subtitleSeparator === ':' ? ': ' : (journal.subtitleSeparator || ': ');
       title += `${sep}${journal.subtitle}`;
     }
     parts.push(`${title}${buildTypeIndicator('J', journal.mediaType)}.`);
 
-    // 刊名, [年,] 卷(期): 页码
+    // 析出文献其他责任者（标准 §8.5: 类型标识后著录，如 "顾幼静，译."）
+    if (journal.otherAuthors && journal.otherAuthors.length > 0) {
+      parts.push(this.formatAuthors(journal.otherAuthors, undefined, journal.authorComma) + '.');
+    }
+
+    // 刊名, [年,] [在线出版日期,] 卷(期): 页码
     let journalInfo = journal.journalTitle;
     // 著者-出版年制时，年已移至作者后，此处不再重复
-    if (this.options.citationStyle !== 'author-date' && journal.year) {
-      journalInfo += `, ${journal.year}`;
+    if (this.options.citationStyle !== 'author-date') {
+      if (journal.year) {
+        journalInfo += `, ${journal.year}`;
+      }
+      if (journal.onlineDate) {
+        journalInfo += `, ${journal.onlineDate}`;
+      }
     }
     if (journal.volume) {
       const volSep = journal.volumeSeparator || '';

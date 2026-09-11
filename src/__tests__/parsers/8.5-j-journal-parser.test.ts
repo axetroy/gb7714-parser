@@ -164,6 +164,7 @@ describe('JournalParser', () => {
       expect(ref.type).toBe('J');
       expect(ref.authors).toHaveLength(1);
       expect(ref.authors[0].name).toBe('久保智康');
+      expect(ref.otherAuthors).toEqual([{ name: '顾幼静，译' }]);
       expect(ref.title).toBe('花枝蝶鸟方镜的镜范');
       expect(ref.subtitle).toBe('以平安后期的铜镜制作工艺为中心');
       expect(ref.journalTitle).toBe('东方博物');

@@ -74,18 +74,34 @@ export class JournalParser extends BaseParser {
     const { mediaType, position: afterType } = this.skipTypeIndicator(tokens, position);
     position = afterType;
 
-    // 跳过析出文献其他责任者（如 "顾幼静,译."）
-    // 格式：姓名,译. 或 姓名,注. 等，出现在类型标识后的 DOT 和期刊题名之间
+    // 解析析出文献其他责任者（如 "顾幼静，译."）
+    // 标准 §8.5: 类型标识后著录析出文献其他责任者，如 "顾幼静，译. 东方博物, ..."
+    let otherAuthors: import('../types/index.js').Author[] | undefined;
     if (tokens[position]?.type === 'TEXT') {
-      const commaAfterName = tokens.findIndex((t, i) => i >= position && t.type === 'COMMA');
-      if (commaAfterName > position) {
-        const afterComma = tokens.slice(commaAfterName + 1).find(t => t.type === 'TEXT');
-        if (afterComma && /^[\u4e00-\u9fa5]+$/.test(afterComma.value) &&
-            tokens.findIndex((t, i) => i > tokens.indexOf(afterComma) && t.type === 'DOT') > tokens.indexOf(afterComma)) {
-          // 确认是 "姓名,译." 模式，跳过整个责任者段
-          position = tokens.findIndex((t, i) => i >= position && t.type === 'DOT') + 1;
-          position = this.skipWhitespace(tokens, position);
+      const translatorIndex = tokens.findIndex((t, i) => i >= position && t.type === 'TEXT' && /译$/.test(t.value.trim()));
+      if (translatorIndex >= position) {
+        // 往前找姓名边界：停止在 DOT/COLON 之前（跳过 COMMA）
+        let start = translatorIndex;
+        while (start > position) {
+          const prev = tokens[start - 1]!;
+          if (prev.type === 'DOT' || prev.type === 'COLON') break;
+          if (prev.type === 'COMMA') { start--; continue; }
+          start--;
         }
+        const nameTokens = tokens.slice(start, translatorIndex + 1);
+        if (nameTokens.length > 0) {
+          // 拼接姓名：COMMA token 还原为全角逗号，"译" 保留在姓名中
+          const nameParts = nameTokens.map(t => t.type === 'COMMA' ? '，' : t.value);
+          const name = nameParts.join('').replace(/[，,。.]+$/, '').trim();
+          if (name) {
+            otherAuthors = [{ name }];
+          }
+        }
+        // 跳过 "译" 及随后的 DOT
+        let pos = translatorIndex + 1;
+        pos = this.skipWhitespace(tokens, pos);
+        if (tokens[pos]?.type === 'DOT') pos++;
+        position = this.skipWhitespace(tokens, pos);
       }
     }
 
@@ -93,12 +109,20 @@ export class JournalParser extends BaseParser {
     const journalTitle = this.readUntilCommaOrYear(tokens, position);
     position = this.findNextCommaOrYear(tokens, position);
 
-    // 解析年份
+    // 解析年份或在线出版日期
+    // 标准 §7.5.4.2: 期刊在线出版日期按 YYYY-MM-DD 著录，如 "铁道学报,2024-05-09."
     let year = '';
-    const yearToken = tokens.slice(position).find(t => t.type === 'YEAR');
-    if (yearToken) {
-      year = yearToken.value;
-      position = tokens.indexOf(yearToken) + 1;
+    let onlineDate = '';
+    const dateToken = tokens.slice(position).find(t => t.type === 'DATE');
+    if (dateToken) {
+      onlineDate = dateToken.value;
+      position = tokens.indexOf(dateToken) + 1;
+    } else {
+      const yearToken = tokens.slice(position).find(t => t.type === 'YEAR');
+      if (yearToken) {
+        year = yearToken.value;
+        position = tokens.indexOf(yearToken) + 1;
+      }
     }
 
     // 解析卷号
@@ -162,10 +186,12 @@ export class JournalParser extends BaseParser {
       type: 'J' as never,
       authors,
       authorsTruncated: truncated || undefined,
+      otherAuthors,
       title,
       subtitle,
       journalTitle: journalTitle.trim().replace(/\.$/, ''),
       year,
+      onlineDate: onlineDate || undefined,
       volume: volume || undefined,
       volumeSeparator: volumeSeparator || undefined,
       issue: issue || undefined,
