@@ -19,7 +19,7 @@ export class ArchiveFormatter extends BaseFormatter {
 
     if (archive.authors && archive.authors.length > 0) {
       if (archive.authors.length > 0) {
-      parts.push(this.formatAuthors(archive.authors, archive.authorsTruncated) + '.');
+      parts.push(this.formatAuthors(archive.authors, archive.authorsTruncated, archive.authorComma) + '.');
     }
     }
 

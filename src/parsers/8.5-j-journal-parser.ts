@@ -41,10 +41,11 @@ export class JournalParser extends BaseParser {
     if (!/^\[(J|J\/OL)\]$/.test(typeIndicator.value)) return false;
 
     // 期刊文章不应匹配连续出版物格式（含破折号范围标记如 "1984, 1(1)—."）
+    // 注意：只检查 em-dash（—），不检查普通连字符（-）
     const hasSerialPattern = tokens.some((t, i) => {
-      if (t.type === 'DASH') {
+      if (t.type === 'DASH' && t.value === '—') {
         const next = tokens[i + 1];
-        return next && (next.type === 'COMMA' || next.type === 'DOT');
+        return next && (next.type === 'COMMA' || next.type === 'DOT' || next.type === 'YEAR');
       }
       return false;
     });
@@ -66,7 +67,7 @@ export class JournalParser extends BaseParser {
     position = this.skipWhitespace(tokens, position);
 
     // 解析作者和题名（含可选副题名）
-    const { authors, truncated, title, subtitle, position: afterTitle } = this.parseTitleWithOptionalSubtitle(tokens, position);
+    const { authors, truncated, authorComma, subtitleSeparator, title, subtitle, position: afterTitle } = this.parseTitleWithOptionalSubtitle(tokens, position);
     position = afterTitle;
 
     // 跳过文献类型标识 [J] 和随后的 .
@@ -111,6 +112,33 @@ export class JournalParser extends BaseParser {
       }
     }
 
+    // 检测卷期分隔符（卷和期之间是否有空格）
+    let volumeSeparator: ' ' | '' = '';
+    if (volume) {
+      const volToken = tokens.find(t => t.type === 'NUMBER' && t.value === volume);
+      if (volToken) {
+        const volIdx = tokens.indexOf(volToken);
+        const afterVolToken = tokens[volIdx + 1];
+        if (afterVolToken && afterVolToken.type === 'PAREN_OPEN') {
+          // 检查位置间隙判断是否有空格
+          const gap = afterVolToken.position - (volToken.position + volToken.value.length);
+          volumeSeparator = gap > 0 ? ' ' : '';
+        }
+      }
+    }
+
+    // 检测年份后是否直接跟括号（表示无卷号，如 "2013 (1)"）
+    let issueSpace = false;
+    if (!volume) {
+      const yearIdx = tokens.indexOf(tokens.find(t => t.type === 'YEAR' && t.value === year)!);
+      if (yearIdx >= 0) {
+        const nextToken = tokens[yearIdx + 1];
+        if (nextToken && nextToken.type === 'PAREN_OPEN') {
+          issueSpace = true;
+        }
+      }
+    }
+
     // 解析期号
     let issue = '';
     const issueToken = tokens.slice(position).find(t => t.type === 'PAREN_OPEN');
@@ -139,11 +167,15 @@ export class JournalParser extends BaseParser {
       journalTitle: journalTitle.trim().replace(/\.$/, ''),
       year,
       volume: volume || undefined,
+      volumeSeparator: volumeSeparator || undefined,
       issue: issue || undefined,
+      issueSpace: issueSpace || undefined,
       pages: pages || undefined,
       pid: pid || undefined,
       url: url || undefined,
       mediaType,
+      authorComma: authorComma || undefined,
+      subtitleSeparator: subtitleSeparator || undefined,
     };
   }
 }

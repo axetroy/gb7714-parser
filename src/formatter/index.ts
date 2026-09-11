@@ -87,10 +87,18 @@ export class Formatter {
       case 'N':
         return this.newspaperFormatter.format(reference);
       case 'M':
+        // 检查是否是析出文献（有 host 字段）
+        if ('host' in reference && reference.host) {
+          return this.componentPartFormatter.format(reference);
+        }
         return this.bookFormatter.format(reference);
       case 'D':
         return this.thesisFormatter.format(reference);
       case 'C':
+        // 检查是否是析出文献（有 host 字段）
+        if ('host' in reference && reference.host) {
+          return this.componentPartFormatter.format(reference);
+        }
         return this.proceedingsFormatter.format(reference);
       case 'R':
         return this.reportFormatter.format(reference);
@@ -108,13 +116,11 @@ export class Formatter {
         return this.datasetFormatter.format(reference);
       case 'PP':
         return this.preprintFormatter.format(reference);
-      case 'Z':
+      default:
         // 检查是否是析出文献（有 host 字段）
         if ('host' in reference && reference.host) {
           return this.componentPartFormatter.format(reference);
         }
-        return this.genericFormatter.format(reference);
-      default:
         return this.genericFormatter.format(reference);
     }
   }

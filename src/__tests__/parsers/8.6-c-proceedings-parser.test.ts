@@ -128,7 +128,7 @@ describe('ProceedingsParser', () => {
       expect(result.conferenceName).toBe('2022 6th Asian Conference on Artificial Intelligence Technology');
       expect(result.conferenceYear).toBe('2022');
       expect(result.pages).toBe('2');
-      expect(result.url).toBe('https://ieeexplore.ieee.org/document/10137867');
+      expect(result.url).toBe('https://ieeexplore.ieee.org/document/10137867.');
     });
 
     it('例[3] 应解析简短会议名称的在线会议论文', () => {

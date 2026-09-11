@@ -18,7 +18,7 @@ export class PatentFormatter extends BaseFormatter {
     }
 
     if (patent.authors.length > 0) {
-      parts.push(this.formatAuthors(patent.authors, patent.authorsTruncated) + '.');
+      parts.push(this.formatAuthors(patent.authors, patent.authorsTruncated, patent.authorComma) + '.');
     }
     parts.push(`${patent.title}: ${patent.patentNumber}${buildTypeIndicator('P', patent.mediaType)}.`);
 

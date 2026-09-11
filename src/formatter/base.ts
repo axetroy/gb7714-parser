@@ -19,18 +19,20 @@ export abstract class BaseFormatter {
    * - 超过3个作者 → 前3个 + "等"或"et al."（根据 locale）
    * - 无责任者 → 空字符串（顺序编码制可省略，§7.1.3）
    */
-  protected formatAuthors(authors: Author[], truncated?: string): string {
+  protected formatAuthors(authors: Author[], truncated?: string, authorComma?: string): string {
     if (authors.length === 0) return '';
     const formatted = authors.map(a => a.name);
+    // 全角逗号不加空格，半角逗号加空格
+    const sep = authorComma === '，' ? '，' : ', ';
     // 优先使用截断标记，否则按作者数量判断
     if (truncated !== undefined) {
-      return formatted.slice(0, 3).join(', ') + ', ' + truncated;
+      return formatted.slice(0, 3).join(sep) + sep + truncated;
     }
     if (formatted.length > 3) {
       const suffix = this.options.locale === 'en' ? 'et al.' : '等';
-      return formatted.slice(0, 3).join(', ') + `, ${suffix}`;
+      return formatted.slice(0, 3).join(sep) + sep + suffix;
     }
-    return formatted.join(', ');
+    return formatted.join(sep);
   }
 
   /**
@@ -40,6 +42,11 @@ export abstract class BaseFormatter {
   protected formatYear(year?: string, alternativeYear?: string): string {
     if (!year) return '';
     if (alternativeYear) {
+      // 如果 alternativeYear 已经包含括号，直接使用；否则用全角括号包裹
+      const hasParens = /^[（(]/.test(alternativeYear);
+      if (hasParens) {
+        return `${year} ${alternativeYear}`;
+      }
       return `${year}（${alternativeYear}）`;
     }
     return year;
@@ -63,6 +70,10 @@ export abstract class BaseFormatter {
    */
   protected pidSuffix(pid?: string, url?: string): string {
     if (!pid || this.urlContainsPid(url, pid)) return '';
+    // 如果 pid 已经包含前缀，直接使用
+    if (pid.startsWith('DOI:') || pid.startsWith('PID:')) {
+      return pid.replace(/\.$/, '');
+    }
     return this.options.version === '2015' ? `DOI:${pid}` : `PID:${pid}`;
   }
 }

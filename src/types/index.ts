@@ -90,10 +90,16 @@ export interface Reference {
   authors: Author[];
   /** 截断标记（原文有"等"/"et al."时被解析保留，用于精准还原） */
   authorsTruncated?: string;
+  /** 作者间原始分隔符（"，"或","），用于 round-trip 精确还原 */
+  authorComma?: string;
+  /** 副题名分隔符（"："或":"），用于 round-trip 精确还原 */
+  subtitleSeparator?: string;
   /** 题名 */
   title: string;
   /** 其他题名信息（副题名、分卷书名等） */
   subtitle?: string;
+  /** 题名中的冒号分隔符（全角或半角） */
+  titleSeparator?: string;
   /** 其他责任者（译者、编者等） */
   otherAuthors?: Author[];
   /** 版本 */
@@ -124,10 +130,16 @@ export interface HostReference {
   authors?: Author[];
   /** 截断标记（原文有"等"/"et al."时被解析保留，用于精准还原） */
   authorsTruncated?: string;
+  /** 作者间原始分隔符（"，"或","），用于 round-trip 精确还原 */
+  authorComma?: string;
+  /** 副题名分隔符（"："或":"），用于 round-trip 精确还原 */
+  subtitleSeparator?: string;
   /** 出处文献题名 */
   title: string;
   /** 出处文献其他题名信息 */
   subtitle?: string;
+  /** 题名中的冒号分隔符（全角或半角） */
+  titleSeparator?: string;
   /** 版本 */
   version?: string;
   /** 出版地 */
@@ -161,6 +173,12 @@ export interface Journal extends Reference {
   volume?: string;
   /** 期（含合期号，如 "8/9/10"） */
   issue?: string;
+  /** 卷和期之间的分隔符（空格或空） */
+  volumeSeparator?: ' ' | '' | undefined;
+  /** 年份后是否直接跟期号括号（无卷号时，如 '2013 (1)'） */
+  issueSpace?: boolean;
+  /** 副题名分隔符（冒号，保留原始全角/半角） */
+  subtitleSeparator?: string;
   /** 在线出版日期（YYYY-MM-DD） */
   onlineDate?: string;
   /** 文章编号（无页码时使用） */
@@ -219,6 +237,10 @@ export interface Serial extends Reference {
    * 格式: "年, 卷(期): 页码" 或 "年, 卷(期): 起始页码-终止页码"
    */
   continuationParts?: string[];
+  /** 卷号与年份之间的分隔符（空格或空） */
+  volumeSeparator?: ' ' | '';
+  /** 期号前是否有空格 */
+  issueSpace?: boolean;
 }
 
 /**
@@ -269,6 +291,8 @@ export interface Report extends Reference {
   releaseDate?: string;
   /** 副题名（题名含双冒号时，第二个冒号后的内容） */
   subtitle?: string;
+  /** 题名中的冒号分隔符（全角或半角） */
+  titleSeparator?: string;
 }
 
 /**
@@ -330,6 +354,8 @@ export interface Map extends Reference {
   scale?: string;
   /** 尺寸（纸质单幅地图必备，如 "128 cm × 84 cm"） */
   dimensions?: string;
+  /** 析出文献宿主信息 */
+  host?: HostReference;
 }
 
 /**

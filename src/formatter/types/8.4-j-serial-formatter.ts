@@ -21,7 +21,7 @@ export class SerialFormatter extends BaseFormatter {
 
     if (serial.authors && serial.authors.length > 0) {
       if (serial.authors.length > 0) {
-      parts.push(this.formatAuthors(serial.authors, serial.authorsTruncated) + '.');
+      parts.push(this.formatAuthors(serial.authors, serial.authorsTruncated, serial.authorComma) + '.');
     }
     }
 
@@ -38,10 +38,13 @@ export class SerialFormatter extends BaseFormatter {
       serialInfo += serial.startYear;
     }
     if (serial.startVolume) {
-      serialInfo += `, ${serial.startVolume}`;
+      const volSep = serial.volumeSeparator || '';
+      serialInfo += `, ${serial.startVolume}${volSep}`;
     }
     if (serial.startIssue) {
-      serialInfo += `(${serial.startIssue})`;
+      // 只有当没有卷号时才添加空格（有卷号时逗号后已有空格）
+      const volSep = serial.startVolume ? '' : (serial.volumeSeparator || '');
+      serialInfo += `${volSep}(${serial.startIssue})`;
     }
 
     // 连接符 —
@@ -54,7 +57,9 @@ export class SerialFormatter extends BaseFormatter {
         serialInfo += `, ${serial.endVolume}`;
       }
       if (serial.endIssue) {
-        serialInfo += `(${serial.endIssue})`;
+        // 只有当没有卷号时才添加空格（有卷号时逗号后已有空格）
+        const volSep = serial.endVolume ? '' : (serial.volumeSeparator || '');
+        serialInfo += `${volSep}(${serial.endIssue})`;
       }
     } else {
       serialInfo += '—';
@@ -66,7 +71,12 @@ export class SerialFormatter extends BaseFormatter {
       serialInfo += '; ' + serial.continuationParts.join('; ');
     }
 
-    parts.push(serialInfo + '.');
+    // 如果没有结束年份但有出版信息，不添加句号（出版信息会自带句号）
+    if (!serial.endYear && serial.publisherPlace && serial.publisher && serial.publicationStartYear) {
+      parts.push(serialInfo);
+    } else {
+      parts.push(serialInfo + '.');
+    }
 
     // 出版地: 出版者, 出版年—
     if (serial.publisherPlace && serial.publisher && serial.publicationStartYear) {

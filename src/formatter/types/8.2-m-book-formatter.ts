@@ -20,24 +20,28 @@ export class BookFormatter extends BaseFormatter {
     }
 
     if (book.authors.length > 0) {
-      parts.push(this.formatAuthors(book.authors, book.authorsTruncated) + '.');
+      parts.push(this.formatAuthors(book.authors, book.authorsTruncated, book.authorComma) + '.');
     }
 
     let title = book.title;
     if (book.subtitle) {
-      title += `: ${book.subtitle}`;
+      const sep = book.subtitleSeparator || ':';
+      // 全角冒号后不加分隔空格，半角冒号后加分隔空格
+      const suffixSep = sep === '：' ? '' : ' ';
+      title += `${sep}${suffixSep}${book.subtitle}`;
     }
     parts.push(`${title}${buildTypeIndicator('M', book.mediaType)}.`);
 
     // 其他责任者（译者、编者等）
     if (book.otherAuthors && book.otherAuthors.length > 0) {
       if (book.otherAuthors.length > 0) {
-      parts.push(this.formatAuthors(book.otherAuthors) + '.');
+      parts.push(this.formatAuthors(book.otherAuthors, undefined, book.authorComma) + '.');
     }
     }
 
     if (book.version) {
-      parts.push(`${book.version}.`);
+      const v = book.version.endsWith('.') ? book.version : `${book.version}.`;
+      parts.push(v);
     }
 
     if (book.publisherPlace && book.publisher && book.year) {

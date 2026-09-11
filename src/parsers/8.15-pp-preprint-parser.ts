@@ -46,7 +46,7 @@ export class PreprintParser extends BaseParser {
     position = this.skipWhitespace(tokens, position);
 
     // 解析作者和题名（含可选副题名）
-    const { authors, truncated, title, subtitle, position: afterTitle } = this.parseTitleWithOptionalSubtitle(tokens, position, true);
+    const { authors, truncated, authorComma, subtitleSeparator: _subtitleSeparator, title, subtitle, position: afterTitle } = this.parseTitleWithOptionalSubtitle(tokens, position, true);
     position = afterTitle;
 
     // 跳过文献类型标识 [PP]
@@ -127,6 +127,7 @@ export class PreprintParser extends BaseParser {
       url,
       pid: pid || undefined,
       mediaType,
+      authorComma: authorComma || undefined,
     };
   }
 

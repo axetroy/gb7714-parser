@@ -19,15 +19,29 @@ export class MapFormatter extends BaseFormatter {
 
     if (map.authors && map.authors.length > 0) {
       if (map.authors.length > 0) {
-      parts.push(this.formatAuthors(map.authors, map.authorsTruncated) + '.');
+      parts.push(this.formatAuthors(map.authors, map.authorsTruncated, map.authorComma) + '.');
     }
     }
 
     let title = map.title;
     if (map.scale) {
-      title += `. ${map.scale}`;
+      const sep = map.titleSeparator || '.';
+      title += `${sep}${sep === ':' || sep === '：' ? '' : ' '}${map.scale}`;
     }
-    parts.push(`${title}${buildTypeIndicator('CM', map.mediaType)}.`);
+
+    // 析出文献形式：作者. 题名[类型]//宿主题名. 出版信息
+    if (map.host && map.host.title) {
+      const typeIndicator = buildTypeIndicator('CM', map.mediaType);
+      let hostInfo = map.host.publisherPlace && map.host.publisher && map.host.year
+        ? `${map.host.publisherPlace}: ${map.host.publisher}, ${map.host.year}`
+        : '';
+      if (map.pages) {
+        hostInfo += `: ${map.pages}`;
+      }
+      parts.push(`${title}${typeIndicator}//${map.host.title}. ${hostInfo}.`);
+    } else {
+      parts.push(`${title}${buildTypeIndicator('CM', map.mediaType)}.`);
+    }
 
     if (map.version) {
       parts.push(`${map.version}.`);
@@ -35,6 +49,9 @@ export class MapFormatter extends BaseFormatter {
 
     if (map.publisherPlace && map.publisher && map.year) {
       let info = `${map.publisherPlace}: ${map.publisher}, ${map.year}`;
+      if (map.pages) {
+        info += `: ${map.pages}`;
+      }
       if (map.dimensions) {
         info += `. ${map.dimensions}`;
       }

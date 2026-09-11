@@ -47,11 +47,59 @@ export class MapParser extends BaseParser {
     position = this.skipWhitespace(tokens, position);
 
     // 解析作者、题名和比例尺（到文献类型标识 [CM]）
-    const { authors, title, scale, position: _afterTitle } = this.parseMapTitleAndScale(tokens, position);
+    const { authors, title, scale, titleSeparator, position: _afterTitle } = this.parseMapTitleAndScale(tokens, position);
+    // 检测作者间逗号
+    let authorComma: string | undefined;
+    for (let i = 0; i < _afterTitle; i++) {
+      if (tokens[i]!.type === 'COMMA') {
+        authorComma = tokens[i]!.value;
+        break;
+      }
+    }
 
     // 跳过文献类型标识 [CM]
     const { mediaType, position: afterType } = this.skipTypeIndicator(tokens, position);
     position = afterType;
+
+    // 检测析出文献格式 [CM]//宿主题名
+    let host: import('../types/index.js').HostReference | undefined;
+    const doubleSlashIndex = tokens.findIndex((t, i) => i >= position && t.type === 'DOUBLE_SLASH');
+    if (doubleSlashIndex >= position) {
+      position = doubleSlashIndex + 1;
+      // 解析宿主信息
+      const hostTitleEnd = this.findNextDot(tokens, position);
+      if (hostTitleEnd > position) {
+        const hostTitle = this.readTextUntil(tokens, position, hostTitleEnd).trim().replace(/\.$/, '');
+        position = hostTitleEnd + 1;
+        position = this.skipWhitespace(tokens, position);
+        
+        let hostPublisherPlace = '';
+        let hostPublisher = '';
+        let hostYear = '';
+        const hostColonIndex = tokens.findIndex((t, i) => i >= position && (t.value === ':' || t.value === '：'));
+        if (hostColonIndex >= position) {
+          hostPublisherPlace = this.readTextUntil(tokens, position, hostColonIndex).trim();
+          position = hostColonIndex + 1;
+          const hostCommaIndex = tokens.findIndex((t, i) => i >= position && t.type === 'COMMA');
+          if (hostCommaIndex >= position) {
+            hostPublisher = this.readTextUntil(tokens, position, hostCommaIndex).trim();
+            position = hostCommaIndex + 1;
+            const hostYearToken = tokens.slice(position).find(t => t.type === 'YEAR');
+            if (hostYearToken) {
+              hostYear = hostYearToken.value;
+              position = tokens.indexOf(hostYearToken) + 1;
+            }
+          }
+        }
+        
+        host = {
+          title: hostTitle,
+          publisherPlace: hostPublisherPlace || undefined,
+          publisher: hostPublisher || undefined,
+          year: hostYear || undefined,
+        };
+      }
+    }
 
     // 解析版本（如果有）
     let version: string | undefined;
@@ -71,6 +119,7 @@ export class MapParser extends BaseParser {
     let publisherPlace = '';
     let publisher = '';
     let year = '';
+    let pages = '';
 
     // 查找冒号
     const colonIndex = tokens.findIndex((t, i) => i >= position && (t.value === ':' || t.value === '：'));
@@ -89,6 +138,17 @@ export class MapParser extends BaseParser {
         if (yearToken) {
           year = yearToken.value;
           position = tokens.indexOf(yearToken) + 1;
+          // 检查年份后是否有页码（如 "1982: 6"）
+          position = this.skipWhitespace(tokens, position);
+          if (tokens[position]?.type === 'COLON') {
+            position++;
+            position = this.skipWhitespace(tokens, position);
+            const pageToken = tokens[position];
+            if (pageToken && pageToken.type === 'NUMBER') {
+              pages = pageToken.value.replace(/\.$/, '');
+              position++;
+            }
+          }
         }
       } else {
         publisher = this.readTextUntil(tokens, position, tokens.length).trim();
@@ -123,13 +183,17 @@ export class MapParser extends BaseParser {
       
       title,
       scale: scale || undefined,
+      titleSeparator: titleSeparator || undefined,
+      authorComma: authorComma || undefined,
       version,
       publisherPlace: publisherPlace || undefined,
       publisher: publisher || undefined,
+      pages: pages || undefined,
       year: year || undefined,
       dimensions,
       url,
       pid: pid || undefined,
+      host,
       mediaType,
     };
   }

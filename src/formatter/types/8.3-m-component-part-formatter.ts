@@ -19,30 +19,32 @@ export class ComponentPartFormatter extends BaseFormatter {
       parts.push(`[${component.id}]`);
     }
 
+    // 析出文献部分：作者. 题名[类型]. 译者//
+    let componentPart = '';
     if (component.authors.length > 0) {
-      if (component.authors.length > 0) {
-      parts.push(this.formatAuthors(component.authors, component.authorsTruncated) + '.');
+      componentPart += this.formatAuthors(component.authors, component.authorsTruncated, component.authorComma) + '. ';
     }
-    }
-
-    // 析出文献题名 + 文献类型标识
     let title = component.title;
     if (component.subtitle) {
-      title += `: ${component.subtitle}`;
+      const sep = component.subtitleSeparator || ':';
+      const suffixSep = sep === '：' ? '' : ' ';
+      title += `${sep}${suffixSep}${component.subtitle}`;
     }
-    // 标准 §8.3.2 要求析出文献题名后需有文献类型标识
     const typeIndicator = buildTypeIndicator(component.type, component.mediaType);
-    parts.push(`${title}${typeIndicator}//`);
-
+    componentPart += title + typeIndicator;
+    if (component.otherAuthors && component.otherAuthors.length > 0) {
+      componentPart += '. ' + this.formatAuthors(component.otherAuthors, undefined, component.authorComma);
+    }
     // 出处文献
+    let hostPart = '';
     if (component.host) {
       if (component.host.authors && component.host.authors.length > 0) {
-        parts.push(this.formatAuthors(component.host.authors, component.host.authorsTruncated) + '.');
+        hostPart += this.formatAuthors(component.host.authors, component.host.authorsTruncated, component.host.authorComma) + '. ';
       }
-      parts.push(`${component.host.title}.`);
+      hostPart += `${component.host.title}.`;
 
       if (component.host.version) {
-        parts.push(`${component.host.version}.`);
+        hostPart += ` ${component.host.version}.`;
       }
 
       if (component.host.publisherPlace && component.host.publisher && component.host.year) {
@@ -51,27 +53,28 @@ export class ComponentPartFormatter extends BaseFormatter {
         if (component.pages) {
           hostInfo += `: ${component.pages}`;
         }
-        parts.push(hostInfo + '.');
+        hostPart += ' ' + hostInfo + '.';
       } else if (component.host.year) {
         let hostInfo = `${component.host.year}`;
         if (component.pages) {
           hostInfo += `: ${component.pages}`;
         }
-        parts.push(hostInfo + '.');
+        hostPart += ' ' + hostInfo + '.';
       } else if (component.pages) {
-        parts.push(`: ${component.pages}.`);
+        hostPart += `: ${component.pages}.`;
       }
     }
 
     if (component.url) {
-      parts.push(component.url);
+      hostPart += ' ' + component.url;
     }
 
     const pid = this.pidSuffix(component.pid, component.url);
     if (pid) {
-      parts.push(pid);
+      hostPart += ' ' + pid;
     }
 
-    return parts.join(' ');
+    // 组装：析出部分 + // + 出处部分
+    return (componentPart + '//' + hostPart).trim();
   }
 }

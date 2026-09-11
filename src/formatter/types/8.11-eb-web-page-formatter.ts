@@ -19,7 +19,7 @@ export class WebPageFormatter extends BaseFormatter {
 
     if (webPage.authors && webPage.authors.length > 0) {
       if (webPage.authors.length > 0) {
-      parts.push(this.formatAuthors(webPage.authors, webPage.authorsTruncated) + '.');
+      parts.push(this.formatAuthors(webPage.authors, webPage.authorsTruncated, webPage.authorComma) + '.');
     }
     }
 

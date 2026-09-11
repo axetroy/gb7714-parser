@@ -20,7 +20,7 @@ export class ThesisFormatter extends BaseFormatter {
     }
 
     if (thesis.authors.length > 0) {
-      parts.push(this.formatAuthors(thesis.authors, thesis.authorsTruncated) + '.');
+      parts.push(this.formatAuthors(thesis.authors, thesis.authorsTruncated, thesis.authorComma) + '.');
     }
 
     let title = thesis.title;

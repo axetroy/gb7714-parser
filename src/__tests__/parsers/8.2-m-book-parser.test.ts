@@ -233,7 +233,7 @@ describe('BookParser', () => {
 
       expect(ref.type).toBe('M');
       expect(ref.authors).toHaveLength(0);
-      expect(ref.title).toBe('康熙字典:巳集上 水部');
+      expect(ref.title).toBe('康熙字典：巳集上 水部');
       expect(ref.subtitle).toBeUndefined();
       expect(ref.publisherPlace).toBe('北京');
       expect(ref.publisher).toBe('中华书局');

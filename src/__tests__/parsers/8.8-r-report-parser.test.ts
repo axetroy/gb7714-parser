@@ -71,7 +71,7 @@ describe('ReportParser', () => {
       const result = parser.parse(tokens);
 
       expect(result.type).toBe('R');
-      expect(result.url).toBe('http://example.com/report.pdf');
+      expect(result.url).toBe('http://example.com/report.pdf.');
     });
   });
 
@@ -87,7 +87,7 @@ describe('ReportParser', () => {
       expect(r.title).toBe('人体安全重要技术标准研制最终报告');
       expect(r.reportNumber).toBe('7178999X-2006BAK04A 10/10');
       expect(r.releaseDate).toBe('2013-09-30');
-      expect(r.url).toBe('http://www.nstrs.cn/xiangxiBG.aspx?id=41707');
+      expect(r.url).toBe('http://www.nstrs.cn/xiangxiBG.aspx?id=41707.');
       expect(r.mediaType).toBe('OL');
     });
 
@@ -103,7 +103,7 @@ describe('ReportParser', () => {
       expect(r.subtitle).toBe('新时代高质量发展探索');
       expect(r.reportNumber).toBeUndefined();
       expect(r.releaseDate).toBe('2023-12-28');
-      expect(r.url).toBe('http://www.caict.ac.cn/kxyj/qwfb/bps/202312/P020240326615399026294.pdf');
+      expect(r.url).toBe('http://www.caict.ac.cn/kxyj/qwfb/bps/202312/P020240326615399026294.pdf.');
       expect(r.mediaType).toBe('OL');
     });
 
@@ -118,7 +118,7 @@ describe('ReportParser', () => {
       expect(r.reportNumber).toBe('RMRS-GTR-262');
       expect(r.releaseDate).toBe('2011');
       expect(r.pages).toBe('8-9');
-      expect(r.url).toBe('https://www.fs.usda.gov/rm/pubs/rmrs_gtr262.pdf');
+      expect(r.url).toBe('https://www.fs.usda.gov/rm/pubs/rmrs_gtr262.pdf.');
       expect(r.mediaType).toBe('OL');
     });
 

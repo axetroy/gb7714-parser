@@ -90,7 +90,7 @@ describe('PatentParser', () => {
       expect(r.title).toBe('光折变自适应光外差探测方法');
       expect(r.patentNumber).toBe('CN01128777.2');
       expect(r.announceDate).toBe('2002-03-06');
-      expect(r.url).toBe('http://211.152.9.47/sipoasp/zljs/hyjs-yx-new.asp?recid=01128777.2&leixin=0');
+      expect(r.url).toBe('http://211.152.9.47/sipoasp/zljs/hyjs-yx-new.asp?recid=01128777.2&leixin=0.');
       expect(r.mediaType).toBe('OL');
     });
 
@@ -105,7 +105,7 @@ describe('PatentParser', () => {
       expect(r.title).toBe('光コヒーレンス断層拡張現実に基づく手術顕微鏡撮像システム及び方法');
       expect(r.patentNumber).toBe('JP2021578120A');
       expect(r.announceDate).toBe('2022-09-13');
-      expect(r.url).toBe('https://psssystem.cponline.cnipa.gov.cn/documents/detail?prevPageTit=changgui');
+      expect(r.url).toBe('https://psssystem.cponline.cnipa.gov.cn/documents/detail?prevPageTit=changgui.');
       expect(r.mediaType).toBe('OL');
     });
 
@@ -120,7 +120,7 @@ describe('PatentParser', () => {
       expect(r.title).toBe('Storage and delivery system');
       expect(r.patentNumber).toBe('AU2022228203A1');
       expect(r.announceDate).toBe('2022-10-06');
-      expect(r.url).toBe('https://worldwide.espacenet.com/patent/search/family/061561249/publication/AU2022228203A1?q=AU2022228203A');
+      expect(r.url).toBe('https://worldwide.espacenet.com/patent/search/family/061561249/publication/AU2022228203A1?q=AU2022228203A.');
       expect(r.mediaType).toBe('OL');
     });
   });

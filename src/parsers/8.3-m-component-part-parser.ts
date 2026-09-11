@@ -69,11 +69,21 @@ export class ComponentPartParser extends BaseParser {
       });
     const hasAuthor = dotBeforeTypeIndicator && hasTextAfterDot;
     let authors: Author[] = [];
+    let authorsTruncated: string | undefined;
+    let authorComma: string | undefined;
     // 记录提取题名的起始位置
     let titleStart = position;
     if (hasAuthor) {
       const authorResult = this.parseRequiredAuthors(tokens, position);
+      // 检测作者间逗号
+      for (let i = position; i < authorResult.position; i++) {
+        if (tokens[i]!.type === 'COMMA') {
+          authorComma = tokens[i]!.value;
+          break;
+        }
+      }
       authors = authorResult.authors;
+      authorsTruncated = authorResult.truncated;
       titleStart = authorResult.position;
       position = authorResult.position;
     } else if (typeIndicatorIdx >= 0) {
@@ -82,7 +92,15 @@ export class ComponentPartParser extends BaseParser {
     } else {
       // 无法确定，回退到原来的逻辑
       const authorResult = this.parseRequiredAuthors(tokens, position);
+      // 检测作者间逗号
+      for (let i = position; i < authorResult.position; i++) {
+        if (tokens[i]!.type === 'COMMA') {
+          authorComma = tokens[i]!.value;
+          break;
+        }
+      }
       authors = authorResult.authors;
+      authorsTruncated = authorResult.truncated;
       titleStart = authorResult.position;
       position = authorResult.position;
     }
@@ -94,29 +112,71 @@ export class ComponentPartParser extends BaseParser {
     let componentTitle = '';
     let componentType: string = 'Z'; // 默认类型
     let componentMediaType: MediaType | undefined;
+    let translator: string | undefined;
     if (doubleSlashIndex >= titleStart) {
-      componentTitle = this.readTextUntil(tokens, titleStart, doubleSlashIndex).trim().replace(/\.$/, '');
-      // 尝试从题名中提取文献类型标识（从文本中提取）
-      const typeMatch = componentTitle.match(/\[([A-Z\/]+)\]$/);
-      if (typeMatch) {
-        const typeIndicator = typeMatch[1];
-        if (typeIndicator) {
-          const parsed = parseTypeIndicator(`[${typeIndicator}]`);
-          componentType = parsed.baseType || 'Z';
-          componentMediaType = parsed.mediaType;
-          // 移除题名中的类型标识
-          componentTitle = componentTitle.replace(/\s*\[([A-Z\/]+)\]\s*$/, '').trim();
+      // 先找 TYPE_INDICATOR 确定题名边界
+      const typeIndicatorToken = tokens.slice(titleStart, doubleSlashIndex).find(t => t.type === 'TYPE_INDICATOR');
+      if (typeIndicatorToken) {
+        const typeIndicatorIdx = tokens.indexOf(typeIndicatorToken);
+        const typeIndicatorEnd = typeIndicatorIdx + 1;
+        // 提取题名（不含类型标识和之后的内容）
+        componentTitle = this.readTextUntil(tokens, titleStart, typeIndicatorEnd).trim().replace(/\.$/, '');
+        // 解析类型标识
+        const parsed = parseTypeIndicator(typeIndicatorToken.value);
+        componentType = parsed.baseType || 'Z';
+        componentMediaType = parsed.mediaType;
+        // 检查题名和 // 之间是否有译者（"姓名，译" 或 "姓名 译"）
+        let translatorStart = typeIndicatorEnd;
+        // 跳过 [M] 后的 DOT
+        if (tokens[translatorStart]?.type === 'DOT') translatorStart++;
+        // 向前查找译者：在 // 前寻找 "译" 字
+        let translatorEnd = translatorStart;
+        while (translatorEnd < doubleSlashIndex) {
+          const t = tokens[translatorEnd]!;
+          if (t.type === 'TEXT' && /译$/.test(t.value)) {
+            translatorEnd++; // 包含 "译" 字
+            break;
+          }
+          if (t.type === 'COMMA' || t.type === 'COLON' || t.type === 'DOT') {
+            translatorEnd++; // 跳过标点，继续查找
+            continue;
+          }
+          translatorEnd++;
+        }
+        // 提取译者信息（保留原始标点，如全角逗号）
+        if (translatorEnd > translatorStart && translatorEnd <= doubleSlashIndex) {
+          let translatorText = '';
+          let lastEnd = -1;
+          for (let i = translatorStart; i < translatorEnd; i++) {
+            const t = tokens[i]!;
+            if (t.type === 'TEXT') {
+              if (lastEnd >= 0 && t.position > lastEnd) translatorText += ' ';
+              translatorText += t.value;
+              lastEnd = t.position + t.value.length;
+            } else {
+              // 保留原始标点（COMMA 可能是全角）
+              translatorText += t.value;
+              lastEnd = t.position + t.value.length;
+            }
+          }
+          translatorText = translatorText.trim();
+          if (translatorText && /译$/.test(translatorText)) {
+            translator = translatorText;
+            // 跳过 // 分隔符，定位到宿主文献开始处
+            position = translatorEnd;
+            if (tokens[position]?.type === 'DOUBLE_SLASH') position++;
+            position = this.skipWhitespace(tokens, position);
+          } else {
+            position = doubleSlashIndex + 1;
+          }
+        } else {
+          position = doubleSlashIndex + 1;
         }
       } else {
-        // 检查是否在 DOUBLE_SLASH 之前有 TYPE_INDICATOR token（用 titleStart 而非 position）
-        const typeIndicatorToken = tokens.slice(titleStart, doubleSlashIndex).find(t => t.type === 'TYPE_INDICATOR');
-        if (typeIndicatorToken) {
-          const parsed = parseTypeIndicator(typeIndicatorToken.value);
-          componentType = parsed.baseType || 'Z';
-          componentMediaType = parsed.mediaType;
-        }
+        // 无类型标识，直接读到 //
+        componentTitle = this.readTextUntil(tokens, titleStart, doubleSlashIndex).trim().replace(/\.$/, '');
+        position = doubleSlashIndex + 1;
       }
-      position = doubleSlashIndex + 1;
     }
 
     // 跳过空白
@@ -124,13 +184,21 @@ export class ComponentPartParser extends BaseParser {
 
     // 解析图书作者（如果有）
     let hostAuthors: Author[] = [];
+    let hostAuthorComma: string | undefined;
     const nextDotIndex = this.findNextDot(tokens, position);
     if (nextDotIndex > position) {
       const hostAuthorText = this.readTextUntil(tokens, position, nextDotIndex).trim();
-      // 检查是否是作者（包含逗号或中文）
-      if (hostAuthorText.includes(',') || hostAuthorText.includes('，') || /^[\u4e00-\u9fa5]+$/.test(hostAuthorText)) {
+      // 检查是否是作者（包含逗号、中文或书名号）
+      if (hostAuthorText.includes(',') || hostAuthorText.includes('，') || /^[\u4e00-\u9fa5《》]+$/.test(hostAuthorText)) {
         const { authors: _hAuthors, truncated: _ht } = parseAuthors(hostAuthorText);
         hostAuthors = _hAuthors;
+        // 检测原始逗号（全角或半角）
+        for (let i = position; i < nextDotIndex; i++) {
+          if (tokens[i]!.type === 'COMMA') {
+            hostAuthorComma = tokens[i]!.value;
+            break;
+          }
+        }
         position = nextDotIndex + 1;
       }
     }
@@ -198,10 +266,14 @@ export class ComponentPartParser extends BaseParser {
     return {
       type: componentType as never, // 析出文献继承原始文献类型
       authors,
+      authorsTruncated,
+      authorComma: authorComma || undefined,
       title: componentTitle,
       mediaType: componentMediaType,
+      otherAuthors: translator ? [{ name: translator }] : undefined,
       host: {
         authors: hostAuthors.length > 0 ? hostAuthors : undefined,
+        authorComma: hostAuthorComma || undefined,
         title: hostTitle,
         publisherPlace: publisherPlace || undefined,
         publisher: publisher || undefined,

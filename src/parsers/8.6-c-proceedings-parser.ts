@@ -44,7 +44,7 @@ export class ProceedingsParser extends BaseParser {
     position = this.skipWhitespace(tokens, position);
 
     // 解析作者和题名（含可选副题名）
-    const { authors, truncated, title, subtitle, position: afterTitle } = this.parseTitleWithOptionalSubtitle(tokens, position);
+    const { authors, truncated, authorComma, subtitleSeparator, title, subtitle, position: afterTitle } = this.parseTitleWithOptionalSubtitle(tokens, position);
     position = afterTitle;
 
     // 跳过文献类型标识 [C]
@@ -102,13 +102,15 @@ export class ProceedingsParser extends BaseParser {
         type: 'C' as never,
         mediaType,
         authors,
-      authorsTruncated: truncated || undefined,
+        authorsTruncated: truncated || undefined,
         title,
         subtitle,
         conferenceName: conferenceName.trim().replace(/,$/, '') || undefined,
         conferenceYear: conferenceYear || undefined,
+        subtitleSeparator: subtitleSeparator || undefined,
         pages: pages || undefined,
         url: url || undefined,
+        authorComma: authorComma || undefined,
       };
     } else {
       // 图书形式：[C]. 出版地: 出版者, 年
@@ -124,6 +126,7 @@ export class ProceedingsParser extends BaseParser {
       return {
         type: 'C' as never,
         mediaType,
+      authorComma: authorComma || undefined,
         authors,
       authorsTruncated: truncated || undefined,
         title,
@@ -131,6 +134,7 @@ export class ProceedingsParser extends BaseParser {
         publisherPlace: publisherPlace || undefined,
         publisher: publisher || undefined,
         year: year || undefined,
+        subtitleSeparator: subtitleSeparator || undefined,
         pages: pages || undefined,
         url: url || undefined,
       };

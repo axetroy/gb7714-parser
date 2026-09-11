@@ -21,7 +21,7 @@ describe('SerialFormatter', () => {
         publicationStartYear: '1984',
       };
       const result = formatter.format(reference as ReferenceUnion);
-      expect(result).toBe('中华医学会湖北分会. 临床内科杂志[J]. 1984, 1(1)—. 武汉: 中华医学会湖北分会, 1984—.');
+      expect(result).toBe('中华医学会湖北分会. 临床内科杂志[J]. 1984, 1(1)— 武汉: 中华医学会湖北分会, 1984—.');
     });
 
     it('应该格式化带有年份范围的连续出版物', () => {

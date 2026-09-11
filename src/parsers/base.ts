@@ -90,11 +90,13 @@ export abstract class BaseParser implements ParserStrategy {
    * @param position 当前位置
    * @returns 解析结果，包含作者数组和下一个位置
    */
-  protected parseRequiredAuthors(tokens: Token[], position: number): { authors: Author[]; truncated: string | undefined; position: number; preDotText?: string } {
+  protected parseRequiredAuthors(tokens: Token[], position: number): { authors: Author[]; truncated: string | undefined; authorComma: string | undefined; position: number; preDotText?: string } {
+    // 检测原始逗号分隔符（全角"，"或半角","）
+    const comma = tokens.slice(position).find(t => t.type === 'COMMA')?.value;
     const authorsText = readUntilDot(tokens, position);
     position = findNextDot(tokens, position) + 1;
     const { authors, truncated } = parseAuthors(authorsText);
-    return { authors, truncated, position };
+    return { authors, truncated, authorComma: comma || undefined, position };
   }
 
   /**
@@ -103,7 +105,7 @@ export abstract class BaseParser implements ParserStrategy {
    * @param position 当前位置
    * @returns 解析结果，包含作者数组和下一个位置
    */
-  protected parseOptionalAuthors(tokens: Token[], position: number): { authors: Author[]; truncated: string | undefined; position: number; preDotText?: string } {
+  protected parseOptionalAuthors(tokens: Token[], position: number): { authors: Author[]; truncated: string | undefined; authorComma: string | undefined; position: number; preDotText?: string } {
     let authors: Author[] = [];
     let truncated: string | undefined;
     // 找到第一个 TYPE_INDICATOR 的位置，作为搜索边界
@@ -114,6 +116,9 @@ export abstract class BaseParser implements ParserStrategy {
     const searchLimit = typeIndicatorIndex < tokens.length
       ? Math.min(dotIndex, typeIndicatorIndex)
       : dotIndex;
+
+    // 检测原始逗号分隔符
+    const authorComma = tokens.slice(position, searchLimit).find(t => t.type === 'COMMA')?.value;
 
     if (searchLimit > position && dotIndex <= searchLimit) {
       // 有 DOT 在 TYPE_INDICATOR 之前：DOT 前文本视为作者（无论是否为中文）
@@ -126,7 +131,7 @@ export abstract class BaseParser implements ParserStrategy {
         if (hasParen) {
           // 不是作者，将 DOT 前文本纳入题名范围
           position = dotIndex + 1;
-          return { authors, truncated: truncated || undefined, position, preDotText: authorText };
+          return { authors, truncated: truncated || undefined, authorComma: authorComma || undefined, position, preDotText: authorText };
         } else {
           const { authors: _a2, truncated: _t2 } = parseAuthors(authorText);
           authors = _a2;
@@ -154,7 +159,7 @@ export abstract class BaseParser implements ParserStrategy {
         // position 保持原位，外层会从当前位置找到 TYPE_INDICATOR 并跳过
       }
     }
-    return { authors, truncated, position };
+    return { authors, truncated, authorComma: authorComma || undefined, position };
   }
 
   /**
@@ -193,7 +198,7 @@ export abstract class BaseParser implements ParserStrategy {
     tokens: Token[],
     position: number,
     optionalAuthors: boolean = false,
-  ): { authors: Author[]; truncated: string | undefined; title: string; subtitle?: string; position: number } {
+  ): { authors: Author[]; truncated: string | undefined; authorComma: string | undefined; subtitleSeparator: string | undefined; title: string; subtitle?: string; position: number } {
     // 无作者检测：类型标识 [X] 之前没有 DOT 时，著录直接从题名开始，
     // 此时不能把题名文本误解析为作者（标准 B.1 示例[8]「康熙字典：巳集上 水部[M]」等）。
     // 例外：当 optionalAuthors=true 且存在 COLON（如"作者：标题"格式）时，允许解析作者。
@@ -206,19 +211,65 @@ export abstract class BaseParser implements ParserStrategy {
 
     // 解析作者
     const authorResult = noAuthor
-      ? { authors: [] as Author[], truncated: undefined, position, preDotText: undefined as string | undefined }
+      ? { authors: [] as Author[], truncated: undefined, authorComma: undefined, position, preDotText: undefined as string | undefined }
       : optionalAuthors
         ? this.parseOptionalAuthors(tokens, position)
         : this.parseRequiredAuthors(tokens, position);
-    const { authors, truncated, position: afterAuthors, preDotText } = authorResult;
+    const { authors, truncated, authorComma, position: afterAuthors, preDotText } = authorResult;
     position = afterAuthors;
 
     // 解析题名和可选副题名（到文献类型标识为止）
     const titleEnd = findNextTypeIndicator(tokens, position);
-    const fullText = this.readTextUntil(tokens, position, titleEnd).trim().replace(/\.$/, '');
+    const fullText = (() => {
+      if (noAuthor) {
+        // 无作者时：保留原始标点（如全角冒号）在题名中
+        let result = '';
+        let lastEnd = -1;
+        for (let i = position; i < titleEnd; i++) {
+          const t = tokens[i]!;
+          if (t.type === 'TEXT' || t.type === 'NUMBER' || t.type === 'YEAR' || t.type === 'DASH') {
+            if (lastEnd >= 0 && t.position > lastEnd) result += ' ';
+            result += t.value;
+            lastEnd = t.position + t.value.length;
+          } else if (t.type === 'COMMA') {
+            result += ',';
+            lastEnd = t.position + 1;
+          } else if (t.type === 'COLON') {
+            result += t.value; // 保留原始冒号字符
+            lastEnd = t.position + 1;
+          } else if (t.type === 'DOT') {
+            result += '.';
+            lastEnd = t.position + 1;
+          }
+        }
+        return result.trim().replace(/\.$/, '');
+      }
+      // 保留原始标点（如全角冒号）在题名中
+      let result = '';
+      let lastEnd = -1;
+      for (let i = position; i < titleEnd; i++) {
+        const t = tokens[i]!;
+        if (t.type === 'TEXT' || t.type === 'NUMBER' || t.type === 'YEAR' || t.type === 'DASH') {
+          if (lastEnd >= 0 && t.position > lastEnd) result += ' ';
+          result += t.value;
+          lastEnd = t.position + t.value.length;
+        } else if (t.type === 'COMMA') {
+          result += ',';
+          lastEnd = t.position + 1;
+        } else if (t.type === 'COLON') {
+          result += t.value; // 保留原始冒号字符
+          lastEnd = t.position + 1;
+        } else if (t.type === 'DOT') {
+          result += '.';
+          lastEnd = t.position + 1;
+        }
+      }
+      return result.trim().replace(/\.$/, '');
+    })();
 
     let title: string;
     let subtitle: string | undefined;
+    let subtitleSeparator: string | undefined;
 
     // 标准 §6 符号说明使用全角冒号 "：" (U+FF1A) 作为副题名分隔符
     // 但实际示例中：
@@ -248,6 +299,7 @@ export abstract class BaseParser implements ParserStrategy {
           // 冒号：拆分为题名 + 副题名
           title = this.readTextUntil(tokens, position, colonIndex).trim();
           subtitle = this.readTextUntil(tokens, colonIndex + 1, titleEnd).trim();
+          subtitleSeparator = colonToken.value;
         }
       } else {
         // 全角冒号属于题名内部：保留完整题名
@@ -265,7 +317,7 @@ export abstract class BaseParser implements ParserStrategy {
     // 跳过文献类型标识
     position = titleEnd;
 
-    return { authors, truncated, title, subtitle, position };
+    return { authors, truncated, authorComma, subtitleSeparator, title, subtitle, position };
   }
 
   /**
@@ -363,7 +415,7 @@ export abstract class BaseParser implements ParserStrategy {
     tokens: Token[],
     position: number,
     optionalAuthors: boolean = false,
-  ): { authors: Author[]; truncated: string | undefined; title: string; scale?: string; position: number } {
+  ): { authors: Author[]; truncated: string | undefined; title: string; scale?: string; titleSeparator?: string; position: number } {
     // 无作者检测：类型标识前没有 DOT 时，著录直接从题名开始，
     // 不能把题名文本误解析为作者。例外：optionalAuthors=true 且存在 COLON 时允许解析作者。
     const noDot = !this.hasAuthorSeparator(tokens, position);
@@ -399,6 +451,7 @@ export abstract class BaseParser implements ParserStrategy {
     // 情况1：TYPE_INDICATOR 紧跟题名（如 "题名[CM]."）→ 无比例尺
     // 情况2：题名后有点号再是比例尺（如 "题名. 比例尺[CM]."）
     let scale: string | undefined = undefined;
+    let titleSeparator: string | undefined;
     if (tokens[position]?.type === 'TYPE_INDICATOR') {
       // 类型标识紧跟题名，无比例尺
       position++; // 跳过 [CM]
@@ -411,10 +464,33 @@ export abstract class BaseParser implements ParserStrategy {
         findNextTypeIndicator(tokens, position),
       );
       const scaleText = this.readTextUntil(tokens, position, scaleEnd).trim().replace(/\.$/, '');
+      // 检测分隔符（在 scaleText 之前的 COLON/DOT）
+      if (!titleSeparator) {
+        const searchStart = Math.max(0, position - 3);
+        for (let i = position; i >= searchStart; i--) {
+          const t = tokens[i];
+          if (!t) continue;
+          if (t.type === 'COLON' || t.value === '：') {
+            // 检查是否是比例尺模式（如 "1:25000"），如果是则用 DOT 作为分隔符
+            const nextToken = tokens[i + 1];
+            const isScalePattern = nextToken && nextToken.type === 'NUMBER';
+            if (isScalePattern) {
+              continue; // 跳过，继续查找
+            }
+            titleSeparator = t.value;
+            break;
+          }
+          if (t.type === 'DOT' || t.type === 'TYPE_INDICATOR') {
+            titleSeparator = '.';
+            break;
+          }
+        }
+        if (!titleSeparator) titleSeparator = '.';
+      }
       // 判断是否为比例尺：包含冒号或纯数字模式（如 "1:25 000"）
       // 不含冒号但有中文的（如 "第 2 册"）视为题名的一部分
       if (scaleText && /[:：]/.test(scaleText)) {
-        scale = scaleText;
+        scale = scaleText.replace(/^[:：]/, "");
       } else if (scaleText && /^\d/.test(scaleText)) {
         // 纯数字开头可能是比例尺
         scale = scaleText;
@@ -427,7 +503,7 @@ export abstract class BaseParser implements ParserStrategy {
       if (tokens[position]?.type === 'DOT') position++;
     }
 
-    return { authors, truncated, title, scale, position };
+    return { authors, truncated, title, scale, titleSeparator, position };
   }
 
   /**
@@ -542,7 +618,7 @@ export abstract class BaseParser implements ParserStrategy {
    */
   protected parseURL(tokens: Token[]): string | undefined {
     const urlToken = tokens.find(t => t.type === 'URL');
-    return urlToken?.value?.replace(/\.$/, '');
+    return urlToken?.value;
   }
 
   /**
@@ -675,11 +751,18 @@ export abstract class BaseParser implements ParserStrategy {
         lastEndPosition = token.position + 1;
         lastContentEnd = lastEndPosition;
       } else if (token.type === 'COLON') {
-        // 标准 §6 使用全角冒号，但实际著录中统一使用 ASCII 冒号
-        result += ':';
-        lastEndPosition = token.position + 1;
+        // 保留原始冒号字符（全角或半角），用于 round-trip
+        // 保留冒号前的空格（如比例尺 "1 : 25 000"）
+        if (lastEndPosition >= 0 && token.position > lastEndPosition) {
+          result += ' ';
+        }
+        result += token.value;
+        lastEndPosition = token.position + token.value.length;
         lastContentEnd = lastEndPosition;
       } else if (token.type === 'COMMA') {
+        if (lastEndPosition >= 0 && token.position > lastEndPosition) {
+          result += ' ';
+        }
         result += ',';
         lastEndPosition = token.position + 1;
         lastContentEnd = lastEndPosition;

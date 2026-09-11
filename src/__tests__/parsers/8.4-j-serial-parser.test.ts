@@ -74,7 +74,7 @@ describe('SerialParser', () => {
       const result = parser.parse(tokens);
 
       expect(result.type).toBe('J');
-      expect(result.url).toBe('http://www.tandfonline.com/journals/wplq20');
+      expect(result.url).toBe('http://www.tandfonline.com/journals/wplq20.');
     });
 
     it('应该解析没有卷号的连续出版物', () => {

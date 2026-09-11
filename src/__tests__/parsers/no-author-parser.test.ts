@@ -22,7 +22,7 @@ describe('无作者文献（类型标识前无 DOT）', () => {
 
     expect(ref.type).toBe('M');
     expect(ref.authors).toHaveLength(0);
-    expect(ref.title).toBe('康熙字典:巳集上 水部');
+    expect(ref.title).toBe('康熙字典：巳集上 水部');
     expect(ref.subtitle).toBeUndefined();
     expect(ref.version).toBe('影印本');
     expect(ref.publisherPlace).toBe('北京');
@@ -37,7 +37,7 @@ describe('无作者文献（类型标识前无 DOT）', () => {
     const ref = result.reference as Book;
 
     expect(ref.authors).toHaveLength(0);
-    expect(ref.title).toBe('昌平山水记:京东考古录');
+    expect(ref.title).toBe('昌平山水记：京东考古录');
     expect(ref.subtitle).toBeUndefined();
     expect(ref.year).toBe('1980');
   });

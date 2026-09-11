@@ -19,7 +19,7 @@ export class PreprintFormatter extends BaseFormatter {
 
     if (preprint.authors && preprint.authors.length > 0) {
       if (preprint.authors.length > 0) {
-      parts.push(this.formatAuthors(preprint.authors, preprint.authorsTruncated) + '.');
+      parts.push(this.formatAuthors(preprint.authors, preprint.authorsTruncated, preprint.authorComma) + '.');
     }
     }
 

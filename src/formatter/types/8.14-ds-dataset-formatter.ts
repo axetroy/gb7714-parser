@@ -19,7 +19,7 @@ export class DatasetFormatter extends BaseFormatter {
 
     if (dataset.authors && dataset.authors.length > 0) {
       if (dataset.authors.length > 0) {
-      parts.push(this.formatAuthors(dataset.authors, dataset.authorsTruncated) + '.');
+      parts.push(this.formatAuthors(dataset.authors, dataset.authorsTruncated, dataset.authorComma) + '.');
     }
     }
 

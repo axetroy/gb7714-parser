@@ -59,8 +59,7 @@ export class SerialParser extends BaseParser {
   /**
    * 解析连续出版物
    */
-  parse(tokens: Token[], _options?: ParseOptions): Serial {
-    let position = 0;
+  parse(tokens: Token[], _options?: ParseOptions): Serial {    let position = 0;
 
     // 跳过序号 [1]
     position = this.skipReferenceNumber(tokens, position);
@@ -70,7 +69,7 @@ export class SerialParser extends BaseParser {
 
     // 解析作者和题名（含可选副题名）
     // 连续出版物可能没有作者，此时第一个 DOT 前的文本是题名而非作者
-    const { authors, truncated, title, subtitle, position: afterTitle } = this.parseTitleWithOptionalSubtitle(tokens, position, true);
+    const { authors, truncated, authorComma, subtitleSeparator: _subtitleSeparator, title, subtitle, position: afterTitle } = this.parseTitleWithOptionalSubtitle(tokens, position, true);
     position = afterTitle;
 
     // 跳过文献类型标识 [J]
@@ -81,19 +80,19 @@ export class SerialParser extends BaseParser {
     let startYear = '';
     let startVolume = '';
     let startIssue = '';
-    let endYear = '';
+    let endYear: string | undefined = undefined;
     let endVolume = '';
     let endIssue = '';
+    let volumeSeparator: ' ' | '' = '';
 
     // 查找起始年份
     const yearIndex = tokens.findIndex((t, i) => i >= position && t.type === 'YEAR');
     if (yearIndex >= position) {
       startYear = tokens[yearIndex]!.value;
-      position = yearIndex + 1;
-    }
+      position = yearIndex + 1;    }
 
-    // 查找起始卷号（逗号后的数字）
-    const commaIndex = tokens.findIndex((t, i) => i >= position && t.type === 'COMMA');
+    // 查找起始卷号（逗号后的数字，逗号应在年份后不远处）
+    const commaIndex = tokens.findIndex((t, i) => i >= position && i < position + 5 && t.type === 'COMMA');
     if (commaIndex >= position) {
       position = commaIndex + 1;
       const volumeIndex = tokens.findIndex((t, i) => i >= position && t.type === 'NUMBER');
@@ -106,6 +105,14 @@ export class SerialParser extends BaseParser {
     // 查找起始期号（括号内的内容）
     const parenOpenIndex = tokens.findIndex((t, i) => i >= position && t.type === 'PAREN_OPEN');
     if (parenOpenIndex >= position) {
+      // 检测年份和括号之间是否有空格（通过位置差判断）
+      if (parenOpenIndex > 0) {
+        const prevToken = tokens[parenOpenIndex - 1];
+        const currToken = tokens[parenOpenIndex];
+        if (prevToken && currToken && currToken.position > prevToken.position + prevToken.value.length) {
+          volumeSeparator = ' ';
+        }
+      }
       position = parenOpenIndex + 1;
       const parenCloseIndex = tokens.findIndex((t, i) => i > position && t.type === 'PAREN_CLOSE');
       if (parenCloseIndex > position) {
@@ -114,8 +121,29 @@ export class SerialParser extends BaseParser {
       }
     }
 
+    // 处理 "年份 (期号)" 格式（无逗号无卷号）
+    if (!startVolume && !startIssue) {
+      const altParenOpen = tokens.findIndex((t, i) => i >= position && t.type === 'PAREN_OPEN');
+      if (altParenOpen >= position) {
+        // 括号内是期号
+        position = altParenOpen + 1;
+        const altParenClose = tokens.findIndex((t, i) => i > position && t.type === 'PAREN_CLOSE');
+        if (altParenClose > position) {
+          startIssue = tokens.slice(position, altParenClose).map(t => t.value).join('');
+          position = altParenClose + 1;
+        }
+      }
+    }
+
+    // 出版信息变量（可能在 DASH 段提前赋值）
+    let publisherPlace = '';
+    let publisher = '';
+    let publicationStartYear = '';
+    let publicationEndYear = '';
+
     // 查找 DASH（表示连续出版物）
     const dashIndex = tokens.findIndex((t, i) => i >= position && t.type === 'DASH');
+    // 防止重复处理：如果已经解析过 DASH 后的年份，跳过后续的 DASH
     if (dashIndex >= position) {
       position = dashIndex + 1;
 
@@ -129,13 +157,29 @@ export class SerialParser extends BaseParser {
         // 查找结束年份
         const endYearIndex = tokens.findIndex((t, i) => i >= position && t.type === 'YEAR');
         if (endYearIndex >= position) {
-          endYear = tokens[endYearIndex]!.value;
+          // 检查 DASH 和 endYear 之间是否有出版信息（如 "武汉: 中华医学会湖北分会, 1984"）
+          const betweenTokens = tokens.slice(position, endYearIndex);
+          const betweenColonIndex = betweenTokens.findIndex(t => t.type === 'COLON');
+          if (betweenColonIndex >= 0) {
+            // 有出版信息：出版地在冒号前，出版者在冒号和逗号之间
+            const pubPlaceEnd = betweenTokens.findIndex((t, i) => i > betweenColonIndex && (t.type === 'COMMA' || t.type === 'DOT'));
+            publisherPlace = this.readTextUntil(betweenTokens, 0, betweenColonIndex).trim();
+            publisher = pubPlaceEnd >= 0
+              ? this.readTextUntil(betweenTokens, betweenColonIndex + 1, pubPlaceEnd).trim().replace(/\.$$/, '')
+              : this.readTextUntil(betweenTokens, betweenColonIndex + 1, betweenTokens.length).trim().replace(/\.$/, '');
+            publicationStartYear = tokens[endYearIndex]!.value;
+            // 有出版信息时，不设置 endYear（年份属于出版信息）
+          } else {
+            endYear = tokens[endYearIndex]!.value;
+          }
           position = endYearIndex + 1;
         } else {
           endYear = '';
         }
 
         // 查找结束期号（如果有）- 在年份之后的括号
+        // 注意：如果已经找到出版信息，跳过此处，让后续代码处理
+        if (!publisherPlace) {
         const endParenOpenIndex = tokens.findIndex((t, i) => i >= position && t.type === 'PAREN_OPEN');
         if (endParenOpenIndex >= position && endParenOpenIndex < position + 5) {
           position = endParenOpenIndex + 1;
@@ -144,6 +188,7 @@ export class SerialParser extends BaseParser {
             endIssue = tokens.slice(position, endParenCloseIndex).map(t => t.value).join('');
             position = endParenCloseIndex + 1;
           }
+        }
         }
       }
     }
@@ -154,38 +199,40 @@ export class SerialParser extends BaseParser {
       position++;
     }
 
-    // 解析出版地、出版者、出版年
-    let publisherPlace = '';
-    let publisher = '';
-    let publicationStartYear = '';
-    let publicationEndYear = '';
 
-    // 查找冒号（出版地前）
-    const colonIndex = tokens.findIndex((t, i) => i >= position && t.type === 'COLON');
-    if (colonIndex >= position) {
-      // 出版地在冒号前 - 保留尾部的点（可能是缩写如 D. C.）
-      publisherPlace = this.readTextUntil(tokens, position, colonIndex).trim();
-      position = colonIndex + 1;
-    }
+// 查找冒号（出版地前）- 如果已经解析过出版信息，跳过
+    if (!publisherPlace) {
+      const colonIndex = tokens.findIndex((t, i) => i >= position && t.type === 'COLON');
+      if (colonIndex >= position) {
+        // 出版地在冒号前 - 保留尾部的点（可能是缩写如 D. C.）
+        publisherPlace = this.readTextUntil(tokens, position, colonIndex).trim();
+        position = colonIndex + 1;
+      }
 
-    // 查找出版者（到逗号）
-    const nextCommaIndex = tokens.findIndex((t, i) => i >= position && t.type === 'COMMA');
-    if (nextCommaIndex >= position) {
-      publisher = this.readTextUntil(tokens, position, nextCommaIndex).trim().replace(/\.$/, '');
-      position = nextCommaIndex + 1;
+      // 查找出版者（到逗号）
+      const nextCommaIndex = tokens.findIndex((t, i) => i >= position && t.type === 'COMMA');
+      if (nextCommaIndex >= position) {
+        publisher = this.readTextUntil(tokens, position, nextCommaIndex).trim().replace(/\.$/, '');
+        position = nextCommaIndex + 1;
 
-      // 查找出版年起始
-      const pubYearIndex = tokens.findIndex((t, i) => i >= position && t.type === 'YEAR');
-      if (pubYearIndex >= position) {
-        publicationStartYear = tokens[pubYearIndex]!.value;
-        position = pubYearIndex + 1;
+        // 查找出版年起始
+        const pubYearIndex = tokens.findIndex((t, i) => i >= position && t.type === 'YEAR');
+        if (pubYearIndex >= position) {
+          publicationStartYear = tokens[pubYearIndex]!.value;
+          position = pubYearIndex + 1;
 
-        // 查找出版年结束（DASH）
-        const pubDashIndex = tokens.findIndex((t, i) => i >= position && t.type === 'DASH');
-        if (pubDashIndex >= position) {
-          position = pubDashIndex + 1;
-          // 无限期发行
-          publicationEndYear = '';
+          // 查找出版年结束（DASH）
+          const pubDashIndex = tokens.findIndex((t, i) => i >= position && t.type === 'DASH');
+          if (pubDashIndex >= position) {
+            position = pubDashIndex + 1;
+            // 检查 DASH 后是否有年份
+            const pubEndYearIndex = tokens.findIndex((t, i) => i >= position && t.type === 'YEAR');            if (pubEndYearIndex >= position) {
+              publicationEndYear = tokens[pubEndYearIndex]!.value;
+              position = pubEndYearIndex + 1;
+            } else {
+              // 无限期发行
+              publicationEndYear = '';            }
+          }
         }
       }
     }
@@ -216,6 +263,8 @@ export class SerialParser extends BaseParser {
       url,
       pid: pid || undefined,
       mediaType,
+      authorComma: authorComma || undefined,
+      volumeSeparator: volumeSeparator || undefined,
     };
   }
 }

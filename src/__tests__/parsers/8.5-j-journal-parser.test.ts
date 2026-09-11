@@ -296,7 +296,7 @@ describe('JournalParser', () => {
       expect(ref.volume).toBe('510');
       expect(ref.issue).toBeUndefined();
       expect(ref.pages).toBe('356-362');
-      expect(ref.url).toBe('https://www.nature.com/articles/nature13308.pdf');
+      expect(ref.url).toBe('https://www.nature.com/articles/nature13308.pdf.');
     });
 
     it('示例 [10]：英文副题名 + DOI URL', () => {

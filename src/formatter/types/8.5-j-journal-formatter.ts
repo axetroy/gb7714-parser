@@ -22,16 +22,17 @@ export class JournalFormatter extends BaseFormatter {
 
     // 著者-出版年制: 作者, 年.
     if (this.options.citationStyle === 'author-date' && journal.year) {
-      parts.push(`${this.formatAuthors(journal.authors, journal.authorsTruncated)}, ${journal.year}.`);
+      parts.push(`${this.formatAuthors(journal.authors, journal.authorsTruncated, journal.authorComma)}, ${journal.year}.`);
     } else {
       if (journal.authors.length > 0) {
-      parts.push(this.formatAuthors(journal.authors, journal.authorsTruncated) + '.');
+      parts.push(this.formatAuthors(journal.authors, journal.authorsTruncated, journal.authorComma) + '.');
     }
     }
 
     let title = journal.title;
     if (journal.subtitle) {
-      title += `: ${journal.subtitle}`;
+      const sep = journal.subtitleSeparator || ': ';
+      title += `${sep}${journal.subtitle}`;
     }
     parts.push(`${title}${buildTypeIndicator('J', journal.mediaType)}.`);
 
@@ -42,10 +43,12 @@ export class JournalFormatter extends BaseFormatter {
       journalInfo += `, ${journal.year}`;
     }
     if (journal.volume) {
-      journalInfo += `, ${journal.volume}`;
+      const volSep = journal.volumeSeparator || '';
+      journalInfo += `, ${journal.volume}${volSep}`;
     }
     if (journal.issue) {
-      journalInfo += `(${journal.issue})`;
+      const issuePrefix = journal.issueSpace ? ' ' : '';
+      journalInfo += `${issuePrefix}(${journal.issue})`;
     }
     if (journal.pages) {
       journalInfo += `: ${journal.pages}`;

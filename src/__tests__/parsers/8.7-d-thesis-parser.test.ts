@@ -120,7 +120,7 @@ describe('ThesisParser', () => {
       expect(result.awardInstitution).toBe('温州大学');
       expect(result.awardYear).toBe('2020');
       expect(result.pages).toBe('16');
-      expect(result.url).toBe('https://d.wanfangdata.com.cn/thesis/D02216281');
+      expect(result.url).toBe('https://d.wanfangdata.com.cn/thesis/D02216281.');
     });
 
     it('例[3] 应解析在线学位论文（含 CSTR 标识符）', () => {
@@ -134,7 +134,7 @@ describe('ThesisParser', () => {
       expect(result.awardInstitution).toBe('中国科学院大学');
       expect(result.awardYear).toBe('2022');
       expect(result.pages).toBe('43');
-      expect(result.url).toBe('http://dpaper.las.ac.cn/Dpaper/detail/detailNew?paperID=20209289');
+      expect(result.url).toBe('http://dpaper.las.ac.cn/Dpaper/detail/detailNew?paperID=20209289.');
     });
 
     it('例[4] 应解析英文学位论文', () => {

@@ -139,7 +139,7 @@ describe('Formatter base functionality', () => {
       } as ReferenceUnion;
       const result = format(reference);
       // 标准 §8.3.2 要求析出文献题名后需有文献类型标识
-      expect(result).toBe('张三. 析出文献标题[Z]// 李四. 图书标题. 北京: 出版社, 2025: 100-110.');
+      expect(result).toBe('张三. 析出文献标题[Z]//李四. 图书标题. 北京: 出版社, 2025: 100-110.');
     });
 
     it('应该格式化没有页码的析出文献', () => {
@@ -157,7 +157,7 @@ describe('Formatter base functionality', () => {
       } as ReferenceUnion;
       const result = format(reference);
       // 标准 §8.3.2 要求析出文献题名后需有文献类型标识
-      expect(result).toBe('张三. 析出文献标题[Z]// 李四. 图书标题. 北京: 出版社, 2025.');
+      expect(result).toBe('张三. 析出文献标题[Z]//李四. 图书标题. 北京: 出版社, 2025.');
     });
 
     it('应该格式化带有副标题的析出文献', () => {
@@ -172,7 +172,7 @@ describe('Formatter base functionality', () => {
       } as ReferenceUnion;
       const result = format(reference);
       // 标准 §8.3.2 要求析出文献题名后需有文献类型标识
-      expect(result).toBe('张三. 析出文献: 副标题[Z]// 图书标题.');
+      expect(result).toBe('张三. 析出文献: 副标题[Z]//图书标题.');
     });
   });
 
