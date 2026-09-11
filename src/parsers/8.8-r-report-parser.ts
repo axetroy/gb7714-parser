@@ -43,7 +43,14 @@ export class ReportParser extends BaseParser {
     position = this.skipWhitespace(tokens, position);
 
     // 解析作者、题名和报告编号（到文献类型标识 [R]）
-    const { authors, title, extraField: reportNumber, subtitle, position: _afterTitle } = this.parseTitleWithPrefix(tokens, position);
+    let { authors, title, extraField: reportNumber, subtitle, position: _afterTitle } = this.parseTitleWithPrefix(tokens, position);
+
+    // 单冒号歧义消解：冒号后内容不含数字时视为副题名而非报告编号
+    // （如 "白皮书: 新时代高质量发展探索" —— 报告编号通常含数字/连字符）
+    if (!subtitle && reportNumber && !/\d/.test(reportNumber)) {
+      subtitle = reportNumber;
+      reportNumber = '';
+    }
 
     // 跳过文献类型标识 [R]
     const { mediaType, position: afterType } = this.skipTypeIndicator(tokens, position);

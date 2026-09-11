@@ -23,7 +23,11 @@ export class PreprintFormatter extends BaseFormatter {
     }
     }
 
-    parts.push(`${preprint.title}${buildTypeIndicator('PP', preprint.mediaType)}.`);
+    let title = preprint.title;
+    if (preprint.subtitle) {
+      title += `: ${preprint.subtitle}`;
+    }
+    parts.push(`${title}${buildTypeIndicator('PP', preprint.mediaType)}.`);
 
     if (preprint.version) {
       parts.push(`${preprint.version}.`);
@@ -39,6 +43,11 @@ export class PreprintFormatter extends BaseFormatter {
 
     if (preprint.url) {
       parts.push(preprint.url);
+    }
+
+    const pid = this.pidSuffix(preprint.pid, preprint.url);
+    if (pid) {
+      parts.push(pid);
     }
 
     return parts.join(' ');

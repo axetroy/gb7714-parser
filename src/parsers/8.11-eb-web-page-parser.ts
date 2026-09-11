@@ -56,7 +56,9 @@ export class WebPageParser extends BaseParser {
     const parenOpenIndex = this.findNextBracket(tokens, position);
     if (parenOpenIndex < tokens.length && tokens[parenOpenIndex]?.type === 'PAREN_OPEN') {
       createDate = this.readTextUntilNextBracket(tokens, parenOpenIndex + 1);
-      position = this.findNextBracket(tokens, parenOpenIndex + 1) + 1;
+      // 定位到闭合括号之后（findNextBracket 只找打开括号，不能用于定位结束）
+      const parenCloseIndex = tokens.findIndex((t, j) => j > parenOpenIndex && t.type === 'PAREN_CLOSE');
+      position = parenCloseIndex >= 0 ? parenCloseIndex + 1 : tokens.length;
     }
 
     // 解析引用日期（格式为 [YYYY-MM-DD]）
@@ -64,7 +66,8 @@ export class WebPageParser extends BaseParser {
     const bracketOpenIndex = this.findNextBracket(tokens, position);
     if (bracketOpenIndex < tokens.length && tokens[bracketOpenIndex]?.type === 'BRACKET_OPEN') {
       accessDate = this.readTextUntilNextBracket(tokens, bracketOpenIndex + 1);
-      position = this.findNextBracket(tokens, bracketOpenIndex + 1) + 1;
+      const bracketCloseIndex = tokens.findIndex((t, j) => j > bracketOpenIndex && t.type === 'BRACKET_CLOSE');
+      position = bracketCloseIndex >= 0 ? bracketCloseIndex + 1 : tokens.length;
     }
 
     // 跳过 .

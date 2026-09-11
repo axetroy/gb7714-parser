@@ -7,7 +7,7 @@ import { BaseFormatter } from '../base.js';
  *
  * 对应标准 GB/T 7714-2025 §8.8 报告
  *
- * 格式: 作者. 题名;报告编号[R]. 发布日期;引文页码.
+ * 格式: 作者. 题名: 副题名: 报告编号[R]. 发布日期;引文页码.
  */
 export class ReportFormatter extends BaseFormatter {
   format(ref: ReferenceUnion): string {
@@ -24,15 +24,18 @@ export class ReportFormatter extends BaseFormatter {
     }
 
     let title = report.title;
+    if (report.subtitle) {
+      title += `: ${report.subtitle}`;
+    }
     if (report.reportNumber) {
-      title += `;${report.reportNumber}`;
+      title += `: ${report.reportNumber}`;
     }
     parts.push(`${title}${buildTypeIndicator('R', report.mediaType)}.`);
 
     if (report.releaseDate) {
       let info = report.releaseDate;
       if (report.pages) {
-        info += `;${report.pages}`;
+        info += `: ${report.pages}`;
       }
       parts.push(info + '.');
     }

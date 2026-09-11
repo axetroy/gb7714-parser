@@ -1,14 +1,43 @@
 import { describe, it, expect } from 'vitest';
 import { parse, format } from '../index.js';
+import type { ReferenceUnion } from '../types/index.js';
 import appendixB from './__fixtures__/appendix-b-examples.json';
 
+// 项目未引入 @types/node，此处仅声明用到的 process 子集
+declare const process: { env: Record<string, string | undefined> };
+
 /**
- * 附录 B 标准示例 round-trip 测试：parse → format
+ * 附录 B 标准示例 round-trip 测试：parse → format → parse
  *
- * 验证：parse(input) 解析出的 reference，经 format() 格式化后，
- * 能够输出合理的参考文献字符串（不抛异常，包含关键元素）。
+ * 策略（规范化 round-trip）：
+ *   - format 是「规范化」工具：允许把全角标点、空格等规范化为半角/标准格式
+ *   - 核心断言：parse(input) 与 parse(format(parse(input))) 的 reference 语义一致
+ *   - 即两次解析的字段值一致（排除纯格式字段 authorComma、pid 尾点号）
+ *
+ * 这验证 parser 不丢**语义**信息：只要 format 规范化没有丢失任何字段，
+ * 二次解析就能还原出与首次解析相同的结构化数据。
+ *
+ * 严格全量相等（parse → format === 原文）可通过环境变量开启：
+ *   STRICT_ROUNDTRIP=1 npx vitest run src/__tests__/appendix-b-roundtrip.test.ts
+ * 该模式为可选开关，默认关闭，不阻塞发布。
  */
-describe('appendix-b roundtrip (parse → format)', () => {
+const STRICT = process.env.STRICT_ROUNDTRIP === '1';
+
+/**
+ * 归一化：剔除纯格式字段，用于语义比较
+ * - authorComma：作者间原始分隔符（"，"/","），规范化后必然变化，非语义
+ * - pid 尾点号：tokenizer 会把原文句点包进 pid，规范化后消失，非语义
+ */
+function normalizeForSemanticCompare(reference: ReferenceUnion): ReferenceUnion {
+  const copy = JSON.parse(JSON.stringify(reference)) as ReferenceUnion;
+  delete copy.authorComma;
+  if (copy.pid) {
+    copy.pid = copy.pid.replace(/\.$/, '');
+  }
+  return copy;
+}
+
+describe('appendix-b roundtrip (parse → format → parse)', () => {
   let globalIndex = 0;
 
   for (const group of appendixB.groups) {
@@ -26,9 +55,18 @@ describe('appendix-b roundtrip (parse → format)', () => {
         // 格式输出不为空
         expect(formatted.length).toBeGreaterThan(0);
 
-        // 格式输出包含类型标识
-        const hasTypeIndicator = /\[[A-Z]+(?:\/[A-Z]+)?\]/.test(formatted);
-        expect(hasTypeIndicator).toBe(true);
+        // 二次解析：parse(format(parse(input)))
+        const reparsed = parse(formatted).reference;
+
+        // 核心断言：两次解析语义一致（format 规范化不丢字段）
+        expect(normalizeForSemanticCompare(reparsed)).toEqual(
+          normalizeForSemanticCompare(result.reference),
+        );
+
+        // 严格模式（可选）：全量字符串相等，默认关闭
+        if (STRICT) {
+          expect(formatted).toBe(ex.content.trim());
+        }
       });
     }
   }

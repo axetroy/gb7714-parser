@@ -375,11 +375,7 @@ export class BookParser extends BaseParser {
         const spaces = gap > 0 ? ' '.repeat(gap) : '';
 
         if (phase === 'place') {
-          if (token.type === 'COMMA' || token.value === '，') {
-            place += ',';
-          } else {
-            place += spaces + token.value;
-          }
+          place += spaces + token.value;
           lastEndPosition = token.position + token.value.length;
         } else if (phase === 'publisher') {
           publisher += spaces + token.value;

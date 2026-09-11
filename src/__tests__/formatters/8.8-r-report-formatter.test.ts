@@ -16,7 +16,7 @@ describe('ReportFormatter', () => {
         releaseDate: '2025-09-07',
       };
       const result = formatter.format(reference);
-      expect(result).toBe('张三. 技术报告;TR-2025-001[R]. 2025-09-07.');
+      expect(result).toBe('张三. 技术报告: TR-2025-001[R]. 2025-09-07.');
     });
 
     it('应该格式化带有页码的报告', () => {
@@ -29,7 +29,7 @@ describe('ReportFormatter', () => {
         pages: '50',
       };
       const result = formatter.format(reference);
-      expect(result).toBe('张三. 技术报告;TR-2025-001[R]. 2025-09-07;50.');
+      expect(result).toBe('张三. 技术报告: TR-2025-001[R]. 2025-09-07: 50.');
     });
 
     it('应该格式化没有发布日期的报告', () => {
@@ -40,7 +40,7 @@ describe('ReportFormatter', () => {
         reportNumber: 'TR-2025-001',
       };
       const result = formatter.format(reference);
-      expect(result).toBe('张三. 技术报告;TR-2025-001[R].');
+      expect(result).toBe('张三. 技术报告: TR-2025-001[R].');
     });
 
     it('应该格式化没有报告号的报告', () => {
@@ -64,7 +64,7 @@ describe('ReportFormatter', () => {
         url: 'https://example.com',
       };
       const result = formatter.format(reference);
-      expect(result).toBe('张三. 技术报告;TR-2025-001[R]. 2025-09-07. https://example.com');
+      expect(result).toBe('张三. 技术报告: TR-2025-001[R]. 2025-09-07. https://example.com');
     });
 
     it('应该格式化带有 id 的报告', () => {
@@ -77,7 +77,7 @@ describe('ReportFormatter', () => {
         releaseDate: '2025-09-07',
       };
       const result = formatter.format(reference);
-      expect(result).toBe('[7] 张三. 技术报告;TR-2025-001[R]. 2025-09-07.');
+      expect(result).toBe('[7] 张三. 技术报告: TR-2025-001[R]. 2025-09-07.');
     });
 
     it('应该格式化没有作者的报告', () => {
@@ -89,7 +89,7 @@ describe('ReportFormatter', () => {
         releaseDate: '2025-09-07',
       };
       const result = formatter.format(reference);
-      expect(result).toBe('技术报告;TR-2025-001[R]. 2025-09-07.');
+      expect(result).toBe('技术报告: TR-2025-001[R]. 2025-09-07.');
     });
   });
 });

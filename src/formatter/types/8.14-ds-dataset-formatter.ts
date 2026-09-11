@@ -23,7 +23,11 @@ export class DatasetFormatter extends BaseFormatter {
     }
     }
 
-    parts.push(`${dataset.title}${buildTypeIndicator('DS', dataset.mediaType)}.`);
+    let title = dataset.title;
+    if (dataset.subtitle) {
+      title += `: ${dataset.subtitle}`;
+    }
+    parts.push(`${title}${buildTypeIndicator('DS', dataset.mediaType)}.`);
 
     if (dataset.version) {
       parts.push(`${dataset.version}.`);
@@ -39,6 +43,11 @@ export class DatasetFormatter extends BaseFormatter {
 
     if (dataset.url) {
       parts.push(dataset.url);
+    }
+
+    const pid = this.pidSuffix(dataset.pid, dataset.url);
+    if (pid) {
+      parts.push(pid);
     }
 
     return parts.join(' ');

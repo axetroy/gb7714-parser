@@ -23,7 +23,11 @@ export class WebPageFormatter extends BaseFormatter {
     }
     }
 
-    parts.push(`${webPage.title}${buildTypeIndicator('EB', webPage.mediaType)}.`);
+    let title = webPage.title;
+    if (webPage.subtitle) {
+      title += `: ${webPage.subtitle}`;
+    }
+    parts.push(`${title}${buildTypeIndicator('EB', webPage.mediaType)}.`);
 
     if (webPage.createDate) {
       parts.push(`(${webPage.createDate})`);
@@ -35,6 +39,11 @@ export class WebPageFormatter extends BaseFormatter {
 
     if (webPage.url) {
       parts.push(webPage.url + '.');
+    }
+
+    const pid = this.pidSuffix(webPage.pid, webPage.url);
+    if (pid) {
+      parts.push(pid);
     }
 
     return parts.join(' ');
