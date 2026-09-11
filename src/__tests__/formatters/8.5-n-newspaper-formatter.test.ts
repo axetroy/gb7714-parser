@@ -19,7 +19,7 @@ describe('NewspaperFormatter', () => {
         edition: '03',
       };
       const result = formatter.format(reference);
-      expect(result).toBe('张三. 新闻标题[N]. 人民日报, 2025, 09-07: 03.');
+      expect(result).toBe('张三. 新闻标题[N]. 人民日报, 2025-09-07 (03).');
     });
 
     it('应该格式化没有版次的报纸引用', () => {
@@ -32,7 +32,7 @@ describe('NewspaperFormatter', () => {
         monthDay: '09-07',
       };
       const result = formatter.format(reference);
-      expect(result).toBe('张三. 新闻标题[N]. 人民日报, 2025, 09-07.');
+      expect(result).toBe('张三. 新闻标题[N]. 人民日报, 2025-09-07.');
     });
 
     it('应该格式化没有日期的报纸引用', () => {
@@ -57,7 +57,7 @@ describe('NewspaperFormatter', () => {
         url: 'https://example.com',
       };
       const result = formatter.format(reference);
-      expect(result).toBe('张三. 新闻标题[N]. 人民日报, 2025, 09-07. https://example.com');
+      expect(result).toBe('张三. 新闻标题[N]. 人民日报, 2025-09-07. https://example.com');
     });
 
     it('应该格式化带有 id 的报纸引用', () => {
@@ -71,7 +71,7 @@ describe('NewspaperFormatter', () => {
         monthDay: '09-07',
       };
       const result = formatter.format(reference);
-      expect(result).toBe('[10] 张三. 新闻标题[N]. 人民日报, 2025, 09-07.');
+      expect(result).toBe('[10] 张三. 新闻标题[N]. 人民日报, 2025-09-07.');
     });
 
     it('应该格式化没有作者的报纸引用', () => {
@@ -84,7 +84,7 @@ describe('NewspaperFormatter', () => {
         monthDay: '09-07',
       };
       const result = formatter.format(reference);
-      expect(result).toBe('新闻标题[N]. 人民日报, 2025, 09-07.');
+      expect(result).toBe('新闻标题[N]. 人民日报, 2025-09-07.');
     });
   });
 });

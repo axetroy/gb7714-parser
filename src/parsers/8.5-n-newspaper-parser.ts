@@ -67,35 +67,42 @@ export class NewspaperParser extends BaseParser {
     const newspaperTitle = this.readUntilCommaOrYear(tokens, position);
     position = this.findNextCommaOrYear(tokens, position);
 
-    // 解析年份
+    // 解析出版日期（YYYY-MM-DD 或 YYYY）
+    // 标准 §8.5.1.4: 报纸名后著录出版日期与版次，如 2013-03-16 (1)
     let year = '';
-    const yearToken = tokens.slice(position).find(t => t.type === 'YEAR');
-    if (yearToken) {
-      year = yearToken.value;
-      position = tokens.indexOf(yearToken) + 1;
-    }
-
-    // 解析月日
     let monthDay = '';
-    const monthDayStart = position;
-    while (position < tokens.length &&
-           (tokens[position]?.type === 'NUMBER' || tokens[position]?.type === 'DASH' || tokens[position]?.type === 'TEXT')) {
-      position++;
-    }
-    if (position > monthDayStart) {
-      monthDay = tokens.slice(monthDayStart, position).map(t => t.value).join('');
+    const dateToken = tokens.slice(position).find(t => t.type === 'DATE');
+    if (dateToken) {
+      // DATE token 为完整日期 "2000-11-20"，拆分出年份与月日
+      year = dateToken.value.slice(0, 4);
+      monthDay = dateToken.value.slice(5);
+      position = tokens.indexOf(dateToken) + 1;
+    } else {
+      const yearToken = tokens.slice(position).find(t => t.type === 'YEAR');
+      if (yearToken) {
+        year = yearToken.value;
+        position = tokens.indexOf(yearToken) + 1;
+      }
     }
 
-    // 解析版次
+    // 解析版次：(8) 或 : 8
     let edition = '';
-    const colonIndex = tokens.findIndex((t, i) => i >= position && (t.value === ':' || t.value === '：'));
-    if (colonIndex >= position) {
-      position = colonIndex + 1;
-      const editionTokens = tokens.slice(position).filter(t =>
-        t.type === 'NUMBER' || t.type === 'TEXT'
-      );
-      if (editionTokens.length > 0) {
-        edition = editionTokens.map(t => t.value).join('').replace(/\.$/, '');
+    const parenOpenIndex = tokens.findIndex((t, i) => i >= position && t.type === 'PAREN_OPEN');
+    if (parenOpenIndex >= position && parenOpenIndex < tokens.length) {
+      const parenCloseIndex = tokens.findIndex((t, i) => i > parenOpenIndex && t.type === 'PAREN_CLOSE');
+      if (parenCloseIndex > parenOpenIndex) {
+        edition = tokens.slice(parenOpenIndex + 1, parenCloseIndex).map(t => t.value).join('');
+        position = parenCloseIndex + 1;
+      }
+    } else {
+      const colonIndex = tokens.findIndex((t, i) => i >= position && (t.value === ':' || t.value === '：'));
+      if (colonIndex >= position) {
+        const editionTokens = tokens.slice(colonIndex + 1).filter(t =>
+          t.type === 'NUMBER' || t.type === 'TEXT'
+        );
+        if (editionTokens.length > 0) {
+          edition = editionTokens.map(t => t.value).join('').replace(/\.$/, '');
+        }
       }
     }
 

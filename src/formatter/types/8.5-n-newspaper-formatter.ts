@@ -29,14 +29,15 @@ export class NewspaperFormatter extends BaseFormatter {
 
     if (newspaper.newspaperTitle) {
       let info = newspaper.newspaperTitle;
-      if (newspaper.year) {
-        info += `, ${newspaper.year}`;
-      }
-      if (newspaper.monthDay) {
-        info += `, ${newspaper.monthDay}`;
+      // 标准 §8.5.1.4: 报纸名后著录出版日期与版次，如 2013-03-16 (1)
+      const date = newspaper.monthDay
+        ? `${newspaper.year}-${newspaper.monthDay}`
+        : newspaper.year;
+      if (date) {
+        info += `, ${date}`;
       }
       if (newspaper.edition) {
-        info += `: ${newspaper.edition}`;
+        info += ` (${newspaper.edition})`;
       }
       parts.push(info + '.');
     }

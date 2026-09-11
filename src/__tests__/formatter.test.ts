@@ -48,7 +48,7 @@ describe('Formatter (integration)', () => {
         edition: '03',
       };
       const result = format(reference);
-      expect(result).toBe('张三. 新闻标题[N]. 人民日报, 2025, 09-07: 03.');
+      expect(result).toBe('张三. 新闻标题[N]. 人民日报, 2025-09-07 (03).');
     });
   });
 });
